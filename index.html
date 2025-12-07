@@ -84,7 +84,6 @@
 
     .subtitle {
       font-size: 1.1rem;
-      opacity: 0.8;
     }
 
     .card {
@@ -167,7 +166,7 @@
     /* Progress bar (Block A, leicht angepasst) */
     #wbProg {
       width:100%;
-      height:15px;
+      height:14px;
       background:#e5e7eb;
       border-radius:9999px;
       overflow:hidden;
@@ -176,6 +175,16 @@
     @media (prefers-color-scheme: dark) {
       #wbProg {
         background: rgba(255,255,255,0.08);
+      }
+    }
+    .section-divider {
+      border: 0;
+      border-top: 1px solid #d1d5db;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .section-divider {
+        border-top-color: rgba(255,255,255,0.18);
       }
     }
     #wbProgBar {
@@ -280,8 +289,8 @@
       <img src="Respooler.png" alt="LTS Respooler" />
     </div>
     <div class="header-text">
-      <h1>LTS Web Control</h1>
-      <div class="subtitle">Control your LTS Respooler via WebBluetooth</div>
+      <h1>LTS Control Web</h1>
+      <div class="subtitle">Control your LTS Respooler via Bluetooth</div>
     </div>
   </div>
 
@@ -369,7 +378,7 @@
         </select>
       </div>
 
-      <hr style="border:0; border-top:1px solid #d1d5db; margin:12px 0;">
+      <hr class="section-divider" style="margin:12px 0;">
 
       <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
         <label for="motor" style="text-align:right; padding-right:12px;">Motor Strength:</label>
@@ -393,7 +402,7 @@
         </select>
       </div>
 
-      <hr style="border:0; border-top:1px solid #d1d5db; margin:12px 0;">
+      <hr class="section-divider" style="margin:12px 0;">
 
       <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
         <label for="fan" style="text-align:right; padding-right:12px;">Fan Speed:</label>
@@ -404,7 +413,7 @@
         <label style="justify-self:start;"><input id="fanAlways" type="checkbox"> Fan Always On</label>
       </div>
 
-      <hr style="border:0; border-top:1px solid #d1d5db; margin:12px 0;">
+      <hr class="section-divider" style="margin:12px 0;">
 
       <div style="display:grid; grid-template-columns:max-content 1fr max-content; align-items:center; column-gap:12px; width:80%; margin:8px auto;">
         <label for="speed">Speed:</label>
