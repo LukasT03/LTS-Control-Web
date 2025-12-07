@@ -1,11 +1,771 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>LTS Control Web</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LTS Web Control</title>
+  <link rel="icon" type="image/png" href="/LogoFavicon.png" />
+
+  <style>
+    :root {
+      /* Basis wie beim Web Flasher */
+      --bg: 242 242 247;
+      --text: 17 17 17;
+      --accent: #0E7AFE;
+      --accent-dark: #1364C4;
+
+      /* Für die alten Shopify-Blöcke A/B */
+      --flasher-bg: 255 255 255;
+      --flasher-text: 17 17 17;
+      --background-secondary: 255 255 255;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: 15 17 21;
+        --text: 234 234 234;
+
+        --flasher-bg: 28 28 30;
+        --flasher-text: 234 234 234;
+        --background-secondary: 44 44 46;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: rgb(var(--bg));
+      color: rgb(var(--text));
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 1rem;
+      line-height: 1.3;
+      max-width: 580px;
+      margin-inline: auto;
+      padding-top: 7vh;
+      min-height: 10vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+    }
+
+    .header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 0.8rem;
+    }
+
+    .header-logo img {
+      max-height: 120px;
+      height: auto;
+      width: auto;
+      max-width: 100%;
+      display: block;
+    }
+
+    .header-text {
+      margin-top: 1.1rem;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0rem;
+      margin-bottom: 0.2rem;
+      font-size: 2rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      opacity: 0.8;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 28px;
+      padding: 1rem;
+      margin-top: 1.4rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .card {
+        background: rgb(28,28,30);
+      }
+    }
+
+    .card + .card {
+      margin-top: 1rem;
+    }
+
+    /* Web Flasher Button-Style */
+    .lts-btn {
+      padding: 0.85rem 1.5rem;
+      border-radius: 14px;
+      background-color: #1a1a1a;
+      color: #fff !important;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lts-btn:disabled {
+      background-color: #1a1a1a;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Spezifische Farben für Control-Buttons (Block A) */
+    #wbConnect, #wbConnect:hover, #wbConnect:active, #wbConnect[disabled] {
+      background:#0E7AFE !important;
+      color:#ffffff !important;
+      border:none !important;
+      box-shadow:none !important;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+
+    #wbStart, #wbStart:hover, #wbStart:active, #wbStart[disabled] {
+      background:#d1e9ff !important;
+      color:#0088fe !important;
+      border:none !important;
+      box-shadow:none !important;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    @media (prefers-color-scheme: dark) {
+      #wbStart, #wbStart:hover, #wbStart:active, #wbStart[disabled] {
+        background:#153a56 !important;
+      }
+    }
+
+    #wbStop, #wbStop:hover, #wbStop:active, #wbStop[disabled] {
+      background:#ffdbdc !important;
+      color:#fe383c !important;
+      border:none !important;
+      box-shadow:none !important;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    @media (prefers-color-scheme: dark) {
+      #wbStop, #wbStop:hover, #wbStop:active, #wbStop[disabled] {
+        background:#492326 !important;
+      }
+    }
+
+    /* Progress bar (Block A, leicht angepasst) */
+    #wbProg {
+      width:100%;
+      height:15px;
+      background:#e5e7eb;
+      border-radius:9999px;
+      overflow:hidden;
+      margin:10px 0 12px 0;
+    }
+    #wbProgBar {
+      height:100%;
+      width:0%;
+      background:#0c4c98;
+      transition: width 0.35s ease, background-color 0.35s ease, background 0.35s ease;
+      will-change: width, background-color;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #wbProgBar { transition: none; }
+    }
+
+    #wbStatusText {
+      display:inline-block;
+      will-change: opacity, transform;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #wbStatusText { transition: none !important; }
+    }
+
+    /* Block B – zusätzliche Styles */
+    @media (max-width: 699px) {
+      #lts-settings { display:none !important; }
+    }
+    @media (prefers-color-scheme: dark) {
+      #infoPopup { background: rgb(var(--flasher-bg)) !important; }
+    }
+    #infoTitle { margin-bottom: 6px; }
+    #infoPopup #infoBody {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 6px;
+      align-items: center;
+    }
+    #infoPopup #infoBody div {
+      display: contents;
+      white-space: nowrap;
+    }
+    #infoPopup #infoBody span {
+      justify-self: start;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Custom accent color for sliders and checkmarks */
+    input[type="range"],
+    input[type="checkbox"] {
+      accent-color: #1364C4;
+    }
+    @media (prefers-color-scheme: dark) {
+      input[type="range"],
+      input[type="checkbox"] {
+        accent-color: #1364C4;
+      }
+    }
+
+    /* Kleine Typo-Anpassungen für schmale Screens */
+    @media (max-width: 450px) {
+      h1 {
+        font-size: 1.9rem;
+      }
+      .lts-btn {
+        font-size: 1.0rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>LTS Control Web</h1>
-  <p>Test! Hallo von control.lts-design.com 👋</p>
+  <div class="header">
+    <div class="header-logo">
+      <img src="Logo.png" alt="LTS Logo" />
+    </div>
+    <div class="header-text">
+      <h1>LTS Web Control</h1>
+      <div class="subtitle">Control your LTS Respooler via WebBluetooth</div>
+    </div>
+  </div>
+
+  <!-- CONTROL CARD (Block A) -->
+  <div class="card">
+    <section id="lts-control" style="display:block;width:100%;max-width:none;margin:0;padding-bottom:0.4rem;line-height:1.5;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;color: rgb(var(--flasher-text));border-radius:18px;background:transparent;">
+      <p style="visibility:hidden; font-size:20px; line-height:1px; margin:0; padding:0;">---------------------------------------------------------------------</p>
+      <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin:0 0 4px 0;">
+        <span id="wbProgPct" style="justify-self:start;">0 %</span>
+        <span id="wbStatusText" style="justify-self:center;">Not connected</span>
+        <span id="wbProgRem" style="justify-self:end;">-00:00</span>
+      </div>
+      <div id="wbProg">
+        <div id="wbProgBar"></div>
+      </div>
+      <div id="wbButtonGroup" style="display:none">
+        <div class="lts-actions" style="display:flex;flex-wrap:nowrap;gap:12px;width:100%;align-items:stretch;margin:16px 0 0 0;">
+          <button id="wbConnect" class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;">Connect</button>
+          <button id="wbStart"   class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;" disabled>Start</button>
+          <button id="wbStop"    class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;" disabled>Stop</button>
+        </div>
+      </div>
+      <div id="wbNoSupport" style="display:block; text-align:center; margin:16px 0 0 0; color:#ff8c28;">
+        This browser does not support WebBluetooth. Please use Chrome or Edge on desktop or download the app.
+      </div>
+    </section>
+  </div>
+
+  <!-- SETTINGS CARD (Block B) -->
+  <div class="card">
+    <section id="lts-settings" 
+      style="display:block;
+             width:100%;
+             margin:0;
+             line-height:1.5;
+             font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+             color:rgb(var(--flasher-text));
+             position:relative;">
+      <p style="visibility:hidden; font-size:20px; line-height:1px; margin:0; padding:0;">---------------------------------------------------------------------</p>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <h2 style="margin:0; font-size:1.2rem;">Settings</h2>
+        <button id="infoBtn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Info"
+                style="display:none; place-items:center; width:20px; height:20px; border-radius:9999px; border:1.8px solid currentColor; background:transparent; color:rgb(var(--flasher-text)); cursor:pointer; font-weight:600; font-size:14px; line-height:1; z-index:1001;">
+          i
+        </button>
+      </div>
+
+      <div id="infoPopup" role="dialog" aria-modal="false" aria-labelledby="infoTitle"
+           style="display:none; position:absolute; top:34px; right:3px; min-width:fit-content; padding:10px 12px; border:1px solid #d1d5db; border-radius:15px; background:rgb(var(--background-secondary)); color:inherit; box-shadow:0 6px 18px rgba(0,0,0,0.15); z-index:1000;">
+        <div id="infoTitle" style="font-weight:600; text-align:center;">Board Info</div>
+        <div id="infoBody">
+          <div><span>Board Name:</span> <span id="valBoard">-</span></div>
+          <div><span>Firmware Version:</span> <span id="valFW">-</span></div>
+          <div><span>WiFi Status:</span> <span id="valWiFi">-</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0;">
+        <label for="led" style="text-align:right; padding-right:12px;">LED Brightness:</label>
+        <input id="led" type="range" min="0" max="100" step="10" value="50" style="width:min(160px, 100%); margin-top:2px; justify-self:start;">
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+        <label for="wgt" style="text-align:right; padding-right:12px;">Transfer Amount:</label>
+        <select id="wgt" style="justify-self:start; width:min(135px, 100%); border:1px solid #d1d5db; color:#000;">
+          <option value="0">Entire Spool</option>
+          <option value="1">1.0 kg</option>
+          <option value="2">0.5 kg</option>
+          <option value="3">0.25 kg</option>
+        </select>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:5px;">
+        <div></div>
+        <label style="justify-self:start;"><input id="useFil" type="checkbox" checked> Use Filament Sensor</label>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+        <label for="jin" style="text-align:right; padding-right:12px;">Completion Sound:</label>
+        <select id="jin" style="justify-self:start; width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
+          <option value="0">Off</option>
+          <option value="1">Simple</option>
+          <option value="2">Glissando</option>
+          <option value="3">Star Wars</option>
+        </select>
+      </div>
+
+      <hr style="border:0; border-top:1px solid #d1d5db; margin:12px 0;">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+        <label for="motor" style="text-align:right; padding-right:12px;">Motor Strength:</label>
+        <input id="motor" type="range" min="80" max="120" step="10" value="100" style="width:min(160px, 100%); margin-top:2px; justify-self:start;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:0px;">
+        <div></div>
+        <label style="justify-self:start;"><input id="dir" type="checkbox"> Change Direction</label>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:2px;">
+        <div></div>
+        <label style="justify-self:start;"><input id="hs" type="checkbox"> High-Speed</label>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+        <label for="autoStop" style="text-align:right; padding-right:12px;">Auto-Stop Sensitivity:</label>
+        <select id="autoStop" style="justify-self:start; width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
+          <option value="0">Off</option>
+          <option value="1">Low</option>
+          <option value="2">Medium</option>
+          <option value="3">High</option>
+        </select>
+      </div>
+
+      <hr style="border:0; border-top:1px solid #d1d5db; margin:12px 0;">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+        <label for="fan" style="text-align:right; padding-right:12px;">Fan Speed:</label>
+        <input id="fan" type="range" min="10" max="100" step="10" value="60" style="width:min(160px, 100%); margin-top:2px; justify-self:start;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:0px;">
+        <div></div>
+        <label style="justify-self:start;"><input id="fanAlways" type="checkbox"> Fan Always On</label>
+      </div>
+
+      <hr style="border:0; border-top:1px solid #d1d5db; margin:12px 0;">
+
+      <div style="display:grid; grid-template-columns:max-content 1fr max-content; align-items:center; column-gap:12px; width:80%; margin:8px auto;">
+        <label for="speed">Speed:</label>
+        <input id="speed" type="range" min="50" max="100" step="1" value="85" style="width:100%;">
+        <span id="speedVal" style="display:inline-block; width:6ch; text-align:right;">85 %</span>
+      </div>
+    </section>
+  </div>
+
+  <div style="text-align:center; margin-top:1.6rem; margin-bottom:1.2rem; font-size:0.95rem; opacity:0.85;">
+    Powered by LTS Respooler • WebBluetooth
+  </div>
+
+  <!-- BLE Manager -->
+  <script src="webble-manager.js"></script>
+
+  <!-- Block A Logic (leicht angepasst) -->
+  <script>
+  (() => {
+    const ui = {
+      connect:  document.getElementById('wbConnect'),
+      start:    document.getElementById('wbStart'),
+      stop:     document.getElementById('wbStop'),
+      prog:     document.getElementById('wbProg'),
+      progBar:  document.getElementById('wbProgBar'),
+      progPct:  document.getElementById('wbProgPct'),
+      progRem:  document.getElementById('wbProgRem'),
+      statusText: document.getElementById('wbStatusText'),
+      buttons: document.getElementById('wbButtonGroup'),
+      noSupport: document.getElementById('wbNoSupport'),
+    };
+
+    let statusHoldUntil = 0; // timestamp ms until which we force "Connected!"
+
+    function setStatusTextAnimated(text, colorOrNull){
+      const el = ui.statusText;
+      if(!el) return;
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const newColor = (colorOrNull === null) ? '' : colorOrNull;
+      if (prefersReduced) { el.textContent = text; el.style.color = newColor; return; }
+      if (el.textContent === text) { el.style.color = newColor; return; }
+      el.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.93)';
+      setTimeout(() => {
+        el.textContent = text;
+        el.style.color = newColor;
+        requestAnimationFrame(() => {
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1)';
+        });
+      }, 120);
+    }
+
+    // Ensure initial percent text uses a space (e.g., "0 %") even before any JS updates
+    if (ui.progPct) {
+      const t = ui.progPct.textContent || '0';
+      const n = parseInt(String(t).replace('%', '').trim(), 10);
+      ui.progPct.textContent = (isNaN(n) ? 0 : n) + ' %';
+    }
+
+    function statusVisual(s){
+      const code = (s && s.statusCode) ? String(s.statusCode).toUpperCase() : null;
+      const txt  = (s && s.statusText) || null;
+      const byFlags = s?.run ? {t:'Running…', c:'rgb(52,199,89)'} : (s && s.connected ? {t:'Connected', c:'rgb(52,199,89)'} : {t:'Not connected', c:''});
+      if(!code) return { text: txt || byFlags.t, color: byFlags.c };
+      switch(code){
+        case 'R': return { text: txt || 'Running…',   color:'rgb(52,199,89)' };
+        case 'P': return { text: txt || 'Paused',     color:'rgb(255,149,0)' };
+        case 'U': return { text: txt || 'Updating…',  color:'rgb(14,122,254)' };
+        case 'D': return { text: txt || 'Done!',      color:'rgb(52,199,89)' };
+        case 'A': return { text: txt || 'Auto-Stop!', color:'rgb(254,56,60)' };
+        case 'C': return { text: txt || 'Connected',  color:'rgb(52,199,89)' };
+        case 'I': return { text: txt || 'Idle',       color:'rgb(52,199,89)' };
+        default:  return { text: txt || byFlags.t,    color: byFlags.c };
+      }
+    }
+
+    const isIOS = /iPad|iPhone|iPod|iOS/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isWebKit = /AppleWebKit/i.test(navigator.userAgent);
+    const isIOSWebKit = isIOS && isWebKit;
+    if (isIOSWebKit) {
+      if (ui.buttons) ui.buttons.style.display = 'none';
+      if (ui.noSupport) ui.noSupport.style.display = 'block';
+      return;
+    }
+    if (ui.buttons) ui.buttons.style.display = 'block';
+    if (ui.noSupport) ui.noSupport.style.display = 'none';
+    const secure = (typeof window.isSecureContext === 'boolean') ? window.isSecureContext : (location.protocol === 'https:' || location.hostname === 'localhost');
+    const hasBLE = !!(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
+    const webBleSupported = hasBLE && secure && !isIOSWebKit;
+    if(!webBleSupported){
+      if(ui.buttons) ui.buttons.style.display = 'none';
+      if(ui.noSupport) ui.noSupport.style.display = 'block';
+      return;
+    }
+
+    function setConnected(on, justConnected){
+      ui.stop.disabled  = !on;
+      ui.start.disabled = !on;
+      ui.connect.textContent = on ? 'Disconnect' : 'Connect';
+      if (!on) { ui.start.textContent = 'Start'; }
+      if(on && justConnected){
+        statusHoldUntil = Date.now() + 1500;
+      }
+      if (ui.statusText) {
+        if (on) {
+          const withinHold = statusHoldUntil && Date.now() < statusHoldUntil;
+          if (withinHold) {
+            setStatusTextAnimated('Connected!', 'rgb(52,199,89)');
+          } else {
+            setStatusTextAnimated('Connected', '');
+          }
+        } else {
+          setStatusTextAnimated('Not connected', '');
+        }
+      }
+      if(!on && ui.progBar){ ui.progBar.style.width = '0%'; }
+      if(!on && ui.progPct){ ui.progPct.textContent = '0 %'; }
+    }
+
+    ui.connect.addEventListener('click', async () => {
+      const st = window.webble.getState();
+      if (st.connected) {
+        window.webble.disconnect();
+      } else {
+        try { await window.webble.connect(); } catch(e) { alert(e.message||e); }
+      }
+    });
+    ui.start.addEventListener('click', () => {
+      const label = (ui.start.textContent || '').trim();
+      if (label === 'Pause') {
+        window.webble.pause();
+      } else {
+        window.webble.start();
+      }
+    });
+    ui.stop.addEventListener('click',  () => window.webble.stop());
+
+    window.webble.on('connected',   () => {
+      setConnected(true, true);
+    });
+    window.webble.on('disconnected',() => {
+      statusHoldUntil = 0;
+      setConnected(false);
+    });
+    window.webble.on('status', (s) => {
+      const isConn = window.webble.getState().connected === true;
+      const blockedByFil = !!s.useFil && !s.hasFilament;
+      const isUpdating = (String(s.statusCode || s.code || '').toUpperCase() === 'U') || !!s.updating;
+      ui.start.disabled = !isConn || blockedByFil || isUpdating;
+      ui.stop.disabled  = !isConn || isUpdating;
+      const isRunning = (String(s.statusCode || s.code || '').toUpperCase() === 'R') || !!s.run;
+      ui.start.textContent = isRunning ? 'Pause' : 'Start';
+      if (ui.progBar) {
+        const p = Math.max(0, Math.min(100, Number(s.progress ?? s.PROG ?? 0)));
+        ui.progBar.style.width = p + '%';
+
+        const code = String(s.statusCode || s.code || '').toUpperCase();
+        if (code === 'I') {
+          ui.progBar.style.width = '0%';
+        }
+        if (code === 'D') {
+          ui.progBar.style.background = 'rgb(52,199,89)';
+        } else if (code === 'P') {
+          ui.progBar.style.background = 'rgb(255,149,0)';
+        } else if (code === 'A') {
+          ui.progBar.style.background = 'rgb(254,56,60)';
+        } else {
+          ui.progBar.style.background = '#0c4c98';
+        }
+      }
+      if (ui.progPct) {
+        const pct = Math.round(Number(s.progress ?? s.PROG ?? 0));
+        ui.progPct.textContent = pct + ' %';
+      }
+      if (ui.progRem) {
+        let rem = s.remaining ?? null;
+        if (typeof rem === 'number' && !isNaN(rem)) {
+          const m = String(Math.floor(rem / 60)).padStart(2,'0');
+          const sec = String(Math.floor(rem % 60)).padStart(2,'0');
+          ui.progRem.textContent = `-${m}:${sec}`;
+        }
+      }
+      const now = Date.now();
+      if (ui.statusText && isConn && statusHoldUntil && now < statusHoldUntil) {
+        setStatusTextAnimated('Connected!', 'rgb(52,199,89)');
+      } else if (ui.statusText) {
+        const vis = statusVisual({ ...s, connected: isConn });
+        setStatusTextAnimated(vis.text, '');
+      }
+    });
+
+    setConnected(window.webble.getState().connected);
+    (function initProgress(){
+      if(!ui.progBar || !window.webble?.getState) return;
+      const st = window.webble.getState();
+      const p = Math.max(0, Math.min(100, Number(st.progress ?? 0)));
+      ui.progBar.style.width = p + '%';
+      if(ui.progPct){
+        const pct = Math.round(Number(st.progress ?? 0));
+        ui.progPct.textContent = pct + ' %';
+      }
+      const isRunningInit = (String(st.statusCode || '').toUpperCase() === 'R') || !!st.run;
+      ui.start.textContent = isRunningInit ? 'Pause' : 'Start';
+      const isUpdatingInit = (String(st.statusCode || '').toUpperCase() === 'U') || !!st.updating;
+      ui.start.disabled = !window.webble.getState?.().connected || isUpdatingInit || (!!st.useFil && !st.hasFilament);
+      ui.stop.disabled  = !window.webble.getState?.().connected || isUpdatingInit;
+      if(ui.progRem && typeof st.remaining === 'number'){
+        const m = String(Math.floor(st.remaining/60)).padStart(2,'0');
+        const sec = String(Math.floor(st.remaining%60)).padStart(2,'0');
+        ui.progRem.textContent = `-${m}:${sec}`;
+      }
+      if(ui.statusText){
+        const stc = window.webble.getState?.() || {};
+        const vis = statusVisual(stc);
+        setStatusTextAnimated(vis.text, '');
+      }
+    })();
+  })();
+  </script>
+
+  <!-- Block B Logic (unverändert übernommen) -->
+  <script>
+  (() => {
+    function whenWebbleReady(fn){
+      if (window.webble && window.webble.__ready) { fn(); return; }
+      const iv = setInterval(() => {
+        if (window.webble && window.webble.__ready) { clearInterval(iv); fn(); }
+      }, 50);
+      setTimeout(() => clearInterval(iv), 5000);
+    }
+
+    function renderInfo(s){
+      const fwEl = document.getElementById('valFW');
+      const brdEl = document.getElementById('valBoard');
+      const wifiEl = document.getElementById('valWiFi');
+      if (!fwEl || !brdEl || !wifiEl) return;
+      if (!s || !s.connected) {
+        fwEl.textContent = '-';
+        brdEl.textContent = '-';
+        wifiEl.textContent = '-';
+        return;
+      }
+      fwEl.textContent = s.fw ?? '-';
+      if (s.name) {
+        const name = String(s.name).trim();
+        if (name.includes('CtrBoard V3')) {
+          brdEl.textContent = 'Control Board V3';
+        } else if (name.includes('CtrBoard V4')) {
+          brdEl.textContent = 'Control Board';
+        } else if (name.includes('Ctrl Board')) {
+          brdEl.textContent = 'Control Board';
+        } else if (name.includes('esp32 PCB')) {
+          brdEl.textContent = 'Driver Board';
+        } else if (name.includes('Drv Board')) {
+          brdEl.textContent = 'Driver Board';
+        } else {
+          brdEl.textContent = 'Unknown';
+        }
+      } else {
+        brdEl.textContent = '-';
+      }
+      if (s.wifiConnected) {
+        const ssid = (s.wifiSSID || '—').trim();
+        wifiEl.textContent = `Connected (${ssid})`;
+      } else {
+        wifiEl.textContent = 'Disconnected';
+      }
+    }
+
+    function bindWithWebble(){
+      const led = document.getElementById('led');
+      const useFil = document.getElementById('useFil');
+      const motor = document.getElementById('motor');
+      const dir = document.getElementById('dir');
+      const hs = document.getElementById('hs');
+      const autoStop = document.getElementById('autoStop');
+      const jin = document.getElementById('jin');
+      const wgt = document.getElementById('wgt');
+      const fan = document.getElementById('fan');
+      const fanAlways = document.getElementById('fanAlways');
+      const speed = document.getElementById('speed');
+      const speedVal = document.getElementById('speedVal');
+
+      const uiEditing = new Set();
+      const beginUI = (key) => { uiEditing.add(key); try { window.webble.beginEdit(key); } catch(_){} };
+      const endUI   = (key) => { uiEditing.delete(key); try { window.webble.commitEdit(key); } catch(_){} };
+      const isUIEditing = (key) => uiEditing.has(key);
+
+      const pending = new Map();
+      function setPending(key, val, ms = 900) {
+        pending.set(key, { val: String(val), until: Date.now() + ms });
+      }
+      function shouldApply(key, incomingVal) {
+        const p = pending.get(key);
+        if (!p) return true;
+        if (Date.now() > p.until) { pending.delete(key); return true; }
+        if (String(incomingVal) === p.val) { pending.delete(key); return true; }
+        return false;
+      }
+
+      function bindSlider(el, key, setter, onLocal){
+        el.addEventListener('pointerdown', () => beginUI(key));
+        if (onLocal) el.addEventListener('input', e => onLocal(e.target.value));
+        const commit = (v) => { setter(v); endUI(key); };
+        el.addEventListener('pointerup',   e => commit(e.target.value));
+        el.addEventListener('change',      e => commit(e.target.value));
+        el.addEventListener('pointercancel', () => endUI(key));
+        el.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') commit(e.target.value); });
+      }
+      function bindCheckbox(el, key, setter){
+        el.addEventListener('pointerdown', () => beginUI(key));
+        el.addEventListener('change', e => { setter(e.target.checked); endUI(key); });
+        el.addEventListener('pointercancel', () => endUI(key));
+        el.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') { setter(el.checked); endUI(key);} });
+        el.addEventListener('blur', () => { if (uiEditing.has(key)) endUI(key); });
+      }
+      function bindSelect(el, key, setter){
+        el.addEventListener('pointerdown', () => beginUI(key));
+        el.addEventListener('focusin',   () => beginUI(key));
+        el.addEventListener('change',    e => { setter(e.target.value); endUI(key); });
+        el.addEventListener('blur',      () => { if (uiEditing.has(key)) endUI(key); });
+      }
+
+      bindSlider(led,   'LED',     (v)=>window.webble.setLED(v));
+      bindCheckbox(useFil,'USE_FIL',(on)=>window.webble.setUseFil(on));
+      bindSlider(motor, 'POW',     (v)=>window.webble.setPower(v));
+      bindCheckbox(dir, 'DIR',     (on)=>window.webble.setDir(on));
+      bindCheckbox(hs,  'HS',      (on)=>window.webble.setHighSpeed(on));
+      bindSelect(autoStop, 'TRQ', (v) => { setPending('TRQ', v); window.webble.setTorque(v); });
+      bindSelect(jin,      'JIN', (v) => { setPending('JIN', v); window.webble.setJingle(v); });
+      bindSelect(wgt,      'WGT', (v) => { setPending('WGT', v); window.webble.setTargetWeight(v); });
+      bindSlider(fan,   'FAN_SPD', (v)=>window.webble.setFanSpeed(v));
+      bindCheckbox(fanAlways,'FAN_ALW',(on)=>window.webble.setFanAlways(on));
+      bindSlider(speed, 'SPD',     (v)=>window.webble.setSpeed(v), (v)=>{ speedVal.textContent = v + ' %'; });
+
+      window.webble.on('status', s => {
+        if (!isUIEditing('LED'))      led.value = s.led ?? 50;
+        if (!isUIEditing('USE_FIL'))  useFil.checked = (s.useFil !== false);
+        if (!isUIEditing('POW'))      motor.value = s.pow ?? 100;
+        if (!isUIEditing('DIR'))      dir.checked = !!s.dir;
+        if (!isUIEditing('HS'))       hs.checked = !!s.hs;
+        if (!isUIEditing('TRQ')) { const v = String(s.trq ?? 0); if (shouldApply('TRQ', v)) autoStop.value = v; }
+        if (!isUIEditing('JIN')) { const v = String(s.jin ?? 0); if (shouldApply('JIN', v)) jin.value = v; }
+        if (!isUIEditing('WGT')) { const v = String(s.targetWeight ?? s.wgt ?? s.WGT ?? s.targetweight ?? 0); if (shouldApply('WGT', v)) wgt.value = v; }
+        if (!isUIEditing('FAN_SPD'))  fan.value = s.fan ?? 80;
+        if (!isUIEditing('FAN_ALW'))  fanAlways.checked = !!s.fanAlways;
+        if (!isUIEditing('SPD'))      { speed.value = s.speed ?? 80; speedVal.textContent = (s.speed ?? 80) + ' %'; }
+        renderInfo(s);
+        if (infoBtn) {
+          if (s && s.connected) {
+            infoBtn.style.display = 'inline-grid';
+          } else {
+            infoBtn.style.display = 'none';
+            if (infoPopup) { infoPopup.style.display = 'none'; infoBtn.setAttribute('aria-expanded','false'); }
+          }
+        }
+      });
+
+      try {
+        const initial = window.webble.getState();
+        renderInfo(initial);
+        if (infoBtn) {
+          if (initial && initial.connected) {
+            infoBtn.style.display = 'inline-grid';
+          } else {
+            infoBtn.style.display = 'none';
+          }
+        }
+      } catch(_) {}
+    }
+
+    const infoBtn = document.getElementById('infoBtn');
+    const infoPopup = document.getElementById('infoPopup');
+    if (infoBtn && infoPopup) {
+      function hidePopup(){ infoPopup.style.display = 'none'; infoBtn.setAttribute('aria-expanded','false'); }
+      function togglePopup(e){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        const showing = infoPopup.style.display !== 'none';
+        if (showing) { hidePopup(); return; }
+        infoPopup.style.display = 'block';
+        infoBtn.setAttribute('aria-expanded','true');
+      }
+      infoBtn.addEventListener('click', togglePopup);
+      document.addEventListener('click', (e)=>{
+        if (!infoPopup.contains(e.target) && e.target !== infoBtn) hidePopup();
+      });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hidePopup(); });
+    }
+
+    whenWebbleReady(bindWithWebble);
+  })();
+  </script>
 </body>
 </html>
