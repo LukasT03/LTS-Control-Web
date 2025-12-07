@@ -61,7 +61,7 @@
       margin-bottom: 0.8rem;
     }
 
-    .header-logo img {
+    .header-image img {
       max-height: 120px;
       height: auto;
       width: auto;
@@ -83,7 +83,7 @@
     }
 
     .subtitle {
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       opacity: 0.8;
     }
 
@@ -173,6 +173,11 @@
       overflow:hidden;
       margin:10px 0 12px 0;
     }
+    @media (prefers-color-scheme: dark) {
+      #wbProg {
+        background: rgba(255,255,255,0.08);
+      }
+    }
     #wbProgBar {
       height:100%;
       width:0%;
@@ -188,14 +193,16 @@
       display:inline-block;
       will-change: opacity, transform;
     }
+    #wbProgPct,
+    #wbStatusText,
+    #wbProgRem {
+      font-size: 1.1rem;
+    }
     @media (prefers-reduced-motion: reduce) {
       #wbStatusText { transition: none !important; }
     }
 
     /* Block B – zusätzliche Styles */
-    @media (max-width: 699px) {
-      #lts-settings { display:none !important; }
-    }
     @media (prefers-color-scheme: dark) {
       #infoPopup { background: rgb(var(--flasher-bg)) !important; }
     }
@@ -216,6 +223,15 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    /* Typography for settings card (match Web Flasher sizing) */
+    #lts-settings label,
+    #lts-settings select,
+    #lts-settings input[type="range"],
+    #lts-settings input[type="checkbox"],
+    #lts-settings span,
+    #lts-settings #speedVal {
+      font-size: 1.1rem;
+    }
     /* Custom accent color for sliders and checkmarks */
     input[type="range"],
     input[type="checkbox"] {
@@ -233,7 +249,26 @@
       h1 {
         font-size: 1.9rem;
       }
+      .header-image img {
+        max-width: 100px;
+      }
+      .subtitle {
+        font-size: 1.0rem;
+      }
       .lts-btn {
+        font-size: 1.0rem;
+      }
+      #wbProgPct,
+      #wbStatusText,
+      #wbProgRem {
+        font-size: 1.0rem;
+      }
+      #lts-settings label,
+      #lts-settings select,
+      #lts-settings input[type="range"],
+      #lts-settings input[type="checkbox"],
+      #lts-settings span,
+      #lts-settings #speedVal {
         font-size: 1.0rem;
       }
     }
@@ -241,8 +276,8 @@
 </head>
 <body>
   <div class="header">
-    <div class="header-logo">
-      <img src="Logo.png" alt="LTS Logo" />
+    <div class="header-image">
+      <img src="Respooler.png" alt="LTS Respooler" />
     </div>
     <div class="header-text">
       <h1>LTS Web Control</h1>
@@ -252,7 +287,7 @@
 
   <!-- CONTROL CARD (Block A) -->
   <div class="card">
-    <section id="lts-control" style="display:block;width:100%;max-width:none;margin:0;padding-bottom:0.4rem;line-height:1.5;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;color: rgb(var(--flasher-text));border-radius:18px;background:transparent;">
+    <section id="lts-control" style="display:block;width:100%;max-width:none;margin:0;padding-bottom:0;line-height:1.5;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;color: rgb(var(--flasher-text));border-radius:18px;background:transparent;">
       <p style="visibility:hidden; font-size:20px; line-height:1px; margin:0; padding:0;">---------------------------------------------------------------------</p>
       <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin:0 0 4px 0;">
         <span id="wbProgPct" style="justify-self:start;">0 %</span>
@@ -288,7 +323,6 @@
       <p style="visibility:hidden; font-size:20px; line-height:1px; margin:0; padding:0;">---------------------------------------------------------------------</p>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <h2 style="margin:0; font-size:1.2rem;">Settings</h2>
         <button id="infoBtn" type="button" aria-haspopup="dialog" aria-expanded="false" title="Info"
                 style="display:none; place-items:center; width:20px; height:20px; border-radius:9999px; border:1.8px solid currentColor; background:transparent; color:rgb(var(--flasher-text)); cursor:pointer; font-weight:600; font-size:14px; line-height:1; z-index:1001;">
           i
@@ -380,8 +414,12 @@
     </section>
   </div>
 
-  <div style="text-align:center; margin-top:1.6rem; margin-bottom:1.2rem; font-size:0.95rem; opacity:0.85;">
-    Powered by LTS Respooler • WebBluetooth
+  <div style="text-align:center; margin-top:2rem; margin-bottom:2rem; font-size:1rem; color:rgb(var(--text));">
+    Powered by <a href="https://developer.chrome.com/docs/capabilities/bluetooth" target="_blank" style="color:rgb(var(--text)); text-decoration:underline;">WebBluetooth</a>
+    <div style="margin-top:0.6rem;">
+      <a href="https://github.com/LukasT03" target="_blank" style="color:rgb(var(--text)); text-decoration:underline; margin-right:1rem;">GitHub</a>
+      <a href="https://lts-design.com" target="_blank" style="color:rgb(var(--text)); text-decoration:underline;">lts-design.com</a>
+    </div>
   </div>
 
   <!-- BLE Manager -->
