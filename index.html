@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LTS Control Web</title>
+  <title>LTS Web Control</title>
   <link rel="icon" type="image/png" href="/LogoFavicon.png" />
 
   <style>
@@ -38,7 +38,7 @@
       font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
       padding: 1rem;
       line-height: 1.3;
-      max-width: 580px;
+      max-width: 920px;
       margin-inline: auto;
       padding-top: 7vh;
       min-height: 10vh;
@@ -55,30 +55,32 @@
     .header {
       width: 100%;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
+      gap: 16px;
       margin-bottom: 0.8rem;
+      flex-wrap: nowrap;
     }
 
     .header-image img {
-      max-height: 120px;
       height: auto;
       width: auto;
-      max-width: 100%;
+      max-height: 96px;
+      max-width: 140px;
       display: block;
     }
 
     .header-text {
-      margin-top: 1.1rem;
-      text-align: center;
+      margin-top: 0;
+      text-align: left;
     }
 
     h1 {
       margin-top: 0rem;
       margin-bottom: 0.2rem;
       font-size: 2rem;
-      text-align: center;
+      text-align: left;
       white-space: nowrap;
     }
 
@@ -86,11 +88,106 @@
       font-size: 1.1rem;
     }
 
+    /* Top status pills (UI only) */
+    .status-pills {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      justify-content: stretch;
+      gap: 14px;
+      margin-top: 1.0rem;
+      margin-bottom: 0;
+    }
+
+    /* On wider layouts, show pills as 2x2 grid (like screenshot) */
+    @media (max-width: 780px) {
+      .status-pills {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .status-pill {
+      background: #ffffff;
+      border-radius: 28px; /* match card border radius */
+      padding: 0 16px;
+      height: 56px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .status-pill {
+        background: rgb(28,28,30);
+      }
+    }
+
+    .status-pill svg {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      color: rgb(var(--text));
+      opacity: 0.95;
+    }
+    .status-emoji {
+      font-size: 1.6rem;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .status-pill-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.05;
+      min-width: 0;
+    }
+
+    .status-pill-title {
+      font-size: 1.1rem;      /* match .lts-btn */
+      font-weight: 600;       /* match .lts-btn */
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-pill-subtitle {
+      margin-top: 4px;
+      font-size: 1.1rem;      /* match settings card text */
+      font-weight: 400;
+      opacity: 0.45;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 450px) {
+      .status-pills {
+        gap: 10px;
+      }
+      .status-pill {
+        padding: 0 16px;
+        height: 56px;
+        min-height: 56px;
+        border-radius: 28px;
+      }
+      .status-pill svg {
+        width: 24px;
+        height: 24px;
+        flex-basis: 24px;
+      }
+      .status-pill-title,
+      .status-pill-subtitle {
+        font-size: 1.0rem;
+      }
+    }
+
     .card {
       background: #ffffff;
       border-radius: 28px;
       padding: 1rem;
-      margin-top: 1.4rem;
+      margin-top: 0;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -99,8 +196,38 @@
       }
     }
 
-    .card + .card {
-      margin-top: 1rem;
+    /* Pill-style card (e.g. Speed) */
+    .card.pill-card {
+      padding: 0 16px;
+      height: 56px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+    }
+
+
+    /* Two-column layout for Control + Settings cards */
+    .cards-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem; /* spacing below the status pills */
+      align-items: start;
+    }
+
+    /* Stack multiple cards inside the left column (Control + Speed) */
+    .card-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    @media (max-width: 870px) {
+      .cards-row {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* Web Flasher Button-Style */
@@ -241,6 +368,13 @@
     #lts-settings #speedVal {
       font-size: 1.1rem;
     }
+    /* Typography for speed card (match settings card sizing) */
+    #lts-speed label,
+    #lts-speed input[type="range"],
+    #lts-speed span,
+    #lts-speed #speedVal {
+      font-size: 1.1rem;
+    }
     /* Custom accent color for sliders and checkmarks */
     input[type="range"],
     input[type="checkbox"] {
@@ -260,6 +394,7 @@
       }
       .header-image img {
         max-width: 100px;
+        max-height: 80px;
       }
       .subtitle {
         font-size: 1.0rem;
@@ -280,20 +415,72 @@
       #lts-settings #speedVal {
         font-size: 1.0rem;
       }
+      #lts-speed label,
+      #lts-speed input[type="range"],
+      #lts-speed span,
+      #lts-speed #speedVal {
+        font-size: 1.0rem;
+      }
+      .header {
+        gap: 12px;
+        justify-content: flex-start;
+      }
+      .header-text {
+        text-align: left;
+      }
     }
   </style>
 </head>
 <body>
+
   <div class="header">
     <div class="header-image">
       <img src="Logo.png" alt="Logo" />
     </div>
     <div class="header-text">
-      <h1>LTS Control Web</h1>
-      <div class="subtitle">Control your LTS Respooler via Bluetooth</div>
+      <h1>Web Control</h1>
+      <div class="subtitle">Control your LTS Respooler</div>
     </div>
   </div>
 
+  <!-- TOP STATUS PILLS (UI only) -->
+  <div class="status-pills" aria-label="Status">
+    <div class="status-pill">
+      <span class="status-emoji">📡</span>
+      <div class="status-pill-text">
+        <div class="status-pill-title">Verbindung</div>
+        <div class="status-pill-subtitle">Getrennt</div>
+      </div>
+    </div>
+
+    <div class="status-pill">
+      <span class="status-emoji">🌡️</span>
+      <div class="status-pill-text">
+        <div class="status-pill-title">Temperatur</div>
+        <div class="status-pill-subtitle">Chip: –</div>
+      </div>
+    </div>
+
+    <div class="status-pill">
+      <span class="status-emoji">❌</span>
+      <div class="status-pill-text">
+        <div class="status-pill-title">Filament</div>
+        <div class="status-pill-subtitle">Nicht erkannt</div>
+      </div>
+    </div>
+
+    <div class="status-pill">
+      <span class="status-emoji">🌀</span>
+      <div class="status-pill-text">
+        <div class="status-pill-title">Lüfter</div>
+        <div class="status-pill-subtitle">Aus</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards-row">
+
+  <div class="card-stack">
   <!-- CONTROL CARD (Block A) -->
   <div class="card">
     <section id="lts-control" style="display:block;width:100%;max-width:none;margin:0;padding-bottom:0;line-height:1.5;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;color: rgb(var(--flasher-text));border-radius:18px;background:transparent;">
@@ -317,6 +504,26 @@
         WebBluetooth is not supported in this browser. Please use Chrome or Edge on desktop or Android, or download the iOS app.
       </div>
     </section>
+  </div>
+
+  <!-- SPEED CARD -->
+  <div class="card pill-card">
+    <section id="lts-speed"
+      style="display:block;
+             width:100%;
+             margin:0;
+             line-height:1.5;
+             font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+             color:rgb(var(--flasher-text));">
+
+      <div style="display:grid; grid-template-columns:max-content 1fr max-content; align-items:center; column-gap:12px; width:100%; margin:0;">
+        <label for="speed">Speed:</label>
+        <input id="speed" type="range" min="50" max="100" step="1" value="85" style="width:100%;">
+        <span id="speedVal" style="display:inline-block; width:6ch; text-align:right;">85 %</span>
+      </div>
+    </section>
+  </div>
+
   </div>
 
   <!-- SETTINGS CARD (Block B) -->
@@ -413,14 +620,10 @@
         <label style="justify-self:start;"><input id="fanAlways" type="checkbox"> Fan Always On</label>
       </div>
 
-      <hr class="section-divider" style="margin:12px 0;">
+      <!-- Speed slider moved to its own card -->
+  </section>
+  </div>
 
-      <div style="display:grid; grid-template-columns:max-content 1fr max-content; align-items:center; column-gap:12px; width:80%; margin:8px auto;">
-        <label for="speed">Speed:</label>
-        <input id="speed" type="range" min="50" max="100" step="1" value="85" style="width:100%;">
-        <span id="speedVal" style="display:inline-block; width:6ch; text-align:right;">85 %</span>
-      </div>
-    </section>
   </div>
 
   <div style="text-align:center; margin-top:2rem; margin-bottom:2rem; font-size:1rem; color:rgb(var(--text));">
