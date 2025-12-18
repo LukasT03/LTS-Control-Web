@@ -92,18 +92,11 @@
     .status-pills {
       width: 100%;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       justify-content: stretch;
       gap: 14px;
-      margin-top: 1.0rem;
+      margin-top: 0;
       margin-bottom: 0;
-    }
-
-    /* On wider layouts, show pills as 2x2 grid (like screenshot) */
-    @media (max-width: 780px) {
-      .status-pills {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
     }
 
     .status-pill {
@@ -120,6 +113,16 @@
     @media (prefers-color-scheme: dark) {
       .status-pill {
         background: rgb(28,28,30);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      #lts-update select,
+      #lts-update input[type="password"],
+      #lts-update input[type="text"] {
+        background: rgba(255,255,255,0.08);
+        color: rgb(var(--text));
+        border-color: rgba(255,255,255,0.18);
       }
     }
 
@@ -163,15 +166,6 @@
     }
 
     @media (max-width: 450px) {
-      .status-pills {
-        gap: 10px;
-      }
-      .status-pill {
-        padding: 0 16px;
-        height: 56px;
-        min-height: 56px;
-        border-radius: 28px;
-      }
       .status-pill svg {
         width: 24px;
         height: 24px;
@@ -431,12 +425,17 @@
     .modal {
       width: min(480px, 100%);
       background: #ffffff;
-      border-radius: 22px;
+      border-radius: 31px;
       padding: 1rem;
       box-shadow: 0 18px 50px rgba(0,0,0,0.22);
+      border: 1px solid #d1d5db; /* match section divider color */
+      position: relative;
     }
     @media (prefers-color-scheme: dark) {
-      .modal { background: rgb(28,28,30); }
+      .modal {
+        background: rgb(28,28,30);
+        border: 1px solid rgba(255,255,255,0.18); /* match dark divider color */
+      }
     }
 
     .modal-header {
@@ -445,24 +444,45 @@
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 0.75rem;
+      position: relative;
+      padding-right: 44px;   /* reserve space for the close button */
     }
     .modal-title {
       font-size: 1.2rem;
       font-weight: 700;
       margin: 0;
+      line-height: 30px; /* match close button height for exact vertical centering */
     }
 
     .icon-btn {
       border: none;
-      background: transparent;
+      background: #e5e7eb; /* match grey buttons */
       color: rgb(var(--text));
-      font-size: 1.4rem;
-      line-height: 1;
-      padding: 0.25rem 0.45rem;
-      border-radius: 10px;
+      font-size: 1.7rem;
+      width: 30px;
+      height: 30px;
+      padding-bottom: 6px;
+      border-radius: 9999px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .icon-btn:active { transform: scale(0.98); }
+
+    @media (prefers-color-scheme: dark) {
+      .icon-btn {
+        background: rgba(255,255,255,0.14);
+      }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      transform: none;
+      z-index: 20;           /* ensure it stays above modal header/contents */
+      pointer-events: auto;  /* ensure it can receive clicks */
+    }
 
     .mini-btn {
       border: none;
@@ -601,7 +621,7 @@
     }
     .arrow-btn {
       border: none;
-      border-radius: 18px;
+      border-radius: 10px;
       height: 52px;
       width: 64px;
       cursor: pointer;
@@ -645,40 +665,7 @@
     </div>
   </div>
 
-  <!-- TOP STATUS PILLS (UI only) -->
-  <div class="status-pills" aria-label="Status">
-    <div class="status-pill">
-      <span class="status-emoji">📡</span>
-      <div class="status-pill-text">
-        <div class="status-pill-title">Verbindung</div>
-        <div class="status-pill-subtitle">Getrennt</div>
-      </div>
-    </div>
-
-    <div class="status-pill">
-      <span class="status-emoji">🌡️</span>
-      <div class="status-pill-text">
-        <div class="status-pill-title">Temperatur</div>
-        <div class="status-pill-subtitle">Chip: –</div>
-      </div>
-    </div>
-
-    <div class="status-pill">
-      <span class="status-emoji">❌</span>
-      <div class="status-pill-text">
-        <div class="status-pill-title">Filament</div>
-        <div class="status-pill-subtitle">Nicht erkannt</div>
-      </div>
-    </div>
-
-    <div class="status-pill">
-      <span class="status-emoji">🌀</span>
-      <div class="status-pill-text">
-        <div class="status-pill-title">Lüfter</div>
-        <div class="status-pill-subtitle">Aus</div>
-      </div>
-    </div>
-  </div>
+  <!-- TOP STATUS PILLS moved to right column above Settings card -->
 
   <div class="cards-row">
 
@@ -728,16 +715,76 @@
 
   </div>
 
-  <!-- SETTINGS CARD (Block B) -->
-  <div class="card">
-    <section id="lts-settings" 
-      style="display:block;
-             width:100%;
-             margin:0;
-             line-height:1.5;
-             font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
-             color:rgb(var(--flasher-text));
-             position:relative;">
+  <div class="card-stack">
+
+    <!-- TOP STATUS PILLS (UI only) -->
+    <div class="status-pills" aria-label="Status">
+      <div class="status-pill">
+        <span class="status-emoji">📡</span>
+        <div class="status-pill-text">
+          <div class="status-pill-title">Verbindung</div>
+          <div class="status-pill-subtitle">Getrennt</div>
+        </div>
+      </div>
+
+      <div class="status-pill">
+        <span class="status-emoji">❌</span>
+        <div class="status-pill-text">
+          <div class="status-pill-title">Filament</div>
+          <div class="status-pill-subtitle">Nicht erkannt</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATE CARD (WiFi) -->
+    <div class="card">
+      <section id="lts-update"
+        style="display:block;
+               width:100%;
+               margin:0;
+               line-height:1.5;
+               font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+               color:rgb(var(--flasher-text));">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
+          <div style="font-size:1.1rem; font-weight:600;">Update</div>
+          <button id="wifiScanBtn" class="mini-btn compact" type="button" style="justify-self:end;">Search Networks</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:10px;">
+          <label for="wifiSsid" style="text-align:right; padding-right:12px;">Network:</label>
+          <select id="wifiSsid" style="justify-self:start; width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
+            <option value="" selected>Select…</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+          <label for="wifiPass" style="text-align:right; padding-right:12px;">Password:</label>
+          <input id="wifiPass" type="password" autocomplete="current-password" placeholder="WiFi password"
+                 style="justify-self:start; width:min(220px, 100%); border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:10px;">
+          <div></div>
+          <div style="display:flex; align-items:center; gap:10px; justify-self:start;">
+            <button id="wifiSendBtn" class="mini-btn compact" type="button">Send</button>
+            <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 220px;">&nbsp;</span>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- SETTINGS CARD (Block B) -->
+    <div class="card">
+      <section id="lts-settings" 
+        style="display:block;
+               width:100%;
+               margin:0;
+               line-height:1.5;
+               font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+               color:rgb(var(--flasher-text));
+               position:relative;">
       <p style="visibility:hidden; font-size:20px; line-height:1px; margin:0; padding:0;">---------------------------------------------------------------------</p>
 
 
@@ -853,9 +900,9 @@
   <!-- Servo calibration modal -->
   <div id="servoModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Servo calibration">
     <div class="modal">
+      <button id="servoModalClose" class="icon-btn modal-close" aria-label="Close">×</button>
       <div class="modal-header">
-        <h2 class="modal-title">Servo Calibration</h2>
-        <button id="servoModalClose" class="icon-btn" aria-label="Close">×</button>
+        <h2 class="modal-title">Calibrate End Positions</h2>
       </div>
 
       <div id="servoSideSegment" class="segmented" role="tablist" aria-label="Calibration side">
@@ -1101,6 +1148,82 @@
     // Info rendering removed
 
     function bindWithWebble(){
+      // WiFi / Update UI
+      const wifiScanBtn  = document.getElementById('wifiScanBtn');
+      const wifiSsid     = document.getElementById('wifiSsid');
+      const wifiPass     = document.getElementById('wifiPass');
+      const wifiSendBtn  = document.getElementById('wifiSendBtn');
+      const wifiStatus   = document.getElementById('wifiStatus');
+      function setWifiStatusText(t){
+        if (!wifiStatus) return;
+        wifiStatus.textContent = (t && String(t).trim().length) ? String(t) : '\u00A0';
+      }
+
+      function populateSsids(ssids, selected){
+        if (!wifiSsid) return;
+        const cur = (selected != null) ? String(selected) : String(wifiSsid.value || '');
+        const keep = cur;
+        wifiSsid.innerHTML = '<option value="" ' + (keep ? '' : 'selected') + '>Select…</option>';
+        (Array.isArray(ssids) ? ssids : []).forEach(s => {
+          const v = String(s);
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          if (v === keep) opt.selected = true;
+          wifiSsid.appendChild(opt);
+        });
+      }
+
+      if (wifiScanBtn) {
+        wifiScanBtn.addEventListener('click', async () => {
+          try {
+            setWifiStatusText('Scanning…');
+            await window.webble.wifiScan();
+          } catch(e) {
+            setWifiStatusText('Scan failed');
+            console.error(e);
+          }
+        });
+      }
+
+      if (wifiSsid) {
+        wifiSsid.addEventListener('change', async (e) => {
+          const ssid = String(e.target.value || '');
+          if (!ssid) return;
+          try {
+            await window.webble.sendWiFiSSID(ssid);
+            setWifiStatusText('SSID sent');
+          } catch(err) {
+            setWifiStatusText('SSID failed');
+            console.error(err);
+          }
+        });
+      }
+
+      if (wifiSendBtn) {
+        wifiSendBtn.addEventListener('click', async () => {
+          const ssid = String(wifiSsid?.value || '').trim();
+          const pass = String(wifiPass?.value || '');
+          if (!ssid) { setWifiStatusText('Select a network'); return; }
+          try {
+            setWifiStatusText('Sending…');
+            await window.webble.sendWiFiSSID(ssid);
+            await window.webble.sendWiFiPassword(pass);
+            await window.webble.wifiConnect();
+            setWifiStatusText('Connecting…');
+          } catch(e) {
+            setWifiStatusText('Send failed');
+            console.error(e);
+          }
+        });
+      }
+
+      // Update UI initially
+      try {
+        const w = window.webble.getWiFi?.();
+        populateSsids(w?.ssids || [], w?.ssid || '');
+        if (w?.connected && w?.ssid) setWifiStatusText('Connected: ' + w.ssid);
+      } catch(_) {}
       const led = document.getElementById('led');
       const useFil = document.getElementById('useFil');
       const motorVal = document.getElementById('motorVal');
@@ -1447,3 +1570,26 @@
   </script>
 </body>
 </html>
+        // WiFi / Update card
+        try {
+          const isConn = window.webble.getState().connected === true;
+          const scanning = !!s.isScanningForSSIDs;
+          if (wifiScanBtn) wifiScanBtn.disabled = !isConn || scanning;
+          if (wifiSsid) wifiSsid.disabled = !isConn || scanning;
+          if (wifiPass) wifiPass.disabled = !isConn;
+          if (wifiSendBtn) wifiSendBtn.disabled = !isConn || scanning;
+
+          if (Array.isArray(s.availableSSIDs)) {
+            populateSsids(s.availableSSIDs, s.wifiSSID || '');
+          }
+
+          if (scanning) {
+            setWifiStatusText('Scanning…');
+          } else if (s.wifiConnected) {
+            setWifiStatusText(s.wifiSSID ? ('Connected: ' + s.wifiSSID) : 'Connected');
+          } else if (s.wifiConnectionResult != null) {
+            setWifiStatusText(s.wifiConnectionResult ? 'Connected' : 'Connection failed');
+          } else if (s.wifiLastResult != null) {
+            setWifiStatusText(s.wifiLastResult ? 'OK' : 'Failed');
+          }
+        } catch(_) {}
