@@ -20,6 +20,22 @@
     useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 930,
     wifiConnected: null,
     wifiSSID: null,
+    wifiPassSet: null,
+    wifiLastResult: null,
+    wifiConnectionResult: null,
+    isScanningForSSIDs: false,
+    availableSSIDs: null,
+
+    // Board variant (matches iOS app semantics)
+    boardVariant: 'UNK',
+    didReceiveBoardVariant: false,
+
+    // Servo settings
+    servoAngleR: 5,
+    servoAngleL: 175,
+    servoStepMm: 1.75,
+    servoHome: 'R',
+
     targetWeight: 0,
     doneHoldUntil: null, DONE_HOLD_MS: 20000,
     lastConnectedAt: null,
@@ -199,6 +215,16 @@
     for(const ch of chunks){
       try {
         const obj = JSON.parse(ch);
+
+        // WiFi scan results may come as a top-level SSID_LIST array
+        if (Array.isArray(obj.SSID_LIST)) {
+          state.isScanningForSSIDs = false;
+          state.availableSSIDs = obj.SSID_LIST.slice();
+          emit('ssidList', { ssids: state.availableSSIDs.slice() });
+          emit('state',  { ...state });
+          continue;
+        }
+
         const d = (obj.STAT && typeof obj.STAT==='object') ? obj.STAT : obj;
 
         if (typeof obj.STAT === 'string') {
@@ -236,6 +262,25 @@
         if (typeof d.TEMP === 'number') avgTempPush(d.TEMP);
         if ('FW' in d) state.fw = d.FW || state.fw;
 
+        // Board variant (VAR) – only valid if key exists; older firmware won't send it
+        if (Object.prototype.hasOwnProperty.call(d, 'VAR')) {
+          state.didReceiveBoardVariant = true;
+          const v = d.VAR;
+          let mapped = 'UNK';
+          if (typeof v === 'string') {
+            const up = v.trim().toUpperCase();
+            if (up === 'PRO') mapped = 'PRO';
+            else if (up === 'STD') mapped = 'STD';
+            else mapped = 'UNK';
+          } else if (typeof v === 'number') {
+            const i = Math.round(v);
+            if (i === 2) mapped = 'PRO';
+            else if (i === 1) mapped = 'STD';
+            else mapped = 'UNK';
+          }
+          state.boardVariant = mapped;
+        }
+
         if (typeof d.SPD === 'number' && !isEditing('SPD') && !isHeld('SPD')) state.speed = d.SPD|0;
         if ('HS'  in d && !isEditing('HS') && !isHeld('HS')) state.hs  = bool(d.HS);
         if (typeof d.LED === 'number' && !isEditing('LED') && !isHeld('LED')) state.led = d.LED|0;
@@ -248,6 +293,8 @@
 
         if ('WIFI_OK' in d && !isEditing('WIFI_OK') && !isHeld('WIFI_OK')) state.wifiConnected = bool(d.WIFI_OK);
         if ('WIFI_SSID' in d) state.wifiSSID = d.WIFI_SSID || null;
+        if ('WIFI_RESULT' in d) state.wifiLastResult = (typeof d.WIFI_RESULT === 'boolean') ? d.WIFI_RESULT : bool(d.WIFI_RESULT);
+        if ('WIFI_CONN_RESULT' in d) state.wifiConnectionResult = (typeof d.WIFI_CONN_RESULT === 'boolean') ? d.WIFI_CONN_RESULT : bool(d.WIFI_CONN_RESULT);
 
         if ('TRQ' in d && !isEditing('TRQ')) {
           const n = Number(d.TRQ);
@@ -271,6 +318,18 @@
           }
         }
 
+        // ---- Servo settings ----
+        if (typeof d.SV_R === 'number' && !isEditing('SV_R') && !isHeld('SV_R')) state.servoAngleR = d.SV_R|0;
+        if (typeof d.SV_L === 'number' && !isEditing('SV_L') && !isHeld('SV_L')) state.servoAngleL = d.SV_L|0;
+        if ('SV_STP' in d && !isEditing('SV_STP') && !isHeld('SV_STP')) {
+          const n = Number(d.SV_STP);
+          if (Number.isFinite(n)) state.servoStepMm = n;
+        }
+        if (typeof d.SV_HOME === 'string' && !isEditing('SV_HOME') && !isHeld('SV_HOME')) {
+          const h = d.SV_HOME.trim().toUpperCase();
+          if (h === 'R' || h === 'L') state.servoHome = h;
+        }
+
         if (state.statusCode && !state.statusText) state.statusText = state.statusCode;
 
         emit('status', {...state});
@@ -283,13 +342,25 @@
     __ready: true,
     on, off,
     getState: () => ({...state}),
-    getWiFi: () => ({ connected: !!state.wifiConnected, ssid: state.wifiSSID }),
+    getBoardVariant: () => ({ variant: state.boardVariant, didReceive: !!state.didReceiveBoardVariant }),
+    getWiFi: () => ({
+      connected: !!state.wifiConnected,
+      ssid: state.wifiSSID,
+      scanning: !!state.isScanningForSSIDs,
+      ssids: Array.isArray(state.availableSSIDs) ? state.availableSSIDs.slice() : null,
+      lastResult: state.wifiLastResult,
+      connResult: state.wifiConnectionResult,
+    }),
     connect, disconnect: () => { if(state.device?.gatt?.connected) state.device.gatt.disconnect(); },
     beginEdit: (key) => { beginEdit(key); },
     endEdit:   (key) => { endEdit(key); },
     start: () => sendCmd('START'),
     stop:  () => sendCmd('STOP'),
     pause: () => sendCmd('PAUSE'),
+    wifiScan: () => { state.isScanningForSSIDs = true; emit('state', { ...state }); return sendCmd('WIFI_SCAN'); },
+    wifiConnect: () => sendCmd('WIFI_CONNECT'),
+    sendWiFiSSID: (ssid) => { beginEdit('WIFI_SSID'); holdKey('WIFI_SSID', 700); return sendSet('WIFI_SSID', String(ssid ?? '')); },
+    sendWiFiPassword: (pass) => { beginEdit('WIFI_PASS'); holdKey('WIFI_PASS', 700); state.wifiPassSet = true; return sendSet('WIFI_PASS', String(pass ?? '')); },
     setSpeed: (v) => { beginEdit('SPD'); holdKey('SPD', 400); return sendSet('SPD', Number(v)); },
     setHighSpeed: (on) => { beginEdit('HS'); holdKey('HS', 400); return sendSet('HS', on ? 1 : 0); },
     setLED: (v) => { beginEdit('LED'); holdKey('LED', 400); return sendSet('LED', Number(v)); },
@@ -316,6 +387,20 @@
       const n = Number(v);
       if (!Number.isFinite(n)) { releaseKey('WGT'); endEdit('WGT'); return Promise.resolve(); }
       return sendSet('WGT', Math.max(0, Math.trunc(n)));
+    },
+    setServoAngleR: (angle) => { beginEdit('SV_R'); holdKey('SV_R', 400); const a = Math.max(0, Math.min(180, Number(angle))); return sendSet('SV_R', a); },
+    setServoAngleL: (angle) => { beginEdit('SV_L'); holdKey('SV_L', 400); const a = Math.max(0, Math.min(180, Number(angle))); return sendSet('SV_L', a); },
+    setServoStepMm: (mm) => { beginEdit('SV_STP'); holdKey('SV_STP', 700); const v = Number(mm); if (!Number.isFinite(v)) return Promise.resolve(); const clamped = Math.max(0.05, Math.min(20.0, v)); return sendSet('SV_STP', clamped); },
+    setServoHome: (side) => { beginEdit('SV_HOME'); holdKey('SV_HOME', 700); const s = String(side ?? '').trim().toUpperCase(); if (s !== 'R' && s !== 'L') return Promise.resolve(); return sendSet('SV_HOME', s); },
+    servoGoto: (target) => { const t = String(target ?? '').trim().toUpperCase(); if (t !== 'L' && t !== 'R' && t !== 'HOME') return Promise.resolve(); return sendSet('SV_GOTO', t); },
+    setBoardVariant: (variant) => {
+      beginEdit('VAR'); holdKey('VAR', 700);
+      const v = String(variant ?? '').trim().toUpperCase();
+      const mapped = (v === 'PRO' || v === 'STD' || v === 'UNK') ? v : 'UNK';
+      state.boardVariant = mapped;
+      state.didReceiveBoardVariant = true;
+      emit('state', { ...state });
+      return sendSet('VAR', mapped);
     },
     commitEdit: (key) => { releaseKey(key); endEdit(key); },
   };
