@@ -713,67 +713,68 @@
     </section>
   </div>
 
+  <!-- UPDATE CARD (WiFi) -->
+  <div class="card">
+    <section id="lts-update"
+      style="display:block;
+             width:100%;
+             margin:0;
+             line-height:1.5;
+             font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+             color:rgb(var(--flasher-text));">
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
+        <div style="font-size:1.1rem; font-weight:600;">Update</div>
+        <button id="wifiScanBtn" class="mini-btn compact" type="button" style="justify-self:end;">Search Networks</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:10px;">
+        <label for="wifiSsid" style="text-align:right; padding-right:12px;">Network:</label>
+        <select id="wifiSsid" style="justify-self:start; width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
+          <option value="" selected>Select…</option>
+        </select>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
+        <label for="wifiPass" style="text-align:right; padding-right:12px;">Password:</label>
+        <input id="wifiPass" type="password" autocomplete="current-password" placeholder="WiFi password"
+               style="justify-self:start; width:min(220px, 100%); border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:10px;">
+        <div></div>
+        <div style="display:flex; align-items:center; gap:10px; justify-self:start;">
+          <button id="wifiSendBtn" class="mini-btn compact" type="button">Send</button>
+          <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 220px;">&nbsp;</span>
+        </div>
+      </div>
+
+    </section>
   </div>
 
-  <div class="card-stack">
+  </div>
+
+    <div class="card-stack">
 
     <!-- TOP STATUS PILLS (UI only) -->
     <div class="status-pills" aria-label="Status">
       <div class="status-pill">
-        <span class="status-emoji">📡</span>
+        <img id="pillConnIcon" src="antenna-slash.png" alt="Connection" width="30" height="30" style="flex:0 0 30px;">
         <div class="status-pill-text">
-          <div class="status-pill-title">Verbindung</div>
-          <div class="status-pill-subtitle">Getrennt</div>
+          <div class="status-pill-title">Connection</div>
+          <div id="pillConnSub" class="status-pill-subtitle">Disconnected</div>
         </div>
       </div>
 
       <div class="status-pill">
-        <span class="status-emoji">❌</span>
+        <img id="pillFilIcon" src="xmark.png" alt="Filament" width="30" height="30" style="flex:0 0 30px;">
         <div class="status-pill-text">
           <div class="status-pill-title">Filament</div>
-          <div class="status-pill-subtitle">Nicht erkannt</div>
+          <div id="pillFilSub" class="status-pill-subtitle">Not Detected</div>
         </div>
       </div>
     </div>
 
-    <!-- UPDATE CARD (WiFi) -->
-    <div class="card">
-      <section id="lts-update"
-        style="display:block;
-               width:100%;
-               margin:0;
-               line-height:1.5;
-               font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
-               color:rgb(var(--flasher-text));">
-
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-          <div style="font-size:1.1rem; font-weight:600;">Update</div>
-          <button id="wifiScanBtn" class="mini-btn compact" type="button" style="justify-self:end;">Search Networks</button>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:10px;">
-          <label for="wifiSsid" style="text-align:right; padding-right:12px;">Network:</label>
-          <select id="wifiSsid" style="justify-self:start; width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
-            <option value="" selected>Select…</option>
-          </select>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
-          <label for="wifiPass" style="text-align:right; padding-right:12px;">Password:</label>
-          <input id="wifiPass" type="password" autocomplete="current-password" placeholder="WiFi password"
-                 style="justify-self:start; width:min(220px, 100%); border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:10px;">
-          <div></div>
-          <div style="display:flex; align-items:center; gap:10px; justify-self:start;">
-            <button id="wifiSendBtn" class="mini-btn compact" type="button">Send</button>
-            <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 220px;">&nbsp;</span>
-          </div>
-        </div>
-
-      </section>
-    </div>
 
     <!-- SETTINGS CARD (Block B) -->
     <div class="card">
@@ -1154,12 +1155,40 @@
       const wifiPass     = document.getElementById('wifiPass');
       const wifiSendBtn  = document.getElementById('wifiSendBtn');
       const wifiStatus   = document.getElementById('wifiStatus');
+
+      // Status pills
+      const pillConnSub = document.getElementById('pillConnSub');
+      const pillFilSub  = document.getElementById('pillFilSub');
+      const pillConnIcon = document.getElementById('pillConnIcon');
+      const pillFilIcon  = document.getElementById('pillFilIcon');
       function setWifiStatusText(t){
         if (!wifiStatus) return;
         wifiStatus.textContent = (t && String(t).trim().length) ? String(t) : '\u00A0';
       }
 
       function populateSsids(ssids, selected){
+      function updateStatusPills(s){
+        try {
+          const isConn = !!(s && s.connected);
+          if (pillConnSub) pillConnSub.textContent = isConn ? 'Connected' : 'Disconnected';
+          if (pillConnIcon) pillConnIcon.src = isConn ? 'antenna.png' : 'antenna-slash.png';
+
+          // Filament: prefer HAS_FIL boolean if present; otherwise show placeholder
+          let has = null;
+          if (s && typeof s.hasFilament === 'boolean') has = s.hasFilament;
+          else if (s && typeof s.HAS_FIL === 'boolean') has = s.HAS_FIL;
+
+          if (pillFilSub) {
+            if (has === true) pillFilSub.textContent = 'Detected';
+            else if (has === false) pillFilSub.textContent = 'Not Detected';
+            else pillFilSub.textContent = '—';
+          }
+          if (pillFilIcon) {
+            if (has === true) pillFilIcon.src = 'checkmark.png';
+            else pillFilIcon.src = 'xmark.png';
+          }
+        } catch(_) {}
+      }
         if (!wifiSsid) return;
         const cur = (selected != null) ? String(selected) : String(wifiSsid.value || '');
         const keep = cur;
@@ -1487,6 +1516,7 @@
       setSide('L');
 
       window.webble.on('status', s => {
+        updateStatusPills(s);
         // WiFi / Update card
         try {
           const isConn = window.webble.getState().connected === true;
@@ -1565,6 +1595,7 @@
 
       try {
         const initial = window.webble.getState();
+        updateStatusPills(initial);
 
         // Initialize servo UI
         if (typeof initial.servoStepMm === 'number') {
