@@ -102,17 +102,19 @@
     .status-pill {
       background: #ffffff;
       border-radius: 28px; /* match card border radius */
-      padding: 0 16px;
+      padding: 0 13px;
       height: 56px;
       min-height: 56px;
       display: flex;
       align-items: center;
       gap: 12px;
+      border: 1px solid #d1d5db; /* match section divider color */
     }
 
     @media (prefers-color-scheme: dark) {
       .status-pill {
         background: rgb(28,28,30);
+        border: 1px solid rgba(255,255,255,0.18); /* match dark divider color */
       }
     }
 
@@ -182,6 +184,7 @@
       border-radius: 28px;
       padding: 1rem;
       margin-top: 0;
+      border: 1px solid #d1d5db; /* match section divider color */
     }
 
     /* Slightly tighter top padding for the Control card */
@@ -192,6 +195,7 @@
     @media (prefers-color-scheme: dark) {
       .card {
         background: rgb(28,28,30);
+        border: 1px solid rgba(255,255,255,0.18); /* match dark divider color */
       }
     }
 
@@ -520,15 +524,62 @@
       gap: 10px;
       justify-self: start;
     }
-    .stepper .mini-btn { width: 36px; padding: 0.30rem 0; border-radius: 10px; }
+
+    /* Segmented +/- control like iOS (grey background, non-pill radius) */
+    .stepper-seg {
+      display: inline-flex;
+      align-items: stretch;
+      height: 28px;
+      border-radius: 10px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .stepper-seg-btn {
+      width: 38px;
+      border: none;
+      background: transparent;
+      color: rgb(var(--text));
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .stepper-seg-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .stepper-seg-divider {
+      width: 1px;
+      background: #d1d5db; /* same as dividers */
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .stepper-seg {
+        background: rgba(255,255,255,0.14);
+        border-color: rgba(255,255,255,0.18);
+      }
+      .stepper-seg-divider {
+        background: rgba(255,255,255,0.18);
+        opacity: 1;
+      }
+    }
     .stepper .stepper-glyph {
       display: inline-block;
       position: relative;
-      top: -1px; /* adjust this value (+/- px) to move the glyph */
+      top: -1.7px; /* adjust this value (+/- px) to move the glyph */
     }
     .stepper-value {
       min-width: 70px;
-      text-align: center;
+      text-align: left;              /* align like other settings values */
+      padding-left: 2px;             /* subtle inset to match visual grid */
       font-variant-numeric: tabular-nums;
       font-size: 1.05rem;
     }
@@ -831,9 +882,12 @@
       <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
         <label style="text-align:right; padding-right:12px;">Step Distance:</label>
         <div class="stepper" style="justify-self:start;">
-          <button id="servoStepMinus" class="mini-btn" type="button" aria-label="Decrease step distance"><span class="stepper-glyph">−</span></button>
           <span id="servoStepVal" class="stepper-value">1.75 mm</span>
-          <button id="servoStepPlus" class="mini-btn" type="button" aria-label="Increase step distance"><span class="stepper-glyph">+</span></button>
+          <div class="stepper-seg" role="group" aria-label="Step distance controls">
+            <button id="servoStepMinus" class="stepper-seg-btn" type="button" aria-label="Decrease step distance"><span class="stepper-glyph">−</span></button>
+            <div class="stepper-seg-divider" aria-hidden="true"></div>
+            <button id="servoStepPlus" class="stepper-seg-btn" type="button" aria-label="Increase step distance"><span class="stepper-glyph">+</span></button>
+          </div>
         </div>
       </div>
 
@@ -850,9 +904,12 @@
       <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:8px;">
         <label for="motor" style="text-align:right; padding-right:12px;">Motor Strength:</label>
         <div class="stepper" style="justify-self:start;">
-          <button id="motorMinus" class="mini-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph">−</span></button>
           <span id="motorVal" class="stepper-value">100 %</span>
-          <button id="motorPlus" class="mini-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph">+</span></button>
+          <div class="stepper-seg" role="group" aria-label="Motor strength controls">
+            <button id="motorMinus" class="stepper-seg-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph">−</span></button>
+            <div class="stepper-seg-divider" aria-hidden="true"></div>
+            <button id="motorPlus" class="stepper-seg-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph">+</span></button>
+          </div>
         </div>
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; align-items:center; column-gap:0px; width:100%; margin:0; margin-top:0px;">
@@ -1199,15 +1256,15 @@
               : (isDarkMode ? 'antenna-slash-dark.png' : 'antenna-slash.png');
           }
 
-          // Filament: prefer hasFilament boolean if present; otherwise show placeholder
+          // Filament: prefer hasFilament boolean if present; if not connected, default to Not Detected
           let has = null;
           if (s && typeof s.hasFilament === 'boolean') has = s.hasFilament;
           else if (s && typeof s.HAS_FIL === 'boolean') has = s.HAS_FIL;
+          if (!isConn) has = false;
 
           if (pillFilSub) {
             if (has === true) pillFilSub.textContent = 'Detected';
-            else if (has === false) pillFilSub.textContent = 'Not Detected';
-            else pillFilSub.textContent = '—';
+            else pillFilSub.textContent = 'Not Detected';
           }
           if (pillFilIcon) {
             if (has === true) pillFilIcon.src = 'checkmark.png';
