@@ -1161,34 +1161,20 @@
       const pillFilSub  = document.getElementById('pillFilSub');
       const pillConnIcon = document.getElementById('pillConnIcon');
       const pillFilIcon  = document.getElementById('pillFilIcon');
+
+      // Dark mode detection for icon variants
+      const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      let isDarkMode = darkQuery.matches;
+      darkQuery.addEventListener('change', e => {
+        isDarkMode = e.matches;
+        try { updateStatusPills(window.webble.getState()); } catch(_) {}
+      });
       function setWifiStatusText(t){
         if (!wifiStatus) return;
         wifiStatus.textContent = (t && String(t).trim().length) ? String(t) : '\u00A0';
       }
 
       function populateSsids(ssids, selected){
-      function updateStatusPills(s){
-        try {
-          const isConn = !!(s && s.connected);
-          if (pillConnSub) pillConnSub.textContent = isConn ? 'Connected' : 'Disconnected';
-          if (pillConnIcon) pillConnIcon.src = isConn ? 'antenna.png' : 'antenna-slash.png';
-
-          // Filament: prefer HAS_FIL boolean if present; otherwise show placeholder
-          let has = null;
-          if (s && typeof s.hasFilament === 'boolean') has = s.hasFilament;
-          else if (s && typeof s.HAS_FIL === 'boolean') has = s.HAS_FIL;
-
-          if (pillFilSub) {
-            if (has === true) pillFilSub.textContent = 'Detected';
-            else if (has === false) pillFilSub.textContent = 'Not Detected';
-            else pillFilSub.textContent = '—';
-          }
-          if (pillFilIcon) {
-            if (has === true) pillFilIcon.src = 'checkmark.png';
-            else pillFilIcon.src = 'xmark.png';
-          }
-        } catch(_) {}
-      }
         if (!wifiSsid) return;
         const cur = (selected != null) ? String(selected) : String(wifiSsid.value || '');
         const keep = cur;
@@ -1201,6 +1187,33 @@
           if (v === keep) opt.selected = true;
           wifiSsid.appendChild(opt);
         });
+      }
+
+      function updateStatusPills(s){
+        try {
+          const isConn = !!(s && s.connected);
+          if (pillConnSub) pillConnSub.textContent = isConn ? 'Connected' : 'Disconnected';
+          if (pillConnIcon) {
+            pillConnIcon.src = isConn
+              ? 'antenna.png'
+              : (isDarkMode ? 'antenna-slash-dark.png' : 'antenna-slash.png');
+          }
+
+          // Filament: prefer hasFilament boolean if present; otherwise show placeholder
+          let has = null;
+          if (s && typeof s.hasFilament === 'boolean') has = s.hasFilament;
+          else if (s && typeof s.HAS_FIL === 'boolean') has = s.HAS_FIL;
+
+          if (pillFilSub) {
+            if (has === true) pillFilSub.textContent = 'Detected';
+            else if (has === false) pillFilSub.textContent = 'Not Detected';
+            else pillFilSub.textContent = '—';
+          }
+          if (pillFilIcon) {
+            if (has === true) pillFilIcon.src = 'checkmark.png';
+            else pillFilIcon.src = isDarkMode ? 'xmark-dark.png' : 'xmark.png';
+          }
+        } catch(_) {}
       }
 
       if (wifiScanBtn) {
