@@ -1221,11 +1221,29 @@
 
       function openServoModal(){
         if (!servoModalBackdrop) return;
+
+        // When opening, align modal picker with current Home Position
+        try {
+          const hv = (servoHomeSetting && servoHomeSetting.value)
+            ? String(servoHomeSetting.value).trim().toUpperCase()
+            : null;
+          if (hv === 'R' || hv === 'L') {
+            setSide(hv);
+          }
+        } catch(_) {}
+
         servoModalBackdrop.classList.add('show');
       }
       function closeServoModal(){
         if (!servoModalBackdrop) return;
         servoModalBackdrop.classList.remove('show');
+
+        // When closing, return servo to Home position
+        try {
+          if (window.webble && typeof window.webble.servoGoto === 'function') {
+            window.webble.servoGoto('HOME');
+          }
+        } catch(_) {}
       }
 
       if (servoCalBtn) {
@@ -1277,6 +1295,13 @@
       function setSide(side){
         calSide = (side === 'R') ? 'R' : 'L';
 
+        // Side selection should also move the servo to that side
+        try {
+          if (window.webble && typeof window.webble.servoGoto === 'function') {
+            window.webble.servoGoto(calSide);
+          }
+        } catch(_) {}
+
         if (servoSideL) {
           const on = calSide === 'L';
           servoSideL.classList.toggle('is-selected', on);
@@ -1325,8 +1350,8 @@
 
       if (servoSideL) servoSideL.addEventListener('click', () => setSide('L'));
       if (servoSideR) servoSideR.addEventListener('click', () => setSide('R'));
-      if (servoArrowLeft)  servoArrowLeft.addEventListener('click', () => nudgeAngle(-1));
-      if (servoArrowRight) servoArrowRight.addEventListener('click', () => nudgeAngle(+1));
+      if (servoArrowLeft)  servoArrowLeft.addEventListener('click', () => nudgeAngle(+1));
+      if (servoArrowRight) servoArrowRight.addEventListener('click', () => nudgeAngle(-1));
 
       // Initialize
       setSide('L');
