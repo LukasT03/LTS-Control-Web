@@ -429,7 +429,7 @@
     .modal-backdrop.show { display: flex; }
 
     .modal {
-      width: min(560px, 100%);
+      width: min(480px, 100%);
       background: #ffffff;
       border-radius: 22px;
       padding: 1rem;
@@ -471,7 +471,7 @@
       font-size: 1.0rem;
       font-weight: 600;
       cursor: pointer;
-      background: rgba(0,0,0,0.07);
+      background: #e5e7eb; /* match segmented picker background */
       color: rgb(var(--text));
       -webkit-appearance: none;
       appearance: none;
@@ -490,7 +490,7 @@
       white-space: nowrap;
     }
     @media (prefers-color-scheme: dark) {
-      .mini-btn { background: rgba(255,255,255,0.10); }
+      .mini-btn { background: rgba(255,255,255,0.14); }
     }
     .mini-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -525,16 +525,111 @@
     .modal .row label { text-align: right; padding-right: 12px; }
     .modal .row input[type="range"] { width: min(260px, 100%); justify-self: start; }
 
-    .modal-actions {
+    .segmented {
       display: flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .modal-actions .lts-btn {
-      width: auto;
-      padding: 0.7rem 1.0rem;
+      padding: 0.2rem;
+      background: #e5e7eb;
       border-radius: 14px;
-      font-size: 1.0rem;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0;
+    }
+
+    .segmented.is-disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .segmented {
+        background: rgba(255,255,255,0.08);
+      }
+    }
+
+    .seg-indicator {
+      position: absolute;
+      top: 0.25rem;
+      left: 0.25rem;
+      height: calc(100% - 0.5rem);
+      width: calc(50% - 0.25rem);
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      transform: translateX(0%);
+      transition: transform 0.25s ease;
+      pointer-events: none;
+    }
+    @media (prefers-color-scheme: dark) {
+      .seg-indicator {
+        background: rgba(255,255,255,0.14);
+      }
+    }
+
+    .seg-btn {
+      flex: 1 1 0;
+      padding: 0.4rem 0.9rem;
+      border: none;
+      background: transparent;
+      font-size: 1.1rem;
+      font-weight: 400;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      color: rgb(var(--text));
+      transition: background 0.25s ease, box-shadow 0.25s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .seg-btn.is-selected {
+      font-weight: 600; /* selected state emphasis, matches Web Flasher */
+    }
+    .seg-btn:focus {
+      outline: none;
+    }
+
+    .cal-row {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 64px 1fr 64px;
+      align-items: center;
+      gap: 12px;
+    }
+    .arrow-btn {
+      border: none;
+      border-radius: 18px;
+      height: 52px;
+      width: 64px;
+      cursor: pointer;
+      background: #e5e7eb; /* match segmented picker background */
+      color: rgb(var(--text));
+      -webkit-appearance: none;
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+    @media (prefers-color-scheme: dark) {
+      .arrow-btn { background: rgba(255,255,255,0.14); }
+    }
+    .angle-text {
+      text-align: center;
+      font-size: 1.1rem;           /* match settings card text */
+      font-weight: 400;            /* match settings card text */
+      opacity: 1;                  /* same visual weight as settings */
+      font-variant-numeric: tabular-nums;
+    }
+    .cal-desc {
+      margin: 16px 0 0 0;
+      opacity: 0.55;
+      font-size: 1.05rem;
+      line-height: 1.25;
     }
   </style>
 </head>
@@ -763,30 +858,21 @@
         <button id="servoModalClose" class="icon-btn" aria-label="Close">×</button>
       </div>
 
-      <div class="row">
-        <label for="servoAngleR">Right end:</label>
-        <div style="display:flex; align-items:center; gap:10px; justify-self:start; width:100%;">
-          <input id="servoAngleR" type="range" min="0" max="180" step="1" value="5" />
-          <span id="servoAngleRVal" style="min-width:5ch; text-align:right; font-variant-numeric: tabular-nums;">5°</span>
-        </div>
+      <div id="servoSideSegment" class="segmented" role="tablist" aria-label="Calibration side">
+        <div id="servoSideIndicator" class="seg-indicator"></div>
+        <button id="servoSideL" class="seg-btn is-selected" type="button" role="tab" aria-selected="true">Left Side</button>
+        <button id="servoSideR" class="seg-btn" type="button" role="tab" aria-selected="false">Right Side</button>
       </div>
 
-      <div class="row">
-        <label for="servoAngleL">Left end:</label>
-        <div style="display:flex; align-items:center; gap:10px; justify-self:start; width:100%;">
-          <input id="servoAngleL" type="range" min="0" max="180" step="1" value="175" />
-          <span id="servoAngleLVal" style="min-width:5ch; text-align:right; font-variant-numeric: tabular-nums;">175°</span>
-        </div>
+      <hr class="section-divider" style="margin:12px 0;">
+
+      <div class="cal-row">
+        <button id="servoArrowLeft" class="arrow-btn" type="button" aria-label="Decrease angle">‹</button>
+        <div id="servoAngleText" class="angle-text">Angle: –°</div>
+        <button id="servoArrowRight" class="arrow-btn" type="button" aria-label="Increase angle">›</button>
       </div>
 
-
-      <div class="modal-actions">
-        <button id="servoGotoR" class="lts-btn" style="background:#d1e9ff !important; color:#0088fe !important;">Go Right</button>
-        <button id="servoGotoL" class="lts-btn" style="background:#d1e9ff !important; color:#0088fe !important;">Go Left</button>
-        <button id="servoGotoHome" class="lts-btn" style="background:#1a1a1a !important;">Go Home</button>
-      </div>
-
-      <p style="margin:12px 0 0 0; opacity:0.6; font-size:0.95rem;">Tip: Move the servo to the desired end positions and adjust the sliders. Settings are saved on the board.</p>
+      <p class="cal-desc">Adjust the left and right end stops so that the filament guide just touches the sides.</p>
     </div>
   </div>
 
@@ -1039,14 +1125,14 @@
       // Modal
       const servoModalBackdrop = document.getElementById('servoModalBackdrop');
       const servoModalClose    = document.getElementById('servoModalClose');
-      const servoAngleR        = document.getElementById('servoAngleR');
-      const servoAngleL        = document.getElementById('servoAngleL');
-      const servoAngleRVal     = document.getElementById('servoAngleRVal');
-      const servoAngleLVal     = document.getElementById('servoAngleLVal');
+      const servoSideL         = document.getElementById('servoSideL');
+      const servoSideR         = document.getElementById('servoSideR');
+      const servoArrowLeft     = document.getElementById('servoArrowLeft');
+      const servoArrowRight    = document.getElementById('servoArrowRight');
+      const servoAngleText     = document.getElementById('servoAngleText');
       const servoHomeSetting   = document.getElementById('servoHomeSetting');
-      const servoGotoR         = document.getElementById('servoGotoR');
-      const servoGotoL         = document.getElementById('servoGotoL');
-      const servoGotoHome      = document.getElementById('servoGotoHome');
+      const servoSideSegment   = document.getElementById('servoSideSegment');
+      const servoSideIndicator = document.getElementById('servoSideIndicator');
 
       const uiEditing = new Set();
       const beginUI = (key) => { uiEditing.add(key); try { window.webble.beginEdit(key); } catch(_){} };
@@ -1183,43 +1269,67 @@
         commitServoStep();
       });
 
-      // Modal controls
-      function setAngleLabel(el, v){ if(el) el.textContent = String(v|0) + '°'; }
+      // Servo calibration (segmented + arrows)
+      let calSide = 'L'; // 'L' or 'R'
+      let angleL = 175;
+      let angleR = 5;
 
-      if (servoAngleR) {
-        servoAngleR.addEventListener('input', (e) => setAngleLabel(servoAngleRVal, e.target.value));
-        servoAngleR.addEventListener('change', (e) => {
-          beginUI('SV_R');
-          window.webble.setServoAngleR(e.target.value);
-          endUI('SV_R');
-        });
+      function setSide(side){
+        calSide = (side === 'R') ? 'R' : 'L';
+
+        if (servoSideL) {
+          const on = calSide === 'L';
+          servoSideL.classList.toggle('is-selected', on);
+          servoSideL.setAttribute('aria-selected', on ? 'true' : 'false');
+        }
+        if (servoSideR) {
+          const on = calSide === 'R';
+          servoSideR.classList.toggle('is-selected', on);
+          servoSideR.setAttribute('aria-selected', on ? 'true' : 'false');
+        }
+
+        if (servoSideIndicator) {
+          const index = (calSide === 'L') ? 0 : 1;
+          servoSideIndicator.style.transform = `translateX(${index * 100}%)`;
+        }
+
+        updateAngleText();
       }
-      if (servoAngleL) {
-        servoAngleL.addEventListener('input', (e) => setAngleLabel(servoAngleLVal, e.target.value));
-        servoAngleL.addEventListener('change', (e) => {
+
+      function updateAngleText(){
+        const v = (calSide === 'L') ? angleL : angleR;
+        if (servoAngleText) servoAngleText.textContent = `Angle: ${Math.round(v)}°`;
+      }
+
+      function commitAngle(){
+        if (calSide === 'L') {
           beginUI('SV_L');
-          window.webble.setServoAngleL(e.target.value);
+          window.webble.setServoAngleL(angleL);
           endUI('SV_L');
-        });
-      }
-      if (servoHomeSetting) {
-        servoHomeSetting.addEventListener('pointerdown', () => beginUI('SV_HOME'));
-        servoHomeSetting.addEventListener('focusin',   () => beginUI('SV_HOME'));
-        servoHomeSetting.addEventListener('change', (e) => {
-          beginUI('SV_HOME');
-          window.webble.setServoHome(e.target.value);
-          endUI('SV_HOME');
-        });
-        servoHomeSetting.addEventListener('blur', () => { if (uiEditing.has('SV_HOME')) endUI('SV_HOME'); });
+        } else {
+          beginUI('SV_R');
+          window.webble.setServoAngleR(angleR);
+          endUI('SV_R');
+        }
       }
 
-      function bindGoto(btn, target){
-        if (!btn) return;
-        btn.addEventListener('click', () => window.webble.servoGoto(target));
+      function nudgeAngle(delta){
+        if (calSide === 'L') {
+          angleL = Math.max(0, Math.min(180, Math.round(angleL + delta)));
+        } else {
+          angleR = Math.max(0, Math.min(180, Math.round(angleR + delta)));
+        }
+        updateAngleText();
+        commitAngle();
       }
-      bindGoto(servoGotoR, 'R');
-      bindGoto(servoGotoL, 'L');
-      bindGoto(servoGotoHome, 'HOME');
+
+      if (servoSideL) servoSideL.addEventListener('click', () => setSide('L'));
+      if (servoSideR) servoSideR.addEventListener('click', () => setSide('R'));
+      if (servoArrowLeft)  servoArrowLeft.addEventListener('click', () => nudgeAngle(-1));
+      if (servoArrowRight) servoArrowRight.addEventListener('click', () => nudgeAngle(+1));
+
+      // Initialize
+      setSide('L');
 
       window.webble.on('status', s => {
         if (!isUIEditing('LED'))      led.value = s.led ?? 50;
@@ -1245,15 +1355,13 @@
             updateServoStepUI();
           }
         }
-        if (!isUIEditing('SV_R') && servoAngleR && typeof (s.servoAngleR ?? s.SV_R) === 'number') {
-          const v = Number(s.servoAngleR ?? s.SV_R);
-          servoAngleR.value = String(Math.max(0, Math.min(180, Math.round(v))));
-          setAngleLabel(servoAngleRVal, servoAngleR.value);
+        if (!isUIEditing('SV_L') && typeof (s.servoAngleL ?? s.SV_L) === 'number') {
+          angleL = Math.max(0, Math.min(180, Math.round(Number(s.servoAngleL ?? s.SV_L))));
+          if (calSide === 'L') updateAngleText();
         }
-        if (!isUIEditing('SV_L') && servoAngleL && typeof (s.servoAngleL ?? s.SV_L) === 'number') {
-          const v = Number(s.servoAngleL ?? s.SV_L);
-          servoAngleL.value = String(Math.max(0, Math.min(180, Math.round(v))));
-          setAngleLabel(servoAngleLVal, servoAngleL.value);
+        if (!isUIEditing('SV_R') && typeof (s.servoAngleR ?? s.SV_R) === 'number') {
+          angleR = Math.max(0, Math.min(180, Math.round(Number(s.servoAngleR ?? s.SV_R))));
+          if (calSide === 'R') updateAngleText();
         }
         if (!isUIEditing('SV_HOME') && servoHomeSetting && typeof (s.servoHome ?? s.SV_HOME) === 'string') {
           const h = String(s.servoHome ?? s.SV_HOME).trim().toUpperCase();
@@ -1265,14 +1373,14 @@
         if (servoCalBtn) servoCalBtn.disabled = !isConn;
         if (servoStepMinus) servoStepMinus.disabled = !isConn;
         if (servoStepPlus) servoStepPlus.disabled = !isConn;
-        if (servoGotoR) servoGotoR.disabled = !isConn;
-        if (servoGotoL) servoGotoL.disabled = !isConn;
-        if (servoGotoHome) servoGotoHome.disabled = !isConn;
-        if (servoAngleR) servoAngleR.disabled = !isConn;
-        if (servoAngleL) servoAngleL.disabled = !isConn;
+        if (servoSideL) servoSideL.disabled = !isConn;
+        if (servoSideR) servoSideR.disabled = !isConn;
+        if (servoArrowLeft)  servoArrowLeft.disabled = !isConn;
+        if (servoArrowRight) servoArrowRight.disabled = !isConn;
         if (servoHomeSetting) servoHomeSetting.disabled = !isConn;
         if (motorMinus) motorMinus.disabled = !isConn;
         if (motorPlus)  motorPlus.disabled = !isConn;
+        if (servoSideSegment) servoSideSegment.classList.toggle('is-disabled', !isConn);
       });
 
       try {
@@ -1283,14 +1391,9 @@
           servoStepLocal = initial.servoStepMm;
           updateServoStepUI();
         }
-        if (servoAngleR && typeof initial.servoAngleR === 'number') {
-          servoAngleR.value = String(Math.max(0, Math.min(180, Math.round(initial.servoAngleR))));
-          setAngleLabel(servoAngleRVal, servoAngleR.value);
-        }
-        if (servoAngleL && typeof initial.servoAngleL === 'number') {
-          servoAngleL.value = String(Math.max(0, Math.min(180, Math.round(initial.servoAngleL))));
-          setAngleLabel(servoAngleLVal, servoAngleL.value);
-        }
+        if (typeof initial.servoAngleL === 'number') angleL = Math.max(0, Math.min(180, Math.round(initial.servoAngleL)));
+        if (typeof initial.servoAngleR === 'number') angleR = Math.max(0, Math.min(180, Math.round(initial.servoAngleR)));
+        updateAngleText();
         if (servoHomeSetting && typeof initial.servoHome === 'string') {
           const h = String(initial.servoHome).trim().toUpperCase();
           if (h === 'R' || h === 'L') servoHomeSetting.value = h;
