@@ -1182,6 +1182,13 @@
       bindSelect(autoStop, 'TRQ', (v) => { setPending('TRQ', v); window.webble.setTorque(v); });
       bindSelect(jin,      'JIN', (v) => { setPending('JIN', v); window.webble.setJingle(v); });
       bindSelect(wgt,      'WGT', (v) => { setPending('WGT', v); window.webble.setTargetWeight(v); });
+      // Servo home position
+      if (servoHomeSetting) {
+        bindSelect(servoHomeSetting, 'SV_HOME', (v) => {
+          setPending('SV_HOME', v);
+          window.webble.setServoHome(v);
+        });
+      }
       bindSlider(fan,   'FAN_SPD', (v)=>window.webble.setFanSpeed(v));
       bindCheckbox(fanAlways,'FAN_ALW',(on)=>window.webble.setFanAlways(on));
       bindSlider(speed, 'SPD',     (v)=>window.webble.setSpeed(v), (v)=>{ speedVal.textContent = v + ' %'; });
@@ -1390,7 +1397,9 @@
         }
         if (!isUIEditing('SV_HOME') && servoHomeSetting && typeof (s.servoHome ?? s.SV_HOME) === 'string') {
           const h = String(s.servoHome ?? s.SV_HOME).trim().toUpperCase();
-          if (h === 'R' || h === 'L') servoHomeSetting.value = h;
+          if ((h === 'R' || h === 'L') && shouldApply('SV_HOME', h)) {
+            servoHomeSetting.value = h;
+          }
         }
 
         // Disable servo controls when not connected
