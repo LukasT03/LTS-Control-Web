@@ -17,7 +17,7 @@
     statusCode: null, statusText: null,
     tempBuf: [], chipTempAvg: null,
     speed: 80, hs: false, led: 50, fan: 80, fanAlways: false,
-    useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 930,
+    useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 895,
     wifiConnected: null,
     wifiSSID: null,
     wifiPassSet: null,
@@ -291,29 +291,42 @@
         if ('DIR' in d && !isEditing('DIR') && !isHeld('DIR')) state.dir = bool(d.DIR);
         if (typeof d.POW === 'number' && !isEditing('POW') && !isHeld('POW')) state.pow = d.POW|0;
 
+        if ('DUR' in d) {
+          const n = Number(d.DUR);
+          if (Number.isFinite(n)) {
+            const v = Math.max(0, Math.trunc(n));
+            // only apply remote value if user isn't actively editing; still clear hold/edit on echo
+            if (!isEditing('DUR') && !isHeld('DUR')) state.dur = v;
+            releaseKey('DUR'); endEdit('DUR');
+          }
+        }
+
         if ('WIFI_OK' in d && !isEditing('WIFI_OK') && !isHeld('WIFI_OK')) state.wifiConnected = bool(d.WIFI_OK);
         if ('WIFI_SSID' in d) state.wifiSSID = d.WIFI_SSID || null;
         if ('WIFI_RESULT' in d) state.wifiLastResult = (typeof d.WIFI_RESULT === 'boolean') ? d.WIFI_RESULT : bool(d.WIFI_RESULT);
         if ('WIFI_CONN_RESULT' in d) state.wifiConnectionResult = (typeof d.WIFI_CONN_RESULT === 'boolean') ? d.WIFI_CONN_RESULT : bool(d.WIFI_CONN_RESULT);
 
-        if ('TRQ' in d && !isEditing('TRQ')) {
+        if ('TRQ' in d) {
           const n = Number(d.TRQ);
           if (Number.isFinite(n)) {
-            state.trq = Math.max(0, Math.trunc(n));
+            const v = Math.max(0, Math.trunc(n));
+            if (!isEditing('TRQ') && !isHeld('TRQ')) state.trq = v;
             releaseKey('TRQ'); endEdit('TRQ');
           }
         }
-        if ('JIN' in d && !isEditing('JIN')) {
+        if ('JIN' in d) {
           const n = Number(d.JIN);
           if (Number.isFinite(n)) {
-            state.jin = Math.max(0, Math.trunc(n));
+            const v = Math.max(0, Math.trunc(n));
+            if (!isEditing('JIN') && !isHeld('JIN')) state.jin = v;
             releaseKey('JIN'); endEdit('JIN');
           }
         }
-        if ('WGT' in d && !isEditing('WGT')) {
+        if ('WGT' in d) {
           const n = Number(d.WGT);
           if (Number.isFinite(n)) {
-            state.targetWeight = Math.max(0, Math.trunc(n));
+            const v = Math.max(0, Math.trunc(n));
+            if (!isEditing('WGT') && !isHeld('WGT')) state.targetWeight = v;
             releaseKey('WGT'); endEdit('WGT');
           }
         }
@@ -381,7 +394,15 @@
       if (!Number.isFinite(n)) { releaseKey('JIN'); endEdit('JIN'); return Promise.resolve(); }
       return sendSet('JIN', Math.max(0, Math.trunc(n)));
     },
-    setDurationAt80: (v) => { beginEdit('DUR'); holdKey('DUR', 400); return sendSet('DUR', Number(v)); },
+    setDurationAt80: (v) => {
+      beginEdit('DUR'); holdKey('DUR', 400);
+      const n = Number(v);
+      if (!Number.isFinite(n)) { releaseKey('DUR'); endEdit('DUR'); return Promise.resolve(); }
+      const secs = Math.max(0, Math.trunc(n));
+      state.dur = secs;
+      emit('state', { ...state });
+      return sendSet('DUR', secs);
+    },
     setTargetWeight: (v) => {
       beginEdit('WGT'); holdKey('WGT', 700);
       const n = Number(v);

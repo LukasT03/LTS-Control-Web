@@ -1101,7 +1101,14 @@
 
       <div class="form-grid" style="margin-top:8px;">
         <label class="form-label">Reference Time:</label>
-        <span id="refTimeVal" class="form-control" style="font-variant-numeric: tabular-nums;">00m 00s</span>
+        <div class="stepper form-control">
+          <div class="stepper-seg" role="group" aria-label="Reference time controls">
+            <button id="durMinus" class="stepper-seg-btn" type="button" aria-label="Decrease reference time"><span class="stepper-glyph">−</span></button>
+            <div class="stepper-seg-divider" aria-hidden="true"></div>
+            <button id="durPlus" class="stepper-seg-btn" type="button" aria-label="Increase reference time"><span class="stepper-glyph">+</span></button>
+          </div>
+          <span id="durVal" class="stepper-value">00m 00s</span>
+        </div>
       </div>
 
       <!-- Speed slider moved to its own card -->
@@ -1573,23 +1580,9 @@
       const speed = document.getElementById('speed');
       const speedVal = document.getElementById('speedVal');
 
-      const refTimeVal = document.getElementById('refTimeVal');
-
-      function fmtRefTime(sec){
-        const n = Number(sec);
-        if (!Number.isFinite(n) || n < 0) return '—';
-        const total = Math.floor(n);
-        const m = String(Math.floor(total / 60)).padStart(2, '0');
-        const s = String(total % 60).padStart(2, '0');
-        return `${m}m ${s}s`;
-      }
-
-      function pickRefTimeSeconds(obj){
-        if (!obj) return null;
-        const v = obj.dur ?? obj.DUR ?? obj.durationAt80 ?? obj.durationAt80Sec ?? obj.calibrationAt80 ?? obj.calibrationTimeAt80 ?? obj.calibrationTimeAt80Sec;
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
-      }
+      const durVal = document.getElementById('durVal');
+      const durMinus = document.getElementById('durMinus');
+      const durPlus  = document.getElementById('durPlus');
 
       // Servo UI
       const servoCalBtn = document.getElementById('servoCalBtn');
@@ -1693,6 +1686,43 @@
         motorLocal = clampPow(motorLocal + 10);
         updateMotorUI();
         commitMotor();
+      });
+
+      // Reference Time (calibration time at 80) — DUR in seconds
+      let durLocal = 930;
+      function clampDur(v){
+        v = Number(v);
+        if (!Number.isFinite(v)) return 930;
+        v = Math.round(v);
+        return Math.max(10, Math.min(60 * 180, v)); // 10s .. 180m
+      }
+      function fmtDur(sec){
+        const s = clampDur(sec);
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return String(m).padStart(2,'0') + 'm ' + String(r).padStart(2,'0') + 's';
+      }
+      function updateDurUI(){
+        if (durVal) durVal.textContent = fmtDur(durLocal);
+      }
+      function commitDur(){
+        beginUI('DUR');
+        setPending('DUR', durLocal);
+        window.webble.setDurationAt80(durLocal);
+        endUI('DUR');
+      }
+      updateDurUI();
+
+      const durDelta = 5; // seconds per click
+      if (durMinus) durMinus.addEventListener('click', () => {
+        durLocal = clampDur(durLocal - durDelta);
+        updateDurUI();
+        commitDur();
+      });
+      if (durPlus) durPlus.addEventListener('click', () => {
+        durLocal = clampDur(durLocal + durDelta);
+        updateDurUI();
+        commitDur();
       });
 
       function fmtMm(v){
@@ -1839,11 +1869,6 @@
       setSide('L');
 
       window.webble.on('status', s => {
-        // Reference Time (calibration time at 80)
-        try {
-          const rt = pickRefTimeSeconds(s);
-          if (refTimeVal) refTimeVal.textContent = fmtRefTime(rt ?? 0);
-        } catch(_) {}
         updateStatusPills(s);
         // WiFi / Update card
         try {
@@ -1883,6 +1908,16 @@
         if (!isUIEditing('FAN_SPD'))  fan.value = s.fan ?? 80;
         if (!isUIEditing('FAN_ALW'))  fanAlways.checked = !!s.fanAlways;
         if (!isUIEditing('SPD'))      { speed.value = s.speed ?? 80; speedVal.textContent = (s.speed ?? 80) + ' %'; }
+        if (!isUIEditing('DUR')) {
+          const v = Number(s.dur ?? s.DUR);
+          if (Number.isFinite(v)) {
+            const vv = clampDur(v);
+            if (shouldApply('DUR', vv)) {
+              durLocal = vv;
+              updateDurUI();
+            }
+          }
+        }
 
         // Servo values
         if (!isUIEditing('SV_STP')) {
@@ -1919,18 +1954,14 @@
         if (servoHomeSetting) servoHomeSetting.disabled = !isConn;
         if (motorMinus) motorMinus.disabled = !isConn;
         if (motorPlus)  motorPlus.disabled = !isConn;
+        if (durMinus) durMinus.disabled = !isConn;
+        if (durPlus)  durPlus.disabled = !isConn;
         if (servoSideSegment) servoSideSegment.classList.toggle('is-disabled', !isConn);
       });
 
       try {
         const initial = window.webble.getState();
         updateStatusPills(initial);
-
-        // Reference Time (calibration time at 80)
-        try {
-          const rt = pickRefTimeSeconds(initial);
-          if (refTimeVal) refTimeVal.textContent = fmtRefTime(rt ?? 0);
-        } catch(_) {}
 
         // Initialize servo UI
         if (typeof initial.servoStepMm === 'number') {
@@ -1948,6 +1979,11 @@
         if (typeof initial.pow === 'number') {
           motorLocal = clampPow(initial.pow);
           updateMotorUI();
+        }
+        // Initialize reference time UI
+        if (typeof initial.dur === 'number') {
+          durLocal = clampDur(initial.dur);
+          updateDurUI();
         }
       } catch(_) {}
     }
