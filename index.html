@@ -256,7 +256,7 @@
       left: var(--info-img-pad);
       width: var(--info-img-size);
       height: var(--info-img-size);
-      background-image: url("Respooler.png");
+      background-image: var(--respooler-img, url("Respooler.png"));
       background-repeat: no-repeat;
       background-position: left center; /* leading */
       background-size: contain;
@@ -1499,10 +1499,16 @@
     const infoWifi = document.getElementById('infoWifi');
 
     function inferBoardVersion(s){
-      const name = String(s?.name || '').toLowerCase();
-      if (name.includes('driver')) return 'Driver Board';
-      if (name.includes('control')) return 'Control Board';
-      return 'Unknown';
+      const raw = String(s?.name || '').trim();
+      const name = raw.toLowerCase();
+
+      if (name === 'esp32 pcb') return 'Driver Board';
+      if (name === 'lts db') return 'Driver Board';
+      if (name === 'ctrboard v4') return 'Control Board';
+      if (name === 'lts cb') return 'Control Board';
+      if (name === 'ctrboard v3') return 'Control Board V3';
+
+      return raw ? `Unknown (${raw})` : 'Unknown';
     }
 
     function mapRespoolerVersion(s){
@@ -1526,6 +1532,13 @@
       if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
       if (infoFw) infoFw.textContent = st?.fw ? String(st.fw) : '—';
       if (infoWifi) infoWifi.textContent = mapWifiStatus(st);
+      // Switch respooler image depending on variant
+      try {
+        const v = String(st?.boardVariant || '').toUpperCase();
+        const img = (v === 'PRO') ? 'url("RespoolerPro.png")' : 'url("Respooler.png")';
+        const card = document.querySelector('.info-card');
+        if (card) card.style.setProperty('--respooler-img', img);
+      } catch(_) {}
     }
 
     function bindWithWebble(){
