@@ -12,6 +12,7 @@
       --text: 17 17 17;
       --accent: #0E7AFE;
       --accent-dark: #1364C4;
+      --action-font: 1.1rem;
 
       --flasher-bg: 255 255 255;
       --flasher-text: 17 17 17;
@@ -38,53 +39,20 @@
       line-height: 1.3;
       max-width: 1100px;
       margin-inline: auto;
-      padding-top: 7vh;
-      min-height: 10vh;
+
+      /* Vertically center without causing overflow from padding */
+      min-height: 100vh;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
 
     button {
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color:  transparent;
       font-family: inherit;
     }
 
-    .header {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 0.8rem;
-      flex-wrap: nowrap;
-    }
-
-    .header-image img {
-      height: auto;
-      width: auto;
-      max-height: 96px;
-      max-width: 140px;
-      display: block;
-    }
-
-    .header-text {
-      margin-top: 0;
-      text-align: left;
-    }
-
-    h1 {
-      margin-top: 0rem;
-      margin-bottom: 0.2rem;
-      font-size: 2rem;
-      text-align: left;
-      white-space: nowrap;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-    }
 
     /* Top status pills (UI only) */
     .status-pills {
@@ -228,9 +196,90 @@
       height: 100%;
     }
 
-    /* Push the Speed card to the bottom of the left column */
-    .card.speed-card {
-      margin-top: auto;
+    .info-card {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+
+      /* image + footer sizing vars */
+      --info-img-pad: 20px;
+      --info-footer-pad: 16px;
+      --info-btn-h: 40px;
+      --info-gap: 10px;
+    }
+
+    .info-card::before {
+      content: "";
+      position: absolute;
+      top: var(--info-img-pad);
+      left: var(--info-img-pad);
+      right: var(--info-img-pad);
+      bottom: calc(var(--info-img-pad) + var(--info-footer-pad) + var(--info-btn-h) + var(--info-footer-pad) + var(--info-gap));
+      background-image: url("Control.png");
+      background-repeat: no-repeat;
+      background-position: left center; /* leading */
+      background-size: contain;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .info-card-footer {
+      position: relative;
+      z-index: 1;
+      padding: var(--info-footer-pad);
+      padding-top: calc(var(--info-footer-pad) + var(--info-gap));
+    }
+
+    .info-card-footer-row {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .info-connect-btn {
+      height: var(--info-btn-h);
+      padding: 0 1.0rem;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1 1 auto;
+      width: auto;
+    }
+
+    .info-wifi-btn {
+      height: var(--info-btn-h);
+      border-radius: 12px;
+      padding: 0 1.0rem;
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      font-size: var(--action-font);
+    }
+    /* Ensure Info-card WiFi button matches Connect button sizing */
+    button.info-wifi-btn {
+      height: var(--info-btn-h);
+      border-radius: 12px;
+      padding: 0 1.0rem;
+      font-size: var(--action-font);
+    }
+    @media (prefers-color-scheme: dark) {
+      .info-card::before {
+        background-image: url("Control-dark.png");
+      }
+    }
+
+    /* Keep spacer class for compatibility (not used now) */
+    .card-stack-spacer {
+      flex: 1 1 auto;
     }
 
     @media (max-width: 870px) {
@@ -246,7 +295,7 @@
       background-color: #1a1a1a;
       color: #fff !important;
       border: none;
-      font-size: 1.1rem;
+      font-size: var(--action-font);
       font-weight: 600;
       width: 100%;
       cursor: pointer;
@@ -263,12 +312,24 @@
 
     /* Spezifische Farben für Control-Buttons (Block A) */
     #wbConnect, #wbConnect:hover, #wbConnect:active, #wbConnect[disabled] {
-      background:#0E7AFE !important;
+      background:#1a1a1a !important;   /* black in light mode */
       color:#ffffff !important;
       border:none !important;
       box-shadow:none !important;
       -webkit-appearance:none;
       appearance:none;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      /* Match Web Flasher connect button styling */
+      #wbConnect, #wbConnect:hover, #wbConnect:active {
+        background: rgb(var(--text)) !important; /* same "white" as flasher */
+        color: #000000 !important;
+      }
+      #wbConnect[disabled] {
+        background: rgba(234, 234, 234, 0.7) !important;
+        color: #000000 !important;
+      }
     }
 
     #wbStart, #wbStart:hover, #wbStart:active, #wbStart[disabled] {
@@ -378,16 +439,7 @@
 
     /* Kleine Typo-Anpassungen für schmale Screens */
     @media (max-width: 450px) {
-      h1 {
-        font-size: 1.9rem;
-      }
-      .header-image img {
-        max-width: 100px;
-        max-height: 80px;
-      }
-      .subtitle {
-        font-size: 1.0rem;
-      }
+      :root { --action-font: 1.0rem; }
       .lts-btn {
         font-size: 1.0rem;
       }
@@ -409,13 +461,6 @@
       #lts-speed span,
       #lts-speed #speedVal {
         font-size: 1.0rem;
-      }
-      .header {
-        gap: 12px;
-        justify-content: flex-start;
-      }
-      .header-text {
-        text-align: left;
       }
     }
 
@@ -535,14 +580,14 @@
     .stepper-seg {
       display: inline-flex;
       align-items: stretch;
-      height: 28px;
+      height: 26px;
       border-radius: 10px;
       background: #e5e7eb;
       overflow: hidden;
     }
 
     .stepper-seg-btn {
-      width: 38px;
+      width: 33px;
       border: none;
       background: transparent;
       color: rgb(var(--text));
@@ -583,9 +628,7 @@
       top: -1.7px; /* adjust this value (+/- px) to move the glyph */
     }
     .stepper-value {
-      min-width: 70px;
       text-align: left;              /* align like other settings values */
-      padding-left: 2px;             /* subtle inset to match visual grid */
       font-variant-numeric: tabular-nums;
       font-size: 1.05rem;
     }
@@ -763,58 +806,48 @@
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-image">
-      <img src="Logo.png" alt="Logo" />
-    </div>
-    <div class="header-text">
-      <h1>Web Control</h1>
-      <div class="subtitle">Control your LTS Respooler</div>
-    </div>
-  </div>
 
   <!-- TOP STATUS PILLS moved to right column above Settings card -->
 
   <div class="cards-row">
 
   <div class="card-stack">
-  <!-- UPDATE CARD (WiFi) -->
-  <div class="card">
-    <section id="lts-update" class="section-base">
 
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-        <div style="font-size:1.1rem; font-weight:600;">Update</div>
-        <button id="wifiScanBtn" class="mini-btn compact" type="button" style="justify-self:end;">Search Networks</button>
+  <!-- TOP STATUS PILLS (UI only) -->
+  <div class="status-pills" aria-label="Status">
+    <div class="status-pill">
+      <img id="pillConnIcon" src="antenna-slash.png" alt="Connection" width="30" height="30" style="flex:0 0 30px;">
+      <div class="status-pill-text">
+        <div class="status-pill-title">Connection</div>
+        <div id="pillConnSub" class="status-pill-subtitle">Disconnected</div>
       </div>
+    </div>
 
-      <div class="form-grid" style="margin-top:10px;">
-        <label for="wifiSsid" class="form-label">Network:</label>
-        <select id="wifiSsid" class="form-control" style="width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
-          <option value="" selected>Select…</option>
-        </select>
+    <div class="status-pill">
+      <img id="pillFilIcon" src="xmark.png" alt="Filament" width="30" height="30" style="flex:0 0 30px;">
+      <div class="status-pill-text">
+        <div class="status-pill-title">Filament</div>
+        <div id="pillFilSub" class="status-pill-subtitle">Not Detected</div>
       </div>
-
-      <div class="form-grid" style="margin-top:8px;">
-        <label for="wifiPass" class="form-label">Password:</label>
-        <input id="wifiPass" class="form-control" type="password" autocomplete="current-password" placeholder="WiFi password"
-               style="width:min(220px, 100%); border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
-      </div>
-
-      <div class="form-grid" style="margin-top:10px;">
-        <div></div>
-        <div class="form-control" style="display:flex; align-items:center; gap:10px;">
-          <button id="wifiSendBtn" class="mini-btn compact" type="button">Send</button>
-          <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 220px;">&nbsp;</span>
-        </div>
-      </div>
-
-    </section>
+    </div>
   </div>
+
+  <!-- INFO CARD (left column, fills available height) -->
+  <div class="card info-card" aria-label="Control image">
+    <div id="wbConnectWrap" class="info-card-footer" style="display:none;">
+      <div class="info-card-footer-row">
+        <button id="wbConnect" class="lts-btn info-connect-btn" type="button">Connect Board</button>
+        <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">Setup WiFi</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- CONTROL CARD (Block A) -->
   <div class="card control-card">
     <section id="lts-control" class="section-base section-control">
       <p class="ghost-divider">---------------------------------------------------------------------</p>
+
       <div class="wb-topline">
         <span id="wbProgPct" style="justify-self:start;">0 %</span>
         <span id="wbStatusText" style="justify-self:center;">Not connected</span>
@@ -825,9 +858,8 @@
       </div>
       <div id="wbButtonGroup" style="display:none">
         <div class="lts-actions" style="display:flex;flex-wrap:nowrap;gap:12px;width:100%;align-items:stretch;margin:16px 0 0 0;">
-          <button id="wbConnect" class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;">Connect</button>
-          <button id="wbStart"   class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;" disabled>Start</button>
-          <button id="wbStop"    class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;" disabled>Stop</button>
+          <button id="wbStart" class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;" disabled>Start</button>
+          <button id="wbStop"  class="lts-btn" style="flex:1 0 0;min-width:0;max-width:none;width:100%;" disabled>Stop</button>
         </div>
       </div>
       <div id="wbNoSupport" style="display:block; text-align:center; margin:16px 0 0 0; color:#ff8c28;">
@@ -851,25 +883,6 @@
   </div>
 
     <div class="card-stack">
-
-    <!-- TOP STATUS PILLS (UI only) -->
-    <div class="status-pills" aria-label="Status">
-      <div class="status-pill">
-        <img id="pillConnIcon" src="antenna-slash.png" alt="Connection" width="30" height="30" style="flex:0 0 30px;">
-        <div class="status-pill-text">
-          <div class="status-pill-title">Connection</div>
-          <div id="pillConnSub" class="status-pill-subtitle">Disconnected</div>
-        </div>
-      </div>
-
-      <div class="status-pill">
-        <img id="pillFilIcon" src="xmark.png" alt="Filament" width="30" height="30" style="flex:0 0 30px;">
-        <div class="status-pill-text">
-          <div class="status-pill-title">Filament</div>
-          <div id="pillFilSub" class="status-pill-subtitle">Not Detected</div>
-        </div>
-      </div>
-    </div>
 
 
     <!-- SETTINGS CARD (Block B) -->
@@ -920,12 +933,12 @@
       <div class="form-grid" style="margin-top:8px;">
         <label class="form-label">Step Distance:</label>
         <div class="stepper form-control">
-          <span id="servoStepVal" class="stepper-value">1.75 mm</span>
           <div class="stepper-seg" role="group" aria-label="Step distance controls">
             <button id="servoStepMinus" class="stepper-seg-btn" type="button" aria-label="Decrease step distance"><span class="stepper-glyph">−</span></button>
             <div class="stepper-seg-divider" aria-hidden="true"></div>
             <button id="servoStepPlus" class="stepper-seg-btn" type="button" aria-label="Increase step distance"><span class="stepper-glyph">+</span></button>
           </div>
+          <span id="servoStepVal" class="stepper-value">1.75 mm</span>
         </div>
       </div>
 
@@ -942,12 +955,12 @@
       <div class="form-grid" style="margin-top:8px;">
         <label for="motor" class="form-label">Motor Strength:</label>
         <div class="stepper form-control">
-          <span id="motorVal" class="stepper-value">100 %</span>
           <div class="stepper-seg" role="group" aria-label="Motor strength controls">
             <button id="motorMinus" class="stepper-seg-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph">−</span></button>
             <div class="stepper-seg-divider" aria-hidden="true"></div>
             <button id="motorPlus" class="stepper-seg-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph">+</span></button>
           </div>
+          <span id="motorVal" class="stepper-value">100 %</span>
         </div>
       </div>
       <div class="form-grid" style="margin-top:0px;">
@@ -985,11 +998,53 @@
 
   </div>
 
-  <div style="text-align:center; margin-top:2rem; margin-bottom:2rem; font-size:1rem; color:rgb(var(--text));">
+  </div>
+
+  <div style="text-align:center; margin-top:2rem; margin-bottom:2rem; font-size:1rem; color:rgb(var(--text)); width:100%;">
     Powered by <a href="https://developer.chrome.com/docs/capabilities/bluetooth" target="_blank" style="color:rgb(var(--text)); text-decoration:underline;">WebBluetooth</a>
     <div style="margin-top:0.6rem;">
       <a href="https://github.com/LukasT03" target="_blank" style="color:rgb(var(--text)); text-decoration:underline; margin-right:1rem;">GitHub</a>
       <a href="https://lts-design.com" target="_blank" style="color:rgb(var(--text)); text-decoration:underline;">lts-design.com</a>
+    </div>
+  </div>
+
+  <!-- Update / WiFi modal -->
+  <div id="wifiModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Update and WiFi">
+    <div class="modal">
+      <button id="wifiModalClose" class="icon-btn modal-close" aria-label="Close">×</button>
+      <div class="modal-header">
+        <h2 class="modal-title">Update / WiFi</h2>
+      </div>
+
+      <section id="lts-update" class="section-base">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
+          <div style="font-size:1.1rem; font-weight:600;">WiFi</div>
+          <button id="wifiScanBtn" class="mini-btn compact" type="button" style="justify-self:end;">Search Networks</button>
+        </div>
+
+        <div class="form-grid" style="margin-top:10px;">
+          <label for="wifiSsid" class="form-label">Network:</label>
+          <select id="wifiSsid" class="form-control" style="width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
+            <option value="" selected>Select…</option>
+          </select>
+        </div>
+
+        <div class="form-grid" style="margin-top:8px;">
+          <label for="wifiPass" class="form-label">Password:</label>
+          <input id="wifiPass" class="form-control" type="password" autocomplete="current-password" placeholder="WiFi password"
+                 style="width:min(220px, 100%); border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
+        </div>
+
+        <div class="form-grid" style="margin-top:10px;">
+          <div></div>
+          <div class="form-control" style="display:flex; align-items:center; gap:10px;">
+            <button id="wifiSendBtn" class="mini-btn compact" type="button">Send</button>
+            <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 220px;">&nbsp;</span>
+          </div>
+        </div>
+
+      </section>
     </div>
   </div>
 
@@ -1027,6 +1082,7 @@
   (() => {
     const ui = {
       connect:  document.getElementById('wbConnect'),
+      connectWrap: document.getElementById('wbConnectWrap'),
       start:    document.getElementById('wbStart'),
       stop:     document.getElementById('wbStop'),
       prog:     document.getElementById('wbProg'),
@@ -1089,16 +1145,19 @@
     const isIOSWebKit = isIOS && isWebKit;
     if (isIOSWebKit) {
       if (ui.buttons) ui.buttons.style.display = 'none';
+      if (ui.connectWrap) ui.connectWrap.style.display = 'none';
       if (ui.noSupport) ui.noSupport.style.display = 'block';
       return;
     }
     if (ui.buttons) ui.buttons.style.display = 'block';
+    if (ui.connectWrap) ui.connectWrap.style.display = 'block';
     if (ui.noSupport) ui.noSupport.style.display = 'none';
     const secure = (typeof window.isSecureContext === 'boolean') ? window.isSecureContext : (location.protocol === 'https:' || location.hostname === 'localhost');
     const hasBLE = !!(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
     const webBleSupported = hasBLE && secure && !isIOSWebKit;
     if(!webBleSupported){
       if(ui.buttons) ui.buttons.style.display = 'none';
+      if (ui.connectWrap) ui.connectWrap.style.display = 'none';
       if(ui.noSupport) ui.noSupport.style.display = 'block';
       return;
     }
@@ -1106,7 +1165,7 @@
     function setConnected(on, justConnected){
       ui.stop.disabled  = !on;
       ui.start.disabled = !on;
-      if (ui.connect) ui.connect.textContent = on ? 'Disconnect' : 'Connect';
+      if (ui.connect) ui.connect.textContent = on ? 'Disconnect' : 'Connect Board';
       if (!on) { ui.start.textContent = 'Start'; }
       if(on && justConnected){
         statusHoldUntil = Date.now() + 1500;
@@ -1250,6 +1309,30 @@
       const wifiPass     = document.getElementById('wifiPass');
       const wifiSendBtn  = document.getElementById('wifiSendBtn');
       const wifiStatus   = document.getElementById('wifiStatus');
+
+      const wifiModalBtn = document.getElementById('wifiModalBtn');
+      const wifiModalBackdrop = document.getElementById('wifiModalBackdrop');
+      const wifiModalClose = document.getElementById('wifiModalClose');
+
+      function openWifiModal(){
+        if (!wifiModalBackdrop) return;
+        wifiModalBackdrop.classList.add('show');
+      }
+      function closeWifiModal(){
+        if (!wifiModalBackdrop) return;
+        wifiModalBackdrop.classList.remove('show');
+      }
+
+      if (wifiModalBtn) wifiModalBtn.addEventListener('click', openWifiModal);
+      if (wifiModalClose) wifiModalClose.addEventListener('click', closeWifiModal);
+      if (wifiModalBackdrop) {
+        wifiModalBackdrop.addEventListener('click', (e) => {
+          if (e.target === wifiModalBackdrop) closeWifiModal();
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeWifiModal();
+      });
 
       // Status pills
       const pillConnSub = document.getElementById('pillConnSub');
@@ -1633,6 +1716,7 @@
           if (wifiSsid) wifiSsid.disabled = !isConn || scanning;
           if (wifiPass) wifiPass.disabled = !isConn;
           if (wifiSendBtn) wifiSendBtn.disabled = !isConn || scanning;
+          if (wifiModalBtn) wifiModalBtn.disabled = !isConn;
 
           if (Array.isArray(s.availableSSIDs)) {
             populateSsids(s.availableSSIDs, s.wifiSSID || '');
