@@ -1,6 +1,5 @@
-/* LTS WebBLE Manager – nur EINMAL laden! */
 (() => {
-  if (window.webble && window.webble.__ready) return; // Doppelladen verhindern
+  if (window.webble && window.webble.__ready) return;
 
   const serviceUUID = '9E05D06D-68A7-4E1F-A503-AE26713AC101'.toLowerCase();
   const charUUID    = '7CB2F1B4-7E3F-43D2-8C92-DF58C9A7B1A8'.toLowerCase();
@@ -26,11 +25,9 @@
     isScanningForSSIDs: false,
     availableSSIDs: null,
 
-    // Board variant (matches iOS app semantics)
     boardVariant: 'UNK',
     didReceiveBoardVariant: false,
 
-    // Servo settings
     servoAngleR: 5,
     servoAngleL: 175,
     servoStepMm: 1.75,
@@ -216,7 +213,6 @@
       try {
         const obj = JSON.parse(ch);
 
-        // WiFi scan results may come as a top-level SSID_LIST array
         if (Array.isArray(obj.SSID_LIST)) {
           state.isScanningForSSIDs = false;
           state.availableSSIDs = obj.SSID_LIST.slice();
@@ -262,7 +258,6 @@
         if (typeof d.TEMP === 'number') avgTempPush(d.TEMP);
         if ('FW' in d) state.fw = d.FW || state.fw;
 
-        // Board variant (VAR) – only valid if key exists; older firmware won't send it
         if (Object.prototype.hasOwnProperty.call(d, 'VAR')) {
           state.didReceiveBoardVariant = true;
           const v = d.VAR;
@@ -295,7 +290,6 @@
           const n = Number(d.DUR);
           if (Number.isFinite(n)) {
             const v = Math.max(0, Math.trunc(n));
-            // only apply remote value if user isn't actively editing; still clear hold/edit on echo
             if (!isEditing('DUR') && !isHeld('DUR')) state.dur = v;
             releaseKey('DUR'); endEdit('DUR');
           }
@@ -331,7 +325,6 @@
           }
         }
 
-        // ---- Servo settings ----
         if (typeof d.SV_R === 'number' && !isEditing('SV_R') && !isHeld('SV_R')) state.servoAngleR = d.SV_R|0;
         if (typeof d.SV_L === 'number' && !isEditing('SV_L') && !isHeld('SV_L')) state.servoAngleL = d.SV_L|0;
         if ('SV_STP' in d && !isEditing('SV_STP') && !isHeld('SV_STP')) {
