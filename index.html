@@ -53,6 +53,35 @@
       font-family: inherit;
     }
 
+    .header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 1.1rem;
+    }
+
+    .header-logo img {
+      max-height: 120px;
+      height: auto;
+      width: auto;
+      max-width: 100%;
+      display: block;
+    }
+
+    .header-text {
+      margin-top: 0.4rem;
+    }
+
+    h1 {
+      margin-top: 0rem;
+      margin-bottom: 0.2rem;
+      font-size: 2rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+
 
     /* Top status pills (UI only) */
     .status-pills {
@@ -183,7 +212,7 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-      margin-top: 1rem; /* spacing below the status pills */
+      margin-top: 0.8rem; /* spacing below the status pills */
       align-items: stretch;
     }
 
@@ -285,6 +314,59 @@
     @media (max-width: 870px) {
       .cards-row {
         grid-template-columns: 1fr;
+      }
+    }
+
+    /* When screen height is small, place header logo + title side-by-side (like Web Flasher) */
+    @media (max-height: 820px) {
+      body {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+
+      .header {
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .header-logo img {
+        max-height: 80px;
+        max-width: 38vw;
+      }
+
+      .header-text {
+        margin-top: 0;
+        text-align: left;
+      }
+
+      .header-text h1 {
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 400px) and (max-height: 820px) {
+      .header {
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 450px) and (max-height: 820px) {
+      .header-logo img {
+        max-width: 100px;
+      }
+    }
+
+    /* Slightly lift the whole layout when header is stacked (default). */
+    .page-content {
+      transform: translateY(-18px);
+    }
+
+    /* When header is side-by-side (small height), don't lift the content. */
+    @media (max-height: 820px) {
+      .page-content {
+        transform: none;
       }
     }
 
@@ -439,6 +521,8 @@
 
     /* Kleine Typo-Anpassungen für schmale Screens */
     @media (max-width: 450px) {
+      h1 { font-size: 1.9rem; }
+      .header-logo img { max-width: 100px; }
       :root { --action-font: 1.0rem; }
       .lts-btn {
         font-size: 1.0rem;
@@ -806,8 +890,19 @@
 </head>
 <body>
 
+  <div class="page-content">
 
-  <!-- TOP STATUS PILLS moved to right column above Settings card -->
+  <div class="header">
+    <div class="header-logo">
+      <picture>
+        <source srcset="Control-Logo-dark.png" media="(prefers-color-scheme: dark)" />
+        <img src="Control-Logo.png" alt="Control Logo" />
+      </picture>
+    </div>
+    <div class="header-text">
+      <h1>LTS Web Control</h1>
+    </div>
+  </div>
 
   <div class="cards-row">
 
@@ -1006,6 +1101,8 @@
       <a href="https://github.com/LukasT03" target="_blank" style="color:rgb(var(--text)); text-decoration:underline; margin-right:1rem;">GitHub</a>
       <a href="https://lts-design.com" target="_blank" style="color:rgb(var(--text)); text-decoration:underline;">lts-design.com</a>
     </div>
+  </div>
+
   </div>
 
   <!-- Update / WiFi modal -->
