@@ -1689,10 +1689,10 @@
       });
 
       // Reference Time (calibration time at 80) — DUR in seconds
-      let durLocal = 930;
+      let durLocal = 895;
       function clampDur(v){
         v = Number(v);
-        if (!Number.isFinite(v)) return 930;
+        if (!Number.isFinite(v)) return 895;
         v = Math.round(v);
         return Math.max(10, Math.min(60 * 180, v)); // 10s .. 180m
       }
