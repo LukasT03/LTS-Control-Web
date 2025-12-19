@@ -232,6 +232,7 @@
       overflow: hidden;
       position: relative;
       display: flex;
+      container-type: size;
       flex-direction: column;
       justify-content: flex-end;
 
@@ -240,6 +241,11 @@
       --info-footer-pad: 16px;
       --info-btn-h: 40px;
       --info-gap: 10px;
+      --info-footer-total: calc(var(--info-footer-pad) + var(--info-btn-h) + var(--info-footer-pad) + var(--info-gap));
+      --info-img-size: min(
+        calc(100cqw - (var(--info-img-pad) * 2)),
+        calc(100cqh - (var(--info-img-pad) * 2) - var(--info-footer-total))
+      );
     }
 
     .info-card::before {
@@ -247,12 +253,15 @@
       position: absolute;
       top: var(--info-img-pad);
       left: var(--info-img-pad);
-      right: var(--info-img-pad);
-      bottom: calc(var(--info-img-pad) + var(--info-footer-pad) + var(--info-btn-h) + var(--info-footer-pad) + var(--info-gap));
-      background-image: url("Control.png");
+      width: var(--info-img-size);
+      height: var(--info-img-size);
+      background-image: url("Respooler.png");
       background-repeat: no-repeat;
       background-position: left center; /* leading */
       background-size: contain;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      box-sizing: border-box;
       pointer-events: none;
       z-index: 0;
     }
@@ -299,11 +308,6 @@
       border-radius: 12px;
       padding: 0 1.0rem;
       font-size: var(--action-font);
-    }
-    @media (prefers-color-scheme: dark) {
-      .info-card::before {
-        background-image: url("Control-dark.png");
-      }
     }
 
     /* Keep spacer class for compatibility (not used now) */
@@ -464,6 +468,12 @@
     @media (prefers-color-scheme: dark) {
       .section-divider {
         border-top-color: rgba(255,255,255,0.18);
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .info-card::before {
+        border-color: rgba(255,255,255,0.18);
       }
     }
     #wbProgBar {
@@ -1087,6 +1097,13 @@
         <label class="form-control"><input id="fanAlways" type="checkbox"> Fan Always On</label>
       </div>
 
+      <hr class="section-divider" style="margin:12px 0;">
+
+      <div class="form-grid" style="margin-top:8px;">
+        <label class="form-label">Reference Time:</label>
+        <span id="refTimeVal" class="form-control" style="font-variant-numeric: tabular-nums;">00m 00s</span>
+      </div>
+
       <!-- Speed slider moved to its own card -->
   </section>
   </div>
@@ -1556,6 +1573,24 @@
       const speed = document.getElementById('speed');
       const speedVal = document.getElementById('speedVal');
 
+      const refTimeVal = document.getElementById('refTimeVal');
+
+      function fmtRefTime(sec){
+        const n = Number(sec);
+        if (!Number.isFinite(n) || n < 0) return '—';
+        const total = Math.floor(n);
+        const m = String(Math.floor(total / 60)).padStart(2, '0');
+        const s = String(total % 60).padStart(2, '0');
+        return `${m}m ${s}s`;
+      }
+
+      function pickRefTimeSeconds(obj){
+        if (!obj) return null;
+        const v = obj.dur ?? obj.DUR ?? obj.durationAt80 ?? obj.durationAt80Sec ?? obj.calibrationAt80 ?? obj.calibrationTimeAt80 ?? obj.calibrationTimeAt80Sec;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      }
+
       // Servo UI
       const servoCalBtn = document.getElementById('servoCalBtn');
       const servoStepMinus = document.getElementById('servoStepMinus');
@@ -1804,6 +1839,11 @@
       setSide('L');
 
       window.webble.on('status', s => {
+        // Reference Time (calibration time at 80)
+        try {
+          const rt = pickRefTimeSeconds(s);
+          if (refTimeVal) refTimeVal.textContent = fmtRefTime(rt ?? 0);
+        } catch(_) {}
         updateStatusPills(s);
         // WiFi / Update card
         try {
@@ -1885,6 +1925,12 @@
       try {
         const initial = window.webble.getState();
         updateStatusPills(initial);
+
+        // Reference Time (calibration time at 80)
+        try {
+          const rt = pickRefTimeSeconds(initial);
+          if (refTimeVal) refTimeVal.textContent = fmtRefTime(rt ?? 0);
+        } catch(_) {}
 
         // Initialize servo UI
         if (typeof initial.servoStepMm === 'number') {
