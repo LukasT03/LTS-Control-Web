@@ -13,6 +13,7 @@
       --accent: #0E7AFE;
       --accent-dark: #1364C4;
       --action-font: 1.1rem;
+      --btn-h: 52px;
 
       --flasher-bg: 255 255 255;
       --flasher-text: 17 17 17;
@@ -232,21 +233,35 @@
       overflow: hidden;
       position: relative;
       display: flex;
-      container-type: size;
       flex-direction: column;
       justify-content: flex-end;
+      container-type: size;
 
-      /* image + footer sizing vars */
+      /* Layout + sizing vars */
       --info-img-pad: 1rem;
+      --info-outline-gap: 1rem;
       --info-footer-pad: 16px;
-      --info-btn-h: 40px;
-      --info-gap: 10px;
+      --info-btn-h: var(--btn-h);
       --info-meta-gap: 1rem;
-      --info-footer-total: calc(var(--info-footer-pad) + var(--info-btn-h) + var(--info-footer-pad) + var(--info-gap));
-      --info-img-size: min(
-        calc(100cqw - (var(--info-img-pad) * 2)),
-        calc(100cqh - (var(--info-img-pad) * 2) - var(--info-footer-total))
+
+      /* Caption area (inside the outline, under the image) */
+      --info-cap-h: 22px;
+      --info-cap-gap: 10px;
+      --info-frame-extra: calc(var(--info-cap-h) + var(--info-cap-gap));
+
+      /* Total space reserved below the image area */
+      --info-footer-total: calc(var(--info-outline-gap) + var(--info-btn-h) + var(--info-footer-pad));
+
+      /* Image outline sizing (outline height = image + caption area) */
+      --info-img-size: max(
+        0px,
+        calc(100cqh - var(--info-img-pad) - var(--info-footer-total) - var(--info-frame-extra))
       );
+      --info-img-width: calc(var(--info-img-size) * 1.25);
+
+      /* Inner padding inside the outline frame */
+      --info-img-inner-pad: 0.35rem;
+      --info-img-inner-pad-top-extra: 0.3rem;
     }
 
     .info-card::before {
@@ -254,15 +269,22 @@
       position: absolute;
       top: var(--info-img-pad);
       left: var(--info-img-pad);
-      width: var(--info-img-size);
-      height: var(--info-img-size);
+      width: var(--info-img-width);
+      height: calc(var(--info-img-size) + var(--info-frame-extra));
+
       background-image: var(--respooler-img, url("Respooler.png"));
       background-repeat: no-repeat;
-      background-position: left center; /* leading */
+      background-position: center;
       background-size: contain;
       background-origin: content-box;
       background-clip: content-box;
-      padding: 0.7rem;
+
+      /* top / right / bottom / left (keeps the exact previous behavior) */
+      padding: calc(var(--info-img-inner-pad) + var(--info-img-inner-pad-top-extra))
+               var(--info-img-inner-pad)
+               calc(var(--info-img-inner-pad) + var(--info-frame-extra))
+               var(--info-img-inner-pad);
+
       border: 1px solid #d1d5db;
       border-radius: 12px;
       box-sizing: border-box;
@@ -270,11 +292,17 @@
       z-index: 0;
     }
 
+    @media (prefers-color-scheme: dark) {
+      .info-card::before {
+        border-color: rgba(255,255,255,0.18);
+      }
+    }
+
     .info-meta {
       position: absolute;
       top: var(--info-img-pad);
-      left: calc(var(--info-img-pad) + var(--info-img-size) + var(--info-meta-gap));
-      width: calc(100% - (var(--info-img-pad) + var(--info-img-size) + var(--info-meta-gap) + var(--info-img-pad)));
+      left: calc(var(--info-img-pad) + var(--info-img-width) + var(--info-meta-gap));
+      width: calc(100% - (var(--info-img-pad) + var(--info-img-width) + var(--info-meta-gap) + var(--info-img-pad)));
       height: var(--info-img-size);
       z-index: 1;
       display: flex;
@@ -315,13 +343,34 @@
     @media (max-width: 450px) {
       .info-meta-label { font-size: 0.9rem; }
       .info-meta-value { font-size: 1.0rem; }
+      .info-respooler-caption { font-size: 1.0rem; }
+    }
+
+    .info-respooler-caption {
+      position: absolute;
+      top: calc(var(--info-img-pad) + var(--info-img-size) + var(--info-cap-gap) - 3px);
+      left: var(--info-img-pad);
+      width: var(--info-img-width);
+      height: var(--info-cap-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 8px;
+      box-sizing: border-box;
+      font-size: 1.1rem;
+      font-weight: 600;
+      pointer-events: none;
+      z-index: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .info-card-footer {
       position: relative;
       z-index: 1;
       padding: var(--info-footer-pad);
-      padding-top: calc(var(--info-footer-pad) + var(--info-gap));
+      padding-top: var(--info-outline-gap);
     }
 
     .info-card-footer-row {
@@ -340,6 +389,7 @@
       justify-content: center;
       flex: 1 1 auto;
       width: auto;
+      box-sizing: border-box;
     }
 
     .info-wifi-btn {
@@ -352,6 +402,7 @@
       justify-content: center;
       white-space: nowrap;
       font-size: var(--action-font);
+      box-sizing: border-box;
     }
     /* Ensure Info-card WiFi button matches Connect button sizing */
     button.info-wifi-btn {
@@ -427,7 +478,9 @@
 
     /* Web Flasher Button-Style */
     .lts-btn {
-      padding: 0.85rem 1.5rem;
+      height: var(--btn-h);
+      padding: 0 1.5rem;
+      box-sizing: border-box;
       border-radius: 14px;
       background-color: #1a1a1a;
       color: #fff !important;
@@ -522,11 +575,6 @@
       }
     }
 
-    @media (prefers-color-scheme: dark) {
-      .info-card::before {
-        border-color: rgba(255,255,255,0.18);
-      }
-    }
     #wbProgBar {
       height:100%;
       width:0%;
@@ -584,7 +632,7 @@
     @media (max-width: 450px) {
       h1 { font-size: 1.9rem; }
       .header-logo img { max-width: 60px; }
-      :root { --action-font: 1.0rem; }
+      :root { --action-font: 1.0rem; --btn-h: 48px; }
       .lts-btn {
         font-size: 1.0rem;
       }
@@ -989,32 +1037,31 @@
   </div>
 
   <!-- INFO CARD (left column, fills available height) -->
-  <div class="card info-card" aria-label="Control image">
-    <div class="info-meta" aria-label="Board info">
-      <div class="info-meta-row">
-        <div class="info-meta-label">Board version</div>
-        <div id="infoBoard" class="info-meta-value">—</div>
+    <div class="card info-card" aria-label="Control image">
+      <div class="info-respooler-caption" aria-label="Respooler version">
+        <span id="infoRespooler">—</span>
       </div>
-      <div class="info-meta-row">
-        <div class="info-meta-label">Respooler version</div>
-        <div id="infoRespooler" class="info-meta-value">—</div>
+      <div class="info-meta" aria-label="Board info">
+        <div class="info-meta-row">
+          <div class="info-meta-label">Board version</div>
+          <div id="infoBoard" class="info-meta-value">—</div>
+        </div>
+        <div class="info-meta-row">
+          <div class="info-meta-label">Board firmware</div>
+          <div id="infoFw" class="info-meta-value">—</div>
+        </div>
+        <div class="info-meta-row">
+          <div class="info-meta-label">WiFi status</div>
+          <div id="infoWifi" class="info-meta-value">—</div>
+        </div>
       </div>
-      <div class="info-meta-row">
-        <div class="info-meta-label">Board firmware</div>
-        <div id="infoFw" class="info-meta-value">—</div>
-      </div>
-      <div class="info-meta-row">
-        <div class="info-meta-label">WiFi status</div>
-        <div id="infoWifi" class="info-meta-value">—</div>
+      <div id="wbConnectWrap" class="info-card-footer" style="display:none;">
+        <div class="info-card-footer-row">
+          <button id="wbConnect" class="lts-btn info-connect-btn" type="button">Connect Board</button>
+          <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">Setup WiFi</button>
+        </div>
       </div>
     </div>
-    <div id="wbConnectWrap" class="info-card-footer" style="display:none;">
-      <div class="info-card-footer-row">
-        <button id="wbConnect" class="lts-btn info-connect-btn" type="button">Connect Board</button>
-        <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">Setup WiFi</button>
-      </div>
-    </div>
-  </div>
 
 
   <!-- CONTROL CARD (Block A) -->
@@ -1512,7 +1559,13 @@
     }
 
     function mapRespoolerVersion(s){
-      const v = String(s?.boardVariant || '').trim().toUpperCase();
+      // Older firmware (<1.2.0) won't send VAR at all.
+      // In that case we default to Respooler V4 and do NOT show "Unknown".
+      const did = (s && Object.prototype.hasOwnProperty.call(s, 'didReceiveBoardVariant')) ? !!s.didReceiveBoardVariant : false;
+      const raw = String(s?.boardVariant || '').trim();
+      const v = raw.toUpperCase();
+
+      if (!did || !raw) return 'Respooler V4';
       if (v === 'PRO') return 'Respooler Pro';
       if (v === 'STD') return 'Respooler V4';
       return 'Unknown';
@@ -1533,9 +1586,13 @@
       if (infoFw) infoFw.textContent = st?.fw ? String(st.fw) : '—';
       if (infoWifi) infoWifi.textContent = mapWifiStatus(st);
       // Switch respooler image depending on variant
+      // Default to V4 image if VAR was never received (older firmware).
       try {
-        const v = String(st?.boardVariant || '').toUpperCase();
-        const img = (v === 'PRO') ? 'url("RespoolerPro.png")' : 'url("Respooler.png")';
+        const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
+        const raw = String(st?.boardVariant || '').trim();
+        const v = raw.toUpperCase();
+        const isPro = did && raw && (v === 'PRO');
+        const img = isPro ? 'url("RespoolerPro.png")' : 'url("Respooler.png")';
         const card = document.querySelector('.info-card');
         if (card) card.style.setProperty('--respooler-img', img);
       } catch(_) {}
