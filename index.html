@@ -358,7 +358,7 @@
       padding-bottom: 8px;
       box-sizing: border-box;
       font-size: 1.1rem;
-      font-weight: 600;
+      font-weight: 400;
       pointer-events: none;
       z-index: 1;
       white-space: nowrap;
@@ -1648,13 +1648,25 @@
         wifiStatus.textContent = (t && String(t).trim().length) ? String(t) : '\u00A0';
       }
 
+      let lastWifiSsidRenderKey = null;
+
       function populateSsids(ssids, selected){
         if (!wifiSsid) return;
+
+        const list = (Array.isArray(ssids) ? ssids : []).map(s => String(s));
         const cur = (selected != null) ? String(selected) : String(wifiSsid.value || '');
         const keep = cur;
+
+        // IMPORTANT: Don't rebuild the <select> while the user is interacting with it.
+        // Frequent status updates can otherwise replace the DOM mid-click, making selection impossible.
+        if (document.activeElement === wifiSsid) return;
+
+        const key = list.join('\u0000') + '|' + keep;
+        if (key === lastWifiSsidRenderKey) return;
+        lastWifiSsidRenderKey = key;
+
         wifiSsid.innerHTML = '<option value="" ' + (keep ? '' : 'selected') + '>Select…</option>';
-        (Array.isArray(ssids) ? ssids : []).forEach(s => {
-          const v = String(s);
+        list.forEach(v => {
           const opt = document.createElement('option');
           opt.value = v;
           opt.textContent = v;
@@ -1718,7 +1730,7 @@
 
       if (wifiSendBtn) {
         wifiSendBtn.addEventListener('click', async () => {
-          const ssid = String(wifiSsid?.value || '').trim();
+          const ssid = String(wifiSsid?.value ?? '');
           const pass = String(wifiPass?.value || '');
           if (!ssid) { setWifiStatusText('Select a network'); return; }
           try {
