@@ -229,81 +229,45 @@
     .info-card {
       flex: 1 1 auto;
       min-height: 0;
-      padding: 0;
+      padding: 1rem;
       overflow: hidden;
       position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      container-type: size;
 
-      /* Layout + sizing vars */
+      /* Stable layout vars */
       --info-img-pad: 1rem;
       --info-outline-gap: 1rem;
       --info-footer-pad: 16px;
       --info-btn-h: var(--btn-h);
       --info-meta-gap: 1rem;
 
-      /* Caption area (inside the outline, under the image) */
+      /* Frame styling */
+      --info-frame-radius: 12px;
+      --info-frame-border: #d1d5db;
+      --info-frame-pad: 0.35rem;
+      --info-frame-pad-top-extra: 0.3rem;
+
+      /* Caption */
       --info-cap-h: 22px;
       --info-cap-gap: 10px;
-      --info-frame-extra: calc(var(--info-cap-h) + var(--info-cap-gap));
 
-      /* Total space reserved below the image area */
-      --info-footer-total: calc(var(--info-outline-gap) + var(--info-btn-h) + var(--info-footer-pad));
+      /* Image */
+      --respooler-img: url("Respooler.png");
 
-      /* Image outline sizing (outline height = image + caption area) */
-      --info-img-size: max(
-        0px,
-        calc(100cqh - var(--info-img-pad) - var(--info-footer-total) - var(--info-frame-extra))
-      );
-      --info-img-width: calc(var(--info-img-size) * 1.25);
-
-      /* Inner padding inside the outline frame */
-      --info-img-inner-pad: 0.35rem;
-      --info-img-inner-pad-top-extra: 0.3rem;
+      /* Use grid to avoid absolute/cqh sizing flicker */
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: 1fr auto;
+      grid-template-areas:
+        "frame meta"
+        "footer footer";
+      column-gap: var(--info-meta-gap);
+      row-gap: var(--info-outline-gap);
+      align-items: stretch;
     }
 
-    .info-card::before {
-      content: "";
-      position: absolute;
-      top: var(--info-img-pad);
-      left: var(--info-img-pad);
-      width: var(--info-img-width);
-      height: calc(var(--info-img-size) + var(--info-frame-extra));
-
-      background-image: var(--respooler-img, url("Respooler.png"));
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: contain;
-      background-origin: content-box;
-      background-clip: content-box;
-
-      /* top / right / bottom / left (keeps the exact previous behavior) */
-      padding: calc(var(--info-img-inner-pad) + var(--info-img-inner-pad-top-extra))
-               var(--info-img-inner-pad)
-               calc(var(--info-img-inner-pad) + var(--info-frame-extra))
-               var(--info-img-inner-pad);
-
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      box-sizing: border-box;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .info-card::before {
-        border-color: rgba(255,255,255,0.18);
-      }
-    }
 
     .info-meta {
-      position: absolute;
-      top: var(--info-img-pad);
-      left: calc(var(--info-img-pad) + var(--info-img-width) + var(--info-meta-gap));
-      width: calc(100% - (var(--info-img-pad) + var(--info-img-width) + var(--info-meta-gap) + var(--info-img-pad)));
-      height: var(--info-img-size);
+      grid-area: meta;
       z-index: 1;
       display: flex;
       flex-direction: column;
@@ -346,31 +310,64 @@
       .info-respooler-caption { font-size: 1.0rem; }
     }
 
-    .info-respooler-caption {
-      position: absolute;
-      top: calc(var(--info-img-pad) + var(--info-img-size) + var(--info-cap-gap) - 3px);
-      left: var(--info-img-pad);
-      width: var(--info-img-width);
+
+    .info-card-footer {
+      grid-area: footer;
+      position: relative;
+      z-index: 1;
+      padding: 0;
+    }
+    .info-frame {
+      grid-area: frame;
+      border: 1px solid var(--info-frame-border);
+      border-radius: var(--info-frame-radius);
+      box-sizing: border-box;
+
+      /* Make width follow height like before (width ≈ 1.25 * height) */
+      height: 100%;
+      aspect-ratio: 5 / 4;
+
+      /* Inner padding to mimic the old pseudo-element padding behavior */
+      padding: calc(var(--info-frame-pad) + var(--info-frame-pad-top-extra))
+               var(--info-frame-pad)
+               var(--info-frame-pad)
+               var(--info-frame-pad);
+
+      display: grid;
+      grid-template-rows: 1fr auto;
+      overflow: hidden;
+      background: transparent;
+      pointer-events: none;
+      min-width: 0;
+    }
+
+    .info-frame-img {
+      background-image: var(--respooler-img, url("Respooler.png"));
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      min-height: 0;
+    }
+
+    .info-frame-cap {
       height: var(--info-cap-h);
+      margin-top: var(--info-cap-gap);
+      padding-bottom: 8px;
+      box-sizing: border-box;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding-bottom: 8px;
-      box-sizing: border-box;
       font-size: 1.1rem;
       font-weight: 400;
-      pointer-events: none;
-      z-index: 1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .info-card-footer {
-      position: relative;
-      z-index: 1;
-      padding: var(--info-footer-pad);
-      padding-top: var(--info-outline-gap);
+    @media (prefers-color-scheme: dark) {
+      .info-frame {
+        border-color: rgba(255,255,255,0.18);
+      }
     }
 
     .info-card-footer-row {
@@ -420,6 +417,25 @@
     @media (max-width: 870px) {
       .cards-row {
         grid-template-columns: 1fr;
+      }
+
+      .info-card {
+        height: 250px;
+        min-height: 250px;
+        max-height: 250px;
+
+        grid-template-columns: auto 1fr;
+        grid-template-rows: 1fr auto;
+        grid-template-areas:
+          "frame meta"
+          "footer footer";
+      }
+
+      .info-frame {
+        height: 100%;
+        width: auto;
+        max-width: 52vw;
+        aspect-ratio: 5 / 4;
       }
     }
 
@@ -1038,9 +1054,13 @@
 
   <!-- INFO CARD (left column, fills available height) -->
     <div class="card info-card" aria-label="Control image">
-      <div class="info-respooler-caption" aria-label="Respooler version">
-        <span id="infoRespooler">—</span>
+      <div class="info-frame" aria-hidden="true">
+        <div class="info-frame-img"></div>
+        <div class="info-frame-cap" aria-label="Respooler version">
+          <span id="infoRespooler">—</span>
+        </div>
       </div>
+
       <div class="info-meta" aria-label="Board info">
         <div class="info-meta-row">
           <div class="info-meta-label">Board version</div>
@@ -1055,6 +1075,7 @@
           <div id="infoWifi" class="info-meta-value">—</div>
         </div>
       </div>
+
       <div id="wbConnectWrap" class="info-card-footer" style="display:none;">
         <div class="info-card-footer-row">
           <button id="wbConnect" class="lts-btn info-connect-btn" type="button">Connect Board</button>
@@ -1730,7 +1751,7 @@
 
       if (wifiSendBtn) {
         wifiSendBtn.addEventListener('click', async () => {
-          const ssid = String(wifiSsid?.value ?? '');
+          const ssid = String(wifiSsid?.value || '').trim();
           const pass = String(wifiPass?.value || '');
           if (!ssid) { setWifiStatusText('Select a network'); return; }
           try {
