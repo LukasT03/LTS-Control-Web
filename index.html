@@ -284,83 +284,6 @@
       min-width: 0;
     }
 
-    /* Firmware update indicator + action inside Info Card */
-    .info-fw-line {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .info-fw-to {
-      opacity: 0.55;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .info-fw-latest {
-      font-size: 1.1rem;
-      font-weight: 700;
-      line-height: 1.15;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .info-fw-actions {
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .info-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 22px;
-      padding: 0 10px;
-      border-radius: 9999px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0;
-      white-space: nowrap;
-      color: #9a3412;
-      background: #ffedd5;
-      border: 1px solid rgba(154, 52, 18, 0.18);
-    }
-
-    .info-update-btn {
-      height: 26px;
-      border-radius: 10px;
-      padding: 0 0.7rem;
-      font-weight: 700;
-    }
-
-    .info-update-btn.is-available {
-      background: #ffedd5;
-      color: #9a3412;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      .info-badge {
-        color: #ffd6a6;
-        background: rgba(255, 140, 40, 0.16);
-        border-color: rgba(255, 140, 40, 0.22);
-      }
-      .info-update-btn.is-available {
-        background: rgba(255, 140, 40, 0.16);
-        color: #ffd6a6;
-      }
-    }
-
-    @media (max-width: 450px) {
-      .info-fw-latest { font-size: 1.0rem; }
-      .info-badge { font-size: 0.9rem; }
-    }
-
     .info-meta-label {
       font-size: 0.95rem;
       font-weight: 600;
@@ -709,6 +632,22 @@
     #lts-speed #speedVal {
       font-size: 1.1rem;
     }
+    /* Typography for WiFi/Update sheet (match settings card sizing) */
+    #lts-update label,
+    #lts-update select,
+    #lts-update input[type="password"],
+    #lts-update input[type="text"],
+    #lts-update span {
+      font-size: 1.1rem;
+    }
+    /* WiFi sheet: bring labels/fields closer to the left */
+    #wifiModalBackdrop .form-grid {
+      grid-template-columns: max-content 1fr;
+    }
+    #wifiModalBackdrop .form-label {
+      text-align: left;
+      padding-right: 10px;
+    }
     /* Custom accent color for sliders and checkmarks */
     input[type="range"],
     input[type="checkbox"] {
@@ -759,6 +698,17 @@
         font-size: 1.0rem;
       }
       #servoModalBackdrop .cal-desc {
+        font-size: 1.0rem;
+      }
+      /* WiFi sheet typography (match settings card sizing on small screens) */
+      #wifiModalBackdrop .modal-title {
+        font-size: 1.1rem;
+      }
+      #lts-update label,
+      #lts-update select,
+      #lts-update input[type="password"],
+      #lts-update input[type="text"],
+      #lts-update span {
         font-size: 1.0rem;
       }
     }
@@ -1202,26 +1152,9 @@
           <div class="info-meta-label">Board version</div>
           <div id="infoBoard" class="info-meta-value">—</div>
         </div>
-        <div class="info-meta-row" aria-label="Firmware status">
+        <div class="info-meta-row">
           <div class="info-meta-label">Board firmware</div>
-
-          <div class="info-fw-line">
-            <span id="infoFwInstalled" class="info-meta-value">—</span>
-            <span id="infoFwTo" class="info-fw-to" style="display:none;" aria-hidden="true">→</span>
-            <span id="infoFwLatest" class="info-fw-latest" style="display:none;">—</span>
-          </div>
-
-          <div id="infoFwActions" class="info-fw-actions" style="display:none;">
-            <span id="infoFwBadge" class="info-badge">Update available</span>
-            <button id="fwUpdateBtn" class="mini-btn compact info-update-btn is-available" type="button">
-              Update
-              <span class="btn-chevron" aria-hidden="true">
-                <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
-                  <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </span>
-            </button>
-          </div>
+          <div id="infoFw" class="info-meta-value">—</div>
         </div>
         <div class="info-meta-row">
           <div class="info-meta-label">WiFi status</div>
@@ -1232,7 +1165,7 @@
       <div id="wbConnectWrap" class="info-card-footer" style="display:none;">
         <div class="info-card-footer-row">
           <button id="wbConnect" class="lts-btn info-connect-btn" type="button">Connect Board</button>
-          <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">WiFi / Update</button>
+          <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">Setup WiFi</button>
         </div>
       </div>
     </div>
@@ -1428,14 +1361,13 @@
     <div class="modal">
       <button id="wifiModalClose" class="icon-btn modal-close" aria-label="Close">×</button>
       <div class="modal-header">
-        <h2 class="modal-title">Update / WiFi</h2>
+        <h2 class="modal-title">Create WiFi Connection</h2>
       </div>
 
       <section id="lts-update" class="section-base">
 
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-          <div style="font-size:1.1rem; font-weight:600;">WiFi</div>
-          <button id="wifiScanBtn" class="mini-btn compact" type="button" style="justify-self:end;">Search Networks</button>
+        <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px; width:100%;">
+          <button id="wifiScanBtn" class="mini-btn compact" type="button">Search Networks</button>
         </div>
 
         <div class="form-grid" style="margin-top:10px;">
@@ -1715,13 +1647,67 @@
     // Info card meta (right of image)
     const infoBoard = document.getElementById('infoBoard');
     const infoRespooler = document.getElementById('infoRespooler');
-    const infoFwInstalled = document.getElementById('infoFwInstalled');
-    const infoFwTo = document.getElementById('infoFwTo');
-    const infoFwLatest = document.getElementById('infoFwLatest');
-    const infoFwActions = document.getElementById('infoFwActions');
-    const infoFwBadge = document.getElementById('infoFwBadge');
-    const fwUpdateBtn = document.getElementById('fwUpdateBtn');
+    const infoFw = document.getElementById('infoFw');
     const infoWifi = document.getElementById('infoWifi');
+
+    // --- Latest firmware check (for Info Card) ---
+    const LATEST_BOARD_FW_URL = 'https://raw.githubusercontent.com/LukasT03/LTS-Respooler/main/Firmware/latest_board_firmware.txt';
+    let latestBoardFw = null;
+    let latestBoardFwPromise = null;
+
+    function normalizeVersion(v){
+      return String(v || '')
+        .trim()
+        .replace(/^v/i, '')
+        .replace(/[^0-9.]/g, '');
+    }
+
+    function parseVersionParts(v){
+      const s = normalizeVersion(v);
+      if (!s) return null;
+      return s.split('.').map(x => {
+        const n = parseInt(x, 10);
+        return Number.isFinite(n) ? n : 0;
+      });
+    }
+
+    function compareVersions(a, b){
+      const pa = parseVersionParts(a);
+      const pb = parseVersionParts(b);
+      if (!pa || !pb) return 0;
+      const len = Math.max(pa.length, pb.length);
+      for (let i = 0; i < len; i++) {
+        const av = pa[i] ?? 0;
+        const bv = pb[i] ?? 0;
+        if (av > bv) return 1;
+        if (av < bv) return -1;
+      }
+      return 0;
+    }
+
+    function fetchLatestBoardFw(){
+      if (latestBoardFwPromise) return latestBoardFwPromise;
+      latestBoardFwPromise = fetch(LATEST_BOARD_FW_URL, { cache: 'no-store' })
+        .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(t => {
+          const v = normalizeVersion(t);
+          latestBoardFw = v || null;
+          return latestBoardFw;
+        })
+        .catch(err => {
+          console.warn('Latest firmware check failed:', err);
+          latestBoardFw = null;
+          return null;
+        });
+      return latestBoardFwPromise;
+    }
+
+    // Kick off fetch once; re-render Info Card when value arrives
+    fetchLatestBoardFw().then(() => {
+      try {
+        if (window.webble?.getState) updateInfoMeta(window.webble.getState());
+      } catch(_) {}
+    });
 
     function inferBoardVersion(s){
       const raw = String(s?.name || '').trim();
@@ -1761,67 +1747,15 @@
       const st = s || (window.webble?.getState ? window.webble.getState() : {});
       if (infoBoard) infoBoard.textContent = inferBoardVersion(st);
       if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
-      // Firmware + update indicator
-      const installed = (st?.fw != null && String(st.fw).trim().length) ? String(st.fw).trim() : '—';
-      const latestRaw = (
-        st?.fwLatest ?? st?.latestFw ?? st?.latestFW ?? st?.latestFirmware ?? st?.fw_latest ?? st?.FW_LATEST ??
-        st?.availableFw ?? st?.availableFW ?? st?.updateFw ?? st?.updateFW ?? null
-      );
-      const latest = (latestRaw != null && String(latestRaw).trim().length) ? String(latestRaw).trim() : null;
-
-      if (infoFwInstalled) infoFwInstalled.textContent = installed;
-
-      // Best-effort semver-ish compare
-      function parseVer(v){
-        const parts = String(v || '').trim().split(/[^0-9]+/).filter(Boolean).map(n => parseInt(n, 10));
-        return parts.length ? parts.slice(0, 4) : null;
-      }
-      function cmpVer(a, b){
-        const A = parseVer(a); const B = parseVer(b);
-        if (!A || !B) return (String(a) === String(b)) ? 0 : 1;
-        for (let i=0; i<Math.max(A.length, B.length); i++) {
-          const x = A[i] ?? 0; const y = B[i] ?? 0;
-          if (x > y) return 1;
-          if (x < y) return -1;
+      if (infoFw) {
+        const cur = st?.fw ? String(st.fw).trim() : '';
+        let suffix = '';
+        if (cur && latestBoardFw) {
+          const cmp = compareVersions(cur, latestBoardFw);
+          suffix = (cmp >= 0) ? ' (up to date)' : ' (update available)';
         }
-        return 0;
+        infoFw.textContent = cur ? (cur + suffix) : '—';
       }
-
-      const explicitAvail = (typeof st?.updateAvailable === 'boolean') ? st.updateAvailable
-        : (typeof st?.fwUpdateAvailable === 'boolean') ? st.fwUpdateAvailable
-        : (typeof st?.otaAvailable === 'boolean') ? st.otaAvailable
-        : null;
-
-      const isUpdating = (String(st?.statusCode || st?.code || '').toUpperCase() === 'U') || !!st?.updating || !!st?.otaUpdating;
-      const differs = (latest && installed !== '—') ? (cmpVer(latest, installed) > 0 || String(latest) !== String(installed)) : false;
-      const updateAvail = (explicitAvail === true) || (explicitAvail == null && !!differs);
-
-      if (infoFwTo) infoFwTo.style.display = (latest && updateAvail) ? 'inline' : 'none';
-      if (infoFwLatest) {
-        infoFwLatest.style.display = (latest && updateAvail) ? 'inline' : 'none';
-        if (latest) infoFwLatest.textContent = latest;
-      }
-
-      if (infoFwActions && infoFwBadge && fwUpdateBtn) {
-        if (isUpdating) {
-          infoFwActions.style.display = 'flex';
-          infoFwBadge.textContent = 'Updating…';
-          fwUpdateBtn.disabled = true;
-          fwUpdateBtn.style.display = 'none';
-        } else if (updateAvail) {
-          infoFwActions.style.display = 'flex';
-          infoFwBadge.textContent = 'Update available';
-          fwUpdateBtn.disabled = false;
-          fwUpdateBtn.style.display = 'inline-flex';
-          fwUpdateBtn.classList.add('is-available');
-        } else {
-          infoFwActions.style.display = 'none';
-          fwUpdateBtn.disabled = true;
-          fwUpdateBtn.style.display = 'none';
-          fwUpdateBtn.classList.remove('is-available');
-        }
-      }
-
       if (infoWifi) infoWifi.textContent = mapWifiStatus(st);
       // Switch respooler image depending on variant
       // Default to V4 image if VAR was never received (older firmware).
@@ -1858,26 +1792,6 @@
       }
 
       if (wifiModalBtn) wifiModalBtn.addEventListener('click', openWifiModal);
-
-      // Firmware Update entry point (best-effort): prefer direct OTA call if available; otherwise open WiFi/Update sheet
-      if (fwUpdateBtn) {
-        fwUpdateBtn.addEventListener('click', async () => {
-          try {
-            if (window.webble) {
-              const candidates = ['startOTA', 'startOta', 'otaStart', 'otaUpdate', 'updateFirmware', 'startUpdate'];
-              for (const fn of candidates) {
-                if (typeof window.webble[fn] === 'function') {
-                  await window.webble[fn]();
-                  return;
-                }
-              }
-            }
-          } catch(e) {
-            console.error(e);
-          }
-          openWifiModal();
-        });
-      }
       if (wifiModalClose) wifiModalClose.addEventListener('click', closeWifiModal);
       if (wifiModalBackdrop) {
         wifiModalBackdrop.addEventListener('click', (e) => {
@@ -2316,7 +2230,6 @@
       window.webble.on('status', s => {
         updateInfoMeta(s);
         updateStatusPills(s);
-        // WiFi / Update card
         try {
           const isConn = window.webble.getState().connected === true;
           const scanning = !!s.isScanningForSSIDs;
@@ -2410,7 +2323,6 @@
         updateStatusPills(initial);
         updateInfoMeta(initial);
 
-        // Initialize servo UI
         if (typeof initial.servoStepMm === 'number') {
           servoStepLocal = initial.servoStepMm;
           updateServoStepUI();
@@ -2422,20 +2334,16 @@
           const h = String(initial.servoHome).trim().toUpperCase();
           if (h === 'R' || h === 'L') servoHomeSetting.value = h;
         }
-        // Initialize motor stepper UI
         if (typeof initial.pow === 'number') {
           motorLocal = clampPow(initial.pow);
           updateMotorUI();
         }
-        // Initialize reference time UI
         if (typeof initial.dur === 'number') {
           durLocal = clampDur(initial.dur);
           updateDurUI();
         }
       } catch(_) {}
     }
-
-    // Info button and popup handlers removed
 
     whenWebbleReady(bindWithWebble);
   })();
