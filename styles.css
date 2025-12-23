@@ -995,6 +995,45 @@ input[type="checkbox"] {
 }
 .mini-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Firmware update button — match the Calibrate mini button styling */
+.fw-update-btn {
+  border: none;
+  background: #e5e7eb; /* match grey buttons */
+  color: rgb(var(--text));
+  -webkit-appearance: none;
+  appearance: none;
+
+  /* Compact mini button sizing like Calibrate */
+  height: 26px;
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  white-space: nowrap;
+
+  font-size: 1.0rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fw-update-btn:focus {
+  outline: none;
+}
+
+.fw-update-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fw-update-btn {
+    background: rgba(255,255,255,0.14);
+  }
+}
+
 .stepper {
   display: inline-flex;
   align-items: center;
