@@ -998,7 +998,7 @@ input[type="checkbox"] {
 /* Firmware update button — match the Calibrate mini button styling */
 .fw-update-btn {
   border: none;
-  background: #e5e7eb; /* match grey buttons */
+  background: #e5e7eb; /* default grey like mini buttons */
   color: rgb(var(--text));
   -webkit-appearance: none;
   appearance: none;
@@ -1023,6 +1023,12 @@ input[type="checkbox"] {
   outline: none;
 }
 
+/* Enabled (clickable) update button */
+.fw-update-btn:not(:disabled) {
+  background: #d6f4de;
+  color: #34c759;
+}
+
 .fw-update-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -1031,6 +1037,12 @@ input[type="checkbox"] {
 @media (prefers-color-scheme: dark) {
   .fw-update-btn {
     background: rgba(255,255,255,0.14);
+  }
+
+  /* Enabled (clickable) update button in dark mode */
+  .fw-update-btn:not(:disabled) {
+    background: #204029;
+    color: #34c759;
   }
 }
 

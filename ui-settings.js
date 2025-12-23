@@ -192,16 +192,12 @@
         row.style.justifyContent = 'space-between';
         row.style.gap = '10px';
         row.style.minWidth = '0';
-        // Let the row wrap if needed, but keep things aligned.
         row.style.flexWrap = 'wrap';
         row.style.position = 'relative';
-
         const left = document.createElement('span');
         left.style.flex = '1';
         left.style.minWidth = '0';
-        // Keep it readable; the allowed texts are short so no ellipsis needed.
         left.style.whiteSpace = 'nowrap';
-        // Ensure the text element can never intercept clicks meant for the button.
         left.style.pointerEvents = 'none';
 
         return { row, left };
