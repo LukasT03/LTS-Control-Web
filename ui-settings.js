@@ -19,6 +19,8 @@
   let infoFwLastRenderKey = null;
   // Local OTA UI state so we can immediately show "Updating..." after the user clicks.
   let otaLocalPendingUntil = 0;
+  // Only show "Update failed!" if the user actually attempted an OTA update in this connection.
+  let otaUserInitiatedThisConnection = false;
 
   // --- Latest firmware check (for Info Card) ---
   const LATEST_BOARD_FW_URL = 'https://raw.githubusercontent.com/LukasT03/LTS-Respooler/main/Firmware/latest_board_firmware.txt';
@@ -103,10 +105,29 @@
   }
 
   function mapWifiStatus(s){
-    const ok = (typeof s?.wifiConnected === 'boolean') ? s.wifiConnected : null;
-    const ssid = (s?.wifiSSID != null && String(s.wifiSSID).trim().length) ? String(s.wifiSSID) : null;
+    const st = s || {};
+
+    // Prefer explicit boolean from firmware, but fall back to other known fields.
+    const ok = (typeof st?.wifiConnected === 'boolean') ? st.wifiConnected
+      : (typeof st?.WIFI_OK === 'boolean') ? st.WIFI_OK
+      : (typeof st?.wifiConnectionResult === 'boolean') ? st.wifiConnectionResult
+      : (typeof st?.wifiLastResult === 'boolean') ? st.wifiLastResult
+      : null;
+
+    const ssid = (st?.wifiSSID != null && String(st.wifiSSID).trim().length)
+      ? String(st.wifiSSID)
+      : (st?.WIFI_SSID != null && String(st.WIFI_SSID).trim().length)
+        ? String(st.WIFI_SSID)
+        : null;
+
     if (ok === true) return ssid ? ('Connected: ' + ssid) : 'Connected';
     if (ok === false) return 'Not connected';
+
+    // If we're connected to the Board but Wi‑Fi state is unknown (older firmware / not reported),
+    // show a sensible default instead of a dash.
+    const isConn = (typeof st?.connected === 'boolean') ? st.connected : false;
+    if (isConn) return 'Not connected';
+
     return '—';
   }
 
@@ -159,6 +180,7 @@
         isUpdating ? '1' : '0',
         (wifiOk === true) ? 'W1' : (wifiOk === false ? 'W0' : 'W-'),
         (otaOk === true) ? 'O1' : (otaOk === false ? 'O0' : 'O-'),
+        otaUserInitiatedThisConnection ? 'T1' : 'T0',
       ].join('|');
 
       // Helper to build the row container once
@@ -224,11 +246,14 @@
                 return;
               }
 
-              // Immediately show "Updating..." (allowed state), even if Board status is delayed.
-              otaLocalPendingUntil = Date.now() + 15000;
-              try { updateInfoMeta(stNow); } catch(_) {}
+          // Mark that the user initiated an OTA update in this connection.
+          otaUserInitiatedThisConnection = true;
 
-              if (typeof window.webble?.otaUpdate === 'function') {
+          // Immediately show "Updating..." (allowed state), even if Board status is delayed.
+          otaLocalPendingUntil = Date.now() + 15000;
+          try { updateInfoMeta(stNow); } catch(_) {}
+
+          if (typeof window.webble?.otaUpdate === 'function') {
                 await window.webble.otaUpdate();
               } else if (typeof window.webble?.triggerOTAUpdate === 'function') {
                 await window.webble.triggerOTAUpdate();
@@ -290,7 +315,8 @@
       }
 
       // 3) Update failed!
-      if (otaOk === false) {
+      // Only show this if the user actually initiated an OTA update in this connection.
+      if (otaOk === false && otaUserInitiatedThisConnection) {
         btn.textContent = 'Update failed!';
         btn.disabled = false; // allow retry
         btn.dataset.fwState = 'failed';
@@ -1068,6 +1094,11 @@
     window.webble.on('disconnected', () => {
       variantModalWasShownThisConnection = false;
       closeVariantModal();
+
+      // Reset OTA UI state for the next connection.
+      otaLocalPendingUntil = 0;
+      otaUserInitiatedThisConnection = false;
+      infoFwLastRenderKey = null;
     });
 
     try {
