@@ -17,6 +17,10 @@
   let infoFwUpdateBtn = null;
   // Cache key to avoid rebuilding the FW row on every status update (prevents click from getting cancelled)
   let infoFwLastRenderKey = null;
+  // Info Wi‑Fi action button (rendered inline inside #infoWifi)
+  let infoWifiActionBtn = null;
+  // Cache key to avoid rebuilding the Wi‑Fi row on every status update (prevents click from getting cancelled)
+  let infoWifiLastRenderKey = null;
   // Local OTA UI state so we can immediately show "Updating..." after the user clicks.
   let otaLocalPendingUntil = 0;
   // Only show "Update failed!" if the user actually attempted an OTA update in this connection.
@@ -129,6 +133,15 @@
     if (isConn) return 'Not connected';
 
     return '—';
+  }
+
+  function getWifiOk(st){
+    if (typeof st?.wifiConnected === 'boolean') return st.wifiConnected;
+    if (typeof st?.WIFI_OK === 'boolean') return st.WIFI_OK;
+    // Fall back to last known result fields if present
+    if (typeof st?.wifiConnectionResult === 'boolean') return st.wifiConnectionResult;
+    if (typeof st?.wifiLastResult === 'boolean') return st.wifiLastResult;
+    return null;
   }
 
   function updateInfoMeta(s){
@@ -347,7 +360,81 @@
       row.appendChild(btn);
       infoFw.appendChild(row);
     }
-    if (infoWifi) infoWifi.textContent = mapWifiStatus(st);
+    if (infoWifi) {
+      const wifiText = mapWifiStatus(st);
+      const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
+      const wifiOk = getWifiOk(st);
+      // Button text depends ONLY on the connected state (unknown => treat as not connected)
+      const btnLabel = (wifiOk === true) ? 'Change' : 'Connect';
+
+      const key = [
+        wifiText || '',
+        isConn ? '1' : '0',
+        (wifiOk === true) ? 'W1' : (wifiOk === false ? 'W0' : 'W-'),
+        btnLabel,
+      ].join('|');
+
+      if (key === infoWifiLastRenderKey) return;
+      infoWifiLastRenderKey = key;
+
+      // Build a row similar to FW: left text + right action button.
+      infoWifi.textContent = '';
+
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.justifyContent = 'space-between';
+      row.style.gap = '10px';
+      row.style.minWidth = '0';
+      row.style.flexWrap = 'wrap';
+      row.style.position = 'relative';
+
+      const left = document.createElement('span');
+      left.style.flex = '1';
+      left.style.minWidth = '0';
+      left.style.whiteSpace = 'nowrap';
+      left.style.pointerEvents = 'none';
+      left.textContent = wifiText || '—';
+
+      row.appendChild(left);
+
+      // Only show the action button when connected to the Board.
+      if (isConn) {
+        if (!infoWifiActionBtn) {
+          infoWifiActionBtn = document.createElement('button');
+          infoWifiActionBtn.type = 'button';
+
+          // Match the Calibrate button styling exactly (same className).
+          try {
+            const calBtn = document.getElementById('servoCalBtn');
+            if (calBtn && calBtn.className) {
+              infoWifiActionBtn.className = calBtn.className;
+            }
+          } catch (_) {}
+
+          // Ensure it behaves like a normal clickable button.
+          infoWifiActionBtn.style.pointerEvents = 'auto';
+          infoWifiActionBtn.style.cursor = 'pointer';
+          infoWifiActionBtn.style.position = 'relative';
+          infoWifiActionBtn.style.zIndex = '5';
+
+          infoWifiActionBtn.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            try {
+              const backdrop = document.getElementById('wifiModalBackdrop');
+              if (backdrop) backdrop.classList.add('show');
+            } catch (_) {}
+          });
+        }
+
+        infoWifiActionBtn.textContent = btnLabel;
+        infoWifiActionBtn.disabled = false;
+        row.appendChild(infoWifiActionBtn);
+      }
+
+      infoWifi.appendChild(row);
+    }
     // Switch respooler image depending on variant
     // Default to V4 image if VAR was never received (older firmware).
     try {
@@ -367,9 +454,12 @@
     const wifiPass     = document.getElementById('wifiPass');
     const wifiSendBtn  = document.getElementById('wifiSendBtn');
     const wifiStatus   = document.getElementById('wifiStatus');
-    const wifiModalBtn = document.getElementById('wifiModalBtn');
     const wifiModalBackdrop = document.getElementById('wifiModalBackdrop');
     const wifiModalClose = document.getElementById('wifiModalClose');
+
+    // Legacy button (should no longer be used; keep hidden if still present in HTML)
+    const wifiModalBtnLegacy = document.getElementById('wifiModalBtn');
+    if (wifiModalBtnLegacy) wifiModalBtnLegacy.style.display = 'none';
     const variantModalBackdrop = document.getElementById('variantModalBackdrop');
     const variantModalClose    = document.getElementById('variantModalClose');
     const variantV4            = document.getElementById('variantV4');
@@ -487,16 +577,10 @@
       });
     }
 
-    function openWifiModal(){
-      if (!wifiModalBackdrop) return;
-      wifiModalBackdrop.classList.add('show');
-    }
     function closeWifiModal(){
       if (!wifiModalBackdrop) return;
       wifiModalBackdrop.classList.remove('show');
     }
-
-    if (wifiModalBtn) wifiModalBtn.addEventListener('click', openWifiModal);
     if (wifiModalClose) wifiModalClose.addEventListener('click', closeWifiModal);
     if (wifiModalBackdrop) {
       wifiModalBackdrop.addEventListener('click', (e) => {
@@ -1016,7 +1100,7 @@
         if (wifiSsid) wifiSsid.disabled = !isConn || scanning;
         if (wifiPass) wifiPass.disabled = !isConn;
         if (wifiSendBtn) wifiSendBtn.disabled = !isConn || scanning;
-        if (wifiModalBtn) wifiModalBtn.disabled = !isConn;
+        // (removed: legacy wifiModalBtn wiring)
 
         if (Array.isArray(s.availableSSIDs)) {
           populateSsids(s.availableSSIDs, s.wifiSSID || '');
@@ -1104,6 +1188,7 @@
       otaLocalPendingUntil = 0;
       otaUserInitiatedThisConnection = false;
       infoFwLastRenderKey = null;
+      infoWifiLastRenderKey = null;
     });
 
     try {

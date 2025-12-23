@@ -75,7 +75,7 @@
 
     ui.stop.disabled  = !on;
     ui.start.disabled = !on;
-    if (ui.connect) ui.connect.textContent = on ? 'Disconnect' : 'Connect Board';
+    if (ui.connect) ui.connect.textContent = on ? 'Disconnect Respooler' : 'Connect Respooler';
     if (!on) { ui.start.textContent = 'Start'; }
     if(on && justConnected){
       statusHoldUntil = Date.now() + 1500;
