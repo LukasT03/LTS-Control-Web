@@ -69,7 +69,10 @@
             </div>
             <div class="info-meta-row">
               <div class="info-meta-label">Board firmware</div>
-              <div id="infoFw" class="info-meta-value">—</div>
+              <div id="infoFw" class="info-meta-value" style="display:flex; align-items:center; gap:10px; min-width:0;">
+                <span id="infoFwText" style="flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</span>
+                <button id="infoFwUpdateBtn" class="mini-btn compact" type="button" style="display:none; flex:0 0 auto;">Update</button>
+              </div>
             </div>
             <div class="info-meta-row">
               <div class="info-meta-label">Wi‑Fi status</div>

@@ -15,6 +15,8 @@
 
   // Info FW update button (rendered inline inside #infoFw when an update is available)
   let infoFwUpdateBtn = null;
+  // Cache key to avoid rebuilding the FW row on every status update (prevents click from getting cancelled)
+  let infoFwLastRenderKey = null;
 
   // --- Latest firmware check (for Info Card) ---
   const LATEST_BOARD_FW_URL = 'https://raw.githubusercontent.com/LukasT03/LTS-Respooler/main/Firmware/latest_board_firmware.txt';
@@ -125,115 +127,160 @@
     if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
     if (infoFw) {
       const cur = st?.fw ? String(st.fw).trim() : '';
+      const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
+      const isUpdating = String(st?.statusCode || '').trim().toUpperCase() === 'U';
 
-      // Rebuild the FW line so we can place an inline Update button.
-      // IMPORTANT: keep the Update button visible even if the version text is ellipsized.
-      infoFw.textContent = '';
+      // Build a stable render key so we don't tear down/rebuild the DOM on every status tick.
+      // Rebuilding during pointer interaction can cancel clicks.
+      const key = [
+        normalizeVersion(cur) || '',
+        normalizeVersion(latestBoardFw) || '',
+        isConn ? '1' : '0',
+        isUpdating ? '1' : '0',
+      ].join('|');
 
-      if (!cur) {
-        infoFw.textContent = '—';
+      // Fast path: nothing relevant changed. Only keep button enabled/disabled in sync.
+      if (key === infoFwLastRenderKey) {
+        try {
+          if (infoFwUpdateBtn) {
+            const shouldDisable = !isConn || isUpdating;
+            infoFwUpdateBtn.disabled = shouldDisable;
+            infoFwUpdateBtn.textContent = isUpdating ? 'Updating…' : 'Update';
+          }
+        } catch(_) {}
       } else {
-        // Build a flex row: left text can ellipsize, right button stays visible.
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '10px';
-        row.style.minWidth = '0';
+        infoFwLastRenderKey = key;
 
-        const left = document.createElement('span');
-        left.style.flex = '1';
-        left.style.minWidth = '0';
-        left.style.overflow = 'hidden';
-        left.style.textOverflow = 'ellipsis';
-        left.style.whiteSpace = 'nowrap';
+        // Rebuild the FW line so we can place an inline Update button.
+        // IMPORTANT: keep the Update button visible even if the version text is ellipsized.
+        infoFw.textContent = '';
 
-        // If we know the latest version, show either (up to date) or an inline Update button.
-        if (latestBoardFw) {
-          const cmp = compareVersions(cur, latestBoardFw);
+        if (!cur) {
+          infoFw.textContent = '—';
+        } else {
+          // Build a flex row: left text can ellipsize, right button stays visible.
+          const row = document.createElement('div');
+          row.style.display = 'flex';
+          row.style.alignItems = 'center';
+          row.style.gap = '10px';
+          row.style.minWidth = '0';
 
-          if (cmp >= 0) {
-            left.textContent = cur + ' (up to date)';
-            left.title = left.textContent;
+          const left = document.createElement('span');
+          left.style.flex = '1';
+          left.style.minWidth = '0';
+          left.style.overflow = 'hidden';
+          left.style.textOverflow = 'ellipsis';
+          left.style.whiteSpace = 'nowrap';
 
-            // Ensure any previously created update button is removed.
-            if (infoFwUpdateBtn && infoFwUpdateBtn.parentElement) {
-              infoFwUpdateBtn.parentElement.removeChild(infoFwUpdateBtn);
-            }
-            // Reset label/disabled for next time it appears.
-            if (infoFwUpdateBtn) {
-              infoFwUpdateBtn.textContent = 'Update';
-              infoFwUpdateBtn.disabled = false;
-            }
+          // If we know the latest version, show either (up to date) or an inline Update button.
+          if (latestBoardFw) {
+            const cmp = compareVersions(cur, latestBoardFw);
 
-            row.appendChild(left);
-            infoFw.appendChild(row);
-          } else {
-            // Update available: show version on the left and a green Update button on the right.
-            left.textContent = cur;
-            left.title = cur;
+            if (cmp >= 0) {
+              left.textContent = cur + ' (up to date)';
+              left.title = left.textContent;
 
-            if (!infoFwUpdateBtn) {
-              infoFwUpdateBtn = document.createElement('button');
-              infoFwUpdateBtn.type = 'button';
-              infoFwUpdateBtn.textContent = 'Update';
-
-              // Match the Variant Save button styling as closely as possible.
-              try {
-                const variantSaveBtn = document.getElementById('variantSaveBtn');
-                if (variantSaveBtn && variantSaveBtn.className) {
-                  infoFwUpdateBtn.className = variantSaveBtn.className;
-                }
-              } catch(_) {}
-
-              // Force the requested green look without touching CSS files.
-              infoFwUpdateBtn.style.background = '#34C759';
-              infoFwUpdateBtn.style.borderColor = '#34C759';
-              infoFwUpdateBtn.style.color = '#fff';
-
-              infoFwUpdateBtn.addEventListener('click', async () => {
-                try {
-                  infoFwUpdateBtn.disabled = true;
-                  infoFwUpdateBtn.textContent = 'Updating…';
-
-                  // Exact exported name (no guessing):
-                  if (typeof window.webble?.otaUpdate === 'function') {
-                    await window.webble.otaUpdate();
-                  } else {
-                    console.warn('window.webble.otaUpdate is not available');
-                  }
-                } catch (e) {
-                  console.error(e);
-                  infoFwUpdateBtn.textContent = 'Update';
-                  infoFwUpdateBtn.disabled = false;
-                } finally {
-                  // Keep disabled while the board reports Updating.
-                  // Re-enabled by updateInfoMeta() when status is no longer Updating.
-                }
-              });
-            }
-
-            row.appendChild(left);
-            row.appendChild(infoFwUpdateBtn);
-            infoFw.appendChild(row);
-
-            // Sync Update button with OTA state
-            try {
-              const isUpdating = String(st?.statusCode || '').toUpperCase() === 'U';
-              if (isUpdating) {
-                infoFwUpdateBtn.disabled = true;
-                infoFwUpdateBtn.textContent = 'Updating…';
-              } else {
-                if (infoFwUpdateBtn.textContent === 'Updating…') infoFwUpdateBtn.textContent = 'Update';
+              // Ensure any previously created update button is removed.
+              if (infoFwUpdateBtn && infoFwUpdateBtn.parentElement) {
+                infoFwUpdateBtn.parentElement.removeChild(infoFwUpdateBtn);
+              }
+              // Reset label/disabled for next time it appears.
+              if (infoFwUpdateBtn) {
+                infoFwUpdateBtn.textContent = 'Update';
                 infoFwUpdateBtn.disabled = false;
               }
-            } catch(_) {}
+
+              row.appendChild(left);
+              infoFw.appendChild(row);
+            } else {
+              // Update available: show version on the left and a green Update button on the right.
+              left.textContent = cur;
+              left.title = cur;
+
+              if (!infoFwUpdateBtn) {
+                infoFwUpdateBtn = document.createElement('button');
+                infoFwUpdateBtn.type = 'button';
+                infoFwUpdateBtn.textContent = 'Update';
+
+                // Match the Variant Save button styling as closely as possible.
+                try {
+                  const variantSaveBtn = document.getElementById('variantSaveBtn');
+                  if (variantSaveBtn && variantSaveBtn.className) {
+                    infoFwUpdateBtn.className = variantSaveBtn.className;
+                  }
+                } catch(_) {}
+
+                // Force the requested green look without touching CSS files.
+                infoFwUpdateBtn.style.background = '#34C759';
+                infoFwUpdateBtn.style.borderColor = '#34C759';
+                infoFwUpdateBtn.style.color = '#fff';
+
+                // Ensure the button can actually receive clicks even if the container has special styles.
+                infoFwUpdateBtn.style.pointerEvents = 'auto';
+                infoFwUpdateBtn.style.cursor = 'pointer';
+
+                // Bind click handler once.
+                infoFwUpdateBtn.addEventListener('click', async (ev) => {
+                  try {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+
+                    const stNow = window.webble?.getState ? window.webble.getState() : {};
+                    const connectedNow = stNow && stNow.connected === true;
+                    if (!connectedNow) {
+                      infoFwUpdateBtn.disabled = true;
+                      const prev = infoFwUpdateBtn.textContent;
+                      infoFwUpdateBtn.textContent = 'Connect first';
+                      setTimeout(() => {
+                        try {
+                          infoFwUpdateBtn.textContent = prev || 'Update';
+                          infoFwUpdateBtn.disabled = false;
+                        } catch(_) {}
+                      }, 1200);
+                      return;
+                    }
+
+                    infoFwUpdateBtn.disabled = true;
+                    infoFwUpdateBtn.textContent = 'Updating…';
+
+                    // Exact exported names (no guessing): try both exports used in the WebBLE layer.
+                    if (typeof window.webble?.otaUpdate === 'function') {
+                      await window.webble.otaUpdate();
+                    } else if (typeof window.webble?.triggerOTAUpdate === 'function') {
+                      await window.webble.triggerOTAUpdate();
+                    } else {
+                      console.warn('No OTA update function exposed on window.webble');
+                      infoFwUpdateBtn.textContent = 'Update';
+                      infoFwUpdateBtn.disabled = false;
+                    }
+                  } catch (e) {
+                    console.error(e);
+                    try {
+                      infoFwUpdateBtn.textContent = 'Update';
+                      infoFwUpdateBtn.disabled = false;
+                    } catch(_) {}
+                  }
+                });
+              }
+
+              // Sync Update button with OTA state / connection state
+              try {
+                const shouldDisable = !isConn || isUpdating;
+                infoFwUpdateBtn.disabled = shouldDisable;
+                infoFwUpdateBtn.textContent = isUpdating ? 'Updating…' : 'Update';
+              } catch(_) {}
+
+              row.appendChild(left);
+              row.appendChild(infoFwUpdateBtn);
+              infoFw.appendChild(row);
+            }
+          } else {
+            // No latest version info available yet
+            left.textContent = cur;
+            left.title = cur;
+            row.appendChild(left);
+            infoFw.appendChild(row);
           }
-        } else {
-          // No latest version info available yet
-          left.textContent = cur;
-          left.title = cur;
-          row.appendChild(left);
-          infoFw.appendChild(row);
         }
       }
     }

@@ -14,6 +14,7 @@
     run: false, progress: null, remaining: null,
     isError: false, errMsg: null,
     statusCode: null, statusText: null,
+    isUpdating: false,
     tempBuf: [], chipTempAvg: null,
     speed: 80, hs: false, led: 50, fan: 80, fanAlways: false,
     useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 895,
@@ -26,6 +27,7 @@
     availableSSIDs: null,
 
     otaSuccess: null,
+    otaInProgress: false,
 
     boardVariant: 'UNK',
     didReceiveBoardVariant: false,
@@ -231,6 +233,12 @@
           state.statusText = s.text;
           state.run = !!s.run;
           state.isError = !!s.isError;
+          state.isUpdating = !!s.updating;
+
+          // If firmware reports we are no longer updating, clear the local in-progress flag.
+          if (!state.isUpdating) {
+            state.otaInProgress = false;
+          }
 
           if (s.done) {
             state.run = false; state.progress = 100; state.remaining = 0;
@@ -305,6 +313,7 @@
         if ('OTA_OK' in d) {
           // OTA result from firmware (true/false). Keep null until we receive a value.
           state.otaSuccess = (typeof d.OTA_OK === 'boolean') ? d.OTA_OK : bool(d.OTA_OK);
+          state.otaInProgress = false;
         }
 
         if ('TRQ' in d) {
@@ -370,8 +379,23 @@
     start: () => sendCmd('START'),
     stop:  () => sendCmd('STOP'),
     pause: () => sendCmd('PAUSE'),
-    otaUpdate: () => sendCmd('OTA'),
-    triggerOTAUpdate: () => sendCmd('OTA'),
+    otaUpdate: () => {
+      if (!state.char || !state.connected) {
+        emit('log', { dir: 'err', error: 'OTA requested but not connected / characteristic missing' });
+        return Promise.reject(new Error('Not connected'));
+      }
+      // Reset previous result and mark update as in progress for UI feedback.
+      state.otaSuccess = null;
+      state.otaInProgress = true;
+      state.isUpdating = true;
+      // Optional immediate feedback (firmware will also report STAT=U).
+      state.statusCode = state.statusCode || 'U';
+      state.statusText = state.statusText || 'Updating…';
+      emit('state', { ...state });
+      emit('status', { ...state });
+      return sendCmd('OTA');
+    },
+    triggerOTAUpdate: () => window.webble.otaUpdate(),
     wifiScan: () => { state.isScanningForSSIDs = true; emit('state', { ...state }); return sendCmd('WIFI_SCAN'); },
     wifiConnect: () => sendCmd('WIFI_CONNECT'),
     sendWiFiSSID: (ssid) => { beginEdit('WIFI_SSID'); holdKey('WIFI_SSID', 700); return sendSet('WIFI_SSID', String(ssid ?? '')); },
