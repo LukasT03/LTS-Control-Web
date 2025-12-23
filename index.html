@@ -1871,7 +1871,6 @@
       return latestBoardFwPromise;
     }
 
-    // Kick off fetch once; re-render Info Card when value arrives
     fetchLatestBoardFw().then(() => {
       try {
         if (window.webble?.getState) updateInfoMeta(window.webble.getState());
@@ -1892,8 +1891,6 @@
     }
 
     function mapRespoolerVersion(s){
-      // Older firmware (<1.2.0) won't send VAR at all.
-      // In that case we default to Respooler V4 and do NOT show "Unknown".
       const did = (s && Object.prototype.hasOwnProperty.call(s, 'didReceiveBoardVariant')) ? !!s.didReceiveBoardVariant : false;
       const raw = String(s?.boardVariant || '').trim();
       const v = raw.toUpperCase();
@@ -1982,11 +1979,11 @@
       function openVariantModal(opts = { manual: false }){
         const manual = !!opts.manual;
 
-        // Auto-open (UNK): start with no selection.
+        // Auto-open (UNK): default to V4 so the user can just press Save.
         // Manual open (button): keep whatever we preselected from the current Board state.
         if (!manual) {
-          pendingVariant = null;
-          setVariantUI(null);
+          pendingVariant = 'STD';
+          setVariantUI('STD');
         }
         updateVariantSaveState();
 
@@ -2533,16 +2530,18 @@
           // Enable/disable the quick-switch button with connection state
           if (infoVariantBtn) infoVariantBtn.disabled = !isConn;
 
-          if (isConn && isUnknown && !variantModalWasShownThisConnection && !isOpen) {
-            // Default UI selection to V4 when unknown
-            setVariantUI('STD');
+          if (isConn && isUnknown && !variantModalWasShownThisConnection && !isOpen && !variantModalManualOpen) {
+            // Auto-open: default selection handled in openVariantModal()
             openVariantModal({ manual: false });
             variantModalWasShownThisConnection = true;
           }
 
           // If we have a known variant, reflect it in the UI.
+          // IMPORTANT: Do NOT override the user's selection while the modal is open manually.
           if (did && (raw === 'PRO' || raw === 'STD')) {
-            setVariantUI(raw);
+            if (!(isOpen && variantModalManualOpen)) {
+              setVariantUI(raw);
+            }
 
             // Only auto-close when it was auto-opened due to UNK.
             if (variantModalAutoOpen) {
