@@ -416,10 +416,6 @@
       cursor: not-allowed;
     }
 
-    @media (prefers-color-scheme: dark) {
-      .info-variant-btn {
-      }
-    }
 
     @media (prefers-color-scheme: dark) {
       .info-frame {
@@ -1920,15 +1916,16 @@
 
     function updateInfoMeta(s){
       const st = s || (window.webble?.getState ? window.webble.getState() : {});
-      // Variant selector button: only show when connected AND Board actually sent VAR (UNK/PRO/STD).
       try {
         const btn = document.getElementById('infoVariantBtn');
         if (btn) {
           const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
           const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
           const raw = String(st?.boardVariant || '').trim().toUpperCase();
-          const show = !!isConn && did && (raw === 'UNK' || raw === 'PRO' || raw === 'STD');
-          btn.style.display = show ? '' : 'none';
+          // Only show the manual selector when the Board reported a *known* variant.
+          // For UNK we auto-open the modal, and we don't show the manual button.
+          const show = !!isConn && did && (raw === 'PRO' || raw === 'STD');
+          btn.style.display = show ? 'inline-flex' : 'none';
           btn.disabled = !show;
         }
       } catch(_) {}
@@ -1958,18 +1955,14 @@
     }
 
     function bindWithWebble(){
-      // WiFi / Update UI
       const wifiScanBtn  = document.getElementById('wifiScanBtn');
       const wifiSsid     = document.getElementById('wifiSsid');
       const wifiPass     = document.getElementById('wifiPass');
       const wifiSendBtn  = document.getElementById('wifiSendBtn');
       const wifiStatus   = document.getElementById('wifiStatus');
-
       const wifiModalBtn = document.getElementById('wifiModalBtn');
       const wifiModalBackdrop = document.getElementById('wifiModalBackdrop');
       const wifiModalClose = document.getElementById('wifiModalClose');
-
-      // Respooler variant modal (auto-shown only when VAR is received as UNK)
       const variantModalBackdrop = document.getElementById('variantModalBackdrop');
       const variantModalClose    = document.getElementById('variantModalClose');
       const variantV4            = document.getElementById('variantV4');
@@ -1990,7 +1983,7 @@
       };
       function openVariantModal(opts = { manual: false }){
         pendingVariant = null;
-        setVariantUI(null); // clear selection
+        setVariantUI(null);
         updateVariantSaveState();
         if (!variantModalBackdrop) return;
         variantModalManualOpen = !!opts.manual;
