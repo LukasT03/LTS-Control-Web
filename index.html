@@ -606,6 +606,20 @@
       }
     }
 
+    #variantSaveBtn, #variantSaveBtn:hover, #variantSaveBtn:active, #variantSaveBtn[disabled] {
+      background:#d1e9ff !important;
+      color:#0088fe !important;
+      border:none !important;
+      box-shadow:none !important;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    @media (prefers-color-scheme: dark) {
+      #variantSaveBtn, #variantSaveBtn:hover, #variantSaveBtn:active, #variantSaveBtn[disabled] {
+        background:#153a56 !important;
+      }
+    }
+
     #wbStop, #wbStop:hover, #wbStop:active, #wbStop[disabled] {
       background:#ffdbdc !important;
       color:#fe383c !important;
@@ -773,6 +787,57 @@
       opacity: 0.55;
       font-size: 1.05rem;
       line-height: 1.25;
+    }
+
+    #variantModalBackdrop .variant-tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0;
+    }
+
+    #variantModalBackdrop .variant-tile {
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      padding: 10px 10px 12px 10px;
+      background: transparent;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      display: grid;
+      grid-template-rows: 110px auto;
+      align-items: center;
+      justify-items: center;
+      gap: 10px;
+      box-sizing: border-box;
+      color: rgb(var(--text));
+      box-shadow: none;
+      outline: none;
+    }
+
+    #variantModalBackdrop .variant-tile img {
+      width: 100%;
+      height: 110px;
+      object-fit: contain;
+      display: block;
+    }
+
+    #variantModalBackdrop .variant-tile-label {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    #variantModalBackdrop .variant-tile.is-selected {
+      box-shadow: 0 0 0 2px #1364C4 inset;
+    }
+
+
+    @media (prefers-color-scheme: dark) {
+      #variantModalBackdrop .variant-tile {
+        border-color: rgba(255,255,255,0.18);
+      }
     }
 
     @media (max-width: 450px) {
@@ -1482,12 +1547,22 @@
         <h2 class="modal-title">Select Respooler Variant</h2>
       </div>
 
-      <p class="variant-desc">Your Board reported an unknown Respooler variant. Please select the correct one.</p>
+      <p class="variant-desc">Your Board reported an unknown Respooler variant. Please select the correct one and press Save.</p>
 
-      <div id="variantSegment" class="segmented" role="tablist" aria-label="Respooler variant">
-        <div id="variantIndicator" class="seg-indicator"></div>
-        <button id="variantV4" class="seg-btn is-selected" type="button" role="tab" aria-selected="true">Respooler V4</button>
-        <button id="variantPro" class="seg-btn" type="button" role="tab" aria-selected="false">Respooler Pro</button>
+      <div class="variant-tiles" role="group" aria-label="Respooler variant">
+        <button id="variantV4" class="variant-tile" type="button" aria-pressed="false">
+          <img src="Respooler.png" alt="Respooler V4" />
+          <div class="variant-tile-label">Respooler V4</div>
+        </button>
+
+        <button id="variantPro" class="variant-tile" type="button" aria-pressed="false">
+          <img src="RespoolerPro.png" alt="Respooler Pro" />
+          <div class="variant-tile-label">Respooler Pro</div>
+        </button>
+      </div>
+
+      <div class="variant-actions" style="margin-top:16px;">
+        <button id="variantSaveBtn" class="lts-btn" type="button" disabled>Save</button>
       </div>
     </div>
   </div>
@@ -1884,13 +1959,21 @@
       const variantModalClose    = document.getElementById('variantModalClose');
       const variantV4            = document.getElementById('variantV4');
       const variantPro           = document.getElementById('variantPro');
-      const variantIndicator     = document.getElementById('variantIndicator');
       const infoVariantBtn       = document.getElementById('infoVariantBtn');
 
       let variantModalWasShownThisConnection = false;
       let variantModalAutoOpen = false;
       let variantModalManualOpen = false;
+      let pendingVariant = null;
+      const variantSaveBtn = document.getElementById('variantSaveBtn');
+      const updateVariantSaveState = () => {
+        if (!variantSaveBtn) return;
+        variantSaveBtn.disabled = !pendingVariant;
+      };
       function openVariantModal(opts = { manual: false }){
+        pendingVariant = null;
+        setVariantUI(null); // clear selection
+        updateVariantSaveState();
         if (!variantModalBackdrop) return;
         variantModalManualOpen = !!opts.manual;
         variantModalAutoOpen = !variantModalManualOpen;
@@ -1909,28 +1992,11 @@
 
         if (variantV4) {
           variantV4.classList.toggle('is-selected', isV4);
-          variantV4.setAttribute('aria-selected', isV4 ? 'true' : 'false');
+          variantV4.setAttribute('aria-pressed', isV4 ? 'true' : 'false');
         }
         if (variantPro) {
           variantPro.classList.toggle('is-selected', isPro);
-          variantPro.setAttribute('aria-selected', isPro ? 'true' : 'false');
-        }
-        if (variantIndicator) {
-          const index = isPro ? 1 : 0;
-          variantIndicator.style.transform = `translateX(${index * 100}%)`;
-        }
-      }
-      async function chooseVariant(mapped){
-        const v = String(mapped || '').toUpperCase();
-        if (v !== 'STD' && v !== 'PRO') return;
-        try {
-          setVariantUI(v);
-          await window.webble.setBoardVariant(v);
-        } catch(e) {
-          console.error(e);
-        } finally {
-          variantModalWasShownThisConnection = true;
-          closeVariantModal();
+          variantPro.setAttribute('aria-pressed', isPro ? 'true' : 'false');
         }
       }
 
@@ -1943,8 +2009,31 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeVariantModal();
       });
-      if (variantV4) variantV4.addEventListener('click', () => chooseVariant('STD'));
-      if (variantPro) variantPro.addEventListener('click', () => chooseVariant('PRO'));
+      if (variantV4) variantV4.addEventListener('click', () => {
+        pendingVariant = 'STD';
+        setVariantUI('STD');
+        updateVariantSaveState();
+      });
+      if (variantPro) variantPro.addEventListener('click', () => {
+        pendingVariant = 'PRO';
+        setVariantUI('PRO');
+        updateVariantSaveState();
+      });
+      if (variantSaveBtn) {
+        variantSaveBtn.addEventListener('click', async () => {
+          if (!pendingVariant) return;
+          try {
+            await window.webble.setBoardVariant(pendingVariant);
+          } catch (e) {
+            console.error(e);
+          } finally {
+            variantModalWasShownThisConnection = true;
+            closeVariantModal();
+            pendingVariant = null;
+            updateVariantSaveState();
+          }
+        });
+      }
       if (infoVariantBtn) {
         infoVariantBtn.addEventListener('click', () => {
           try {
@@ -1952,9 +2041,13 @@
             const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
             const raw = String(st?.boardVariant || '').trim().toUpperCase();
             const mapped = (did && (raw === 'PRO' || raw === 'STD')) ? raw : 'STD';
+            pendingVariant = mapped;
             setVariantUI(mapped);
+            updateVariantSaveState();
           } catch(_) {
+            pendingVariant = 'STD';
             setVariantUI('STD');
+            updateVariantSaveState();
           }
           openVariantModal({ manual: true });
         });
