@@ -72,7 +72,7 @@
               <div id="infoFw" class="info-meta-value">—</div>
             </div>
             <div class="info-meta-row">
-              <div class="info-meta-label">WiFi status</div>
+              <div class="info-meta-label">Wi‑Fi status</div>
               <div id="infoWifi" class="info-meta-value">—</div>
             </div>
           </div>
@@ -80,7 +80,7 @@
           <div id="wbConnectWrap" class="info-card-footer" style="display:none;">
             <div class="info-card-footer-row">
               <button id="wbConnect" class="lts-btn info-connect-btn" type="button">Connect Board</button>
-              <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">Setup WiFi</button>
+              <button id="wifiModalBtn" class="mini-btn info-wifi-btn" type="button">Setup Wi‑Fi</button>
             </div>
           </div>
         </div>
@@ -88,7 +88,6 @@
         <!-- CONTROL CARD (Block A) -->
         <div class="card control-card">
           <section id="lts-control" class="section-base section-control">
-            <p class="ghost-divider">---------------------------------------------------------------------</p>
 
             <div class="wb-topline">
               <span id="wbProgPct" style="justify-self:start;">0 %</span>
@@ -125,7 +124,6 @@
         <!-- SETTINGS CARD (Block B) -->
         <div class="card">
           <section id="lts-settings" class="section-base pos-rel">
-            <p class="ghost-divider">---------------------------------------------------------------------</p>
 
             <div class="form-grid">
               <label for="led" class="form-label">LED Brightness:</label>
@@ -270,37 +268,36 @@
   </div>
 
   <!-- Update / WiFi modal -->
-  <div id="wifiModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Update and WiFi">
+  <div id="wifiModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Update and Wi‑Fi">
     <div class="modal">
       <button id="wifiModalClose" class="icon-btn modal-close" aria-label="Close">×</button>
       <div class="modal-header">
-        <h2 class="modal-title">Create WiFi Connection</h2>
+        <h2 class="modal-title">Create Wi‑Fi Connection</h2>
       </div>
+
+      <p class="wifi-desc">To establish a Wi-Fi connection, scan for available networks and enter the password. Only works with 2.4 GHz networks.</p>
 
       <section id="lts-update" class="section-base">
 
-        <div style="display:flex; align-items:center; justify-content:flex-end; gap:12px; width:100%;">
-          <button id="wifiScanBtn" class="mini-btn compact" type="button">Search Networks</button>
-        </div>
-
-        <div class="form-grid" style="margin-top:10px;">
+        <div class="wifi-form-grid" style="display:grid; grid-template-columns:max-content 1fr; column-gap:0px; row-gap:10px; align-items:center; margin-top:10px;">
           <label for="wifiSsid" class="form-label">Network:</label>
-          <select id="wifiSsid" class="form-control" style="width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
-            <option value="" selected>Select…</option>
-          </select>
-        </div>
+          <div class="form-control" style="display:flex; align-items:center; gap:12px; width:100%;">
+            <select id="wifiSsid" class="form-control" style="flex:1 1 auto; width:100%; box-sizing:border-box; border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem; color:#000;">
+              <option value="" selected>Select…</option>
+            </select>
+            <button id="wifiScanBtn" class="mini-btn compact" type="button">Scan</button>
+          </div>
 
-        <div class="form-grid" style="margin-top:8px;">
           <label for="wifiPass" class="form-label">Password:</label>
-          <input id="wifiPass" class="form-control" type="password" autocomplete="current-password" placeholder="WiFi password"
-                 style="width:min(220px, 100%); border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
-        </div>
+          <div class="form-control" style="display:flex; align-items:center; gap:12px; width:100%;">
+            <input id="wifiPass" class="form-control" type="password" autocomplete="current-password" placeholder="Wi-Fi password"
+                   style="flex:1 1 auto; width:100%; box-sizing:border-box; border:1px solid #d1d5db; border-radius:10px; padding:0.45rem 0.6rem;" />
+            <button class="mini-btn compact" type="button" aria-hidden="true" tabindex="-1" style="visibility:hidden;">Scan</button>
+          </div>
 
-        <div class="form-grid" style="margin-top:10px;">
-          <div></div>
-          <div class="form-control" style="display:flex; align-items:center; gap:10px;">
-            <button id="wifiSendBtn" class="mini-btn compact" type="button">Send</button>
-            <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 220px;">&nbsp;</span>
+          <div style="grid-column: 1 / -1; display:flex; flex-direction:column; align-items:stretch; gap:10px; width:100%; margin-top:8px;">
+            <button id="wifiSendBtn" class="lts-btn" type="button">Connect</button>
+            <span id="wifiStatus" style="opacity:0.55; font-size:1.0rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">&nbsp;</span>
           </div>
         </div>
 

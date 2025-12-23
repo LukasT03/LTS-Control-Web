@@ -594,7 +594,10 @@ button.info-wifi-btn {
   }
 }
 
-#variantSaveBtn, #variantSaveBtn:hover, #variantSaveBtn:active, #variantSaveBtn[disabled] {
+ #variantSaveBtn, #wifiSendBtn,
+#variantSaveBtn:hover, #wifiSendBtn:hover,
+#variantSaveBtn:active, #wifiSendBtn:active,
+#variantSaveBtn[disabled], #wifiSendBtn[disabled] {
   background:#d1e9ff !important;
   color:#0088fe !important;
   border:none !important;
@@ -603,7 +606,10 @@ button.info-wifi-btn {
   appearance:none;
 }
 @media (prefers-color-scheme: dark) {
-  #variantSaveBtn, #variantSaveBtn:hover, #variantSaveBtn:active, #variantSaveBtn[disabled] {
+  #variantSaveBtn, #wifiSendBtn,
+  #variantSaveBtn:hover, #wifiSendBtn:hover,
+  #variantSaveBtn:active, #wifiSendBtn:active,
+  #variantSaveBtn[disabled], #wifiSendBtn[disabled] {
     background:#153a56 !important;
   }
 }
@@ -777,6 +783,14 @@ input[type="checkbox"] {
   line-height: 1.25;
 }
 
+/* --- WiFi modal description --- */
+#wifiModalBackdrop .wifi-desc {
+  margin: 0 0 14px 0;
+  opacity: 0.55;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
 #variantModalBackdrop .variant-tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -833,6 +847,9 @@ input[type="checkbox"] {
     font-size: 1.1rem;
   }
   #variantModalBackdrop .variant-desc {
+    font-size: 1.0rem;
+  }
+  #wifiModalBackdrop .wifi-desc {
     font-size: 1.0rem;
   }
 }
@@ -1205,14 +1222,6 @@ input[type="checkbox"] {
 
 .form-control {
   justify-self: start;
-}
-
-.ghost-divider {
-  visibility: hidden;
-  font-size: 20px;
-  line-height: 1px;
-  margin: 0;
-  padding: 0;
 }
 
 .wb-topline {
