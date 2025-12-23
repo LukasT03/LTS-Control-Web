@@ -248,7 +248,7 @@
 
       /* Caption */
       --info-cap-h: 22px;
-      --info-cap-gap: 10px;
+      --info-cap-gap: 4px;
 
       /* Image */
       --respooler-img: url("Respooler.png");
@@ -323,9 +323,9 @@
       border-radius: var(--info-frame-radius);
       box-sizing: border-box;
 
-      /* Make width follow height like before (width ≈ 1.25 * height) */
+      /* Make width and height always square */
       height: 100%;
-      aspect-ratio: 5 / 4;
+      aspect-ratio: 1 / 1;
 
       /* Inner padding to mimic the old pseudo-element padding behavior */
       padding: calc(var(--info-frame-pad) + var(--info-frame-pad-top-extra))
@@ -339,6 +339,7 @@
       background: transparent;
       pointer-events: none;
       min-width: 0;
+      position: relative;
     }
 
     .info-frame-img {
@@ -352,7 +353,7 @@
     .info-frame-cap {
       height: var(--info-cap-h);
       margin-top: var(--info-cap-gap);
-      padding-bottom: 8px;
+      padding-bottom: 2px;
       box-sizing: border-box;
       display: flex;
       align-items: center;
@@ -362,6 +363,59 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* Respooler variant quick switch (top-right inside image outline) */
+    .info-variant-btn {
+      position: absolute;
+      top: 2.3px;
+      right: 2px;
+      width: 30px;
+      height: 30px;
+      border-radius: 9999px;
+      border: none;
+      color: rgb(var(--text));
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0;   /* prevent emoji/text metrics from affecting centering */
+      line-height: 0;
+      padding: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      z-index: 5;
+      pointer-events: auto; /* allow clicks even though .info-frame is pointer-events:none */
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .info-variant-btn:hover,
+    .info-variant-btn:active,
+    .info-variant-btn:focus {
+      background: transparent !important;
+      box-shadow: none !important;
+      outline: none;
+    }
+
+    .info-variant-btn picture,
+    .info-variant-btn img {
+      display: block;
+    }
+
+    .info-variant-btn img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .info-variant-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .info-variant-btn {
+      }
     }
 
     @media (prefers-color-scheme: dark) {
@@ -435,7 +489,7 @@
         height: 100%;
         width: auto;
         max-width: 52vw;
-        aspect-ratio: 5 / 4;
+        aspect-ratio: 1 / 1;
       }
     }
 
@@ -697,7 +751,7 @@
       #servoModalBackdrop .angle-text {
         font-size: 1.0rem;
       }
-      #servoModalBackdrop .cal-desc {
+      #servoModalBackdrop .servo-desc {
         font-size: 1.0rem;
       }
       /* WiFi sheet typography (match settings card sizing on small screens) */
@@ -709,6 +763,23 @@
       #lts-update input[type="password"],
       #lts-update input[type="text"],
       #lts-update span {
+        font-size: 1.0rem;
+      }
+    }
+
+    /* --- Respooler variant modal --- */
+    #variantModalBackdrop .variant-desc {
+      margin: 0 0 14px 0;
+      opacity: 0.55;
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+
+    @media (max-width: 450px) {
+      #variantModalBackdrop .modal-title {
+        font-size: 1.1rem;
+      }
+      #variantModalBackdrop .variant-desc {
         font-size: 1.0rem;
       }
     }
@@ -734,7 +805,7 @@
     .modal {
       width: min(410px, 100%);
       background: #ffffff;
-      border-radius: 31px;
+      border-radius: 29px;
       padding: 1rem;
       box-shadow: 0 18px 50px rgba(0,0,0,0.22);
       border: 1px solid #d1d5db; /* match section divider color */
@@ -757,9 +828,16 @@
       padding-right: 44px;   /* reserve space for the close button */
     }
 
-    /* More breathing room between header and segmented picker in Servo calibrate sheet */
+    /* Servo modal now mirrors the Variant modal layout */
     #servoModalBackdrop .modal-header {
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+
+    #servoModalBackdrop .servo-desc {
+      margin: 0 0 14px 0;
+      opacity: 0.55;
+      font-size: 1.05rem;
+      line-height: 1.25;
     }
     .modal-title {
       font-size: 1.2rem;
@@ -1091,12 +1169,7 @@
       margin: 0;
     }
 
-    .cal-desc {
-      margin: 16px 0 0 0;
-      opacity: 0.55;
-      font-size: 1.05rem;
-      line-height: 1.25;
-    }
+    /* (removed .cal-desc rule, replaced by .servo-desc for servo modal) */
   </style>
 </head>
 <body>
@@ -1141,6 +1214,12 @@
   <!-- INFO CARD (left column, fills available height) -->
     <div class="card info-card" aria-label="Control image">
       <div class="info-frame" aria-hidden="true">
+        <button id="infoVariantBtn" class="info-variant-btn" type="button" aria-label="Change Respooler variant">
+          <picture>
+            <source srcset="arrows-circle-dark.png" media="(prefers-color-scheme: dark)" />
+            <img src="arrows-circle.png" alt="" width="18" height="18" />
+          </picture>
+        </button>
         <div class="info-frame-img"></div>
         <div class="info-frame-cap" aria-label="Respooler version">
           <span id="infoRespooler">—</span>
@@ -1395,6 +1474,24 @@
     </div>
   </div>
 
+  <!-- Respooler variant modal (only when Board sends VAR=UNK) -->
+  <div id="variantModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Respooler variant">
+    <div class="modal">
+      <button id="variantModalClose" class="icon-btn modal-close" aria-label="Close">×</button>
+      <div class="modal-header">
+        <h2 class="modal-title">Select Respooler Variant</h2>
+      </div>
+
+      <p class="variant-desc">Your Board reported an unknown Respooler variant. Please select the correct one.</p>
+
+      <div id="variantSegment" class="segmented" role="tablist" aria-label="Respooler variant">
+        <div id="variantIndicator" class="seg-indicator"></div>
+        <button id="variantV4" class="seg-btn is-selected" type="button" role="tab" aria-selected="true">Respooler V4</button>
+        <button id="variantPro" class="seg-btn" type="button" role="tab" aria-selected="false">Respooler Pro</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Servo calibration modal -->
   <div id="servoModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Servo calibration">
     <div class="modal">
@@ -1403,13 +1500,7 @@
         <h2 class="modal-title">Calibrate End Positions</h2>
       </div>
 
-      <div id="servoSideSegment" class="segmented" role="tablist" aria-label="Calibration side">
-        <div id="servoSideIndicator" class="seg-indicator"></div>
-        <button id="servoSideL" class="seg-btn is-selected" type="button" role="tab" aria-selected="true">Left Side</button>
-        <button id="servoSideR" class="seg-btn" type="button" role="tab" aria-selected="false">Right Side</button>
-      </div>
-
-      <hr class="section-divider" style="margin:12px 0;">
+      <p class="servo-desc">Adjust the left and right end stops so that the filament guide just touches the sides.</p>
 
       <div class="cal-row">
         <button id="servoArrowLeft" class="arrow-btn" type="button" aria-label="Decrease angle">
@@ -1431,7 +1522,13 @@
         </button>
       </div>
 
-      <p class="cal-desc">Adjust the left and right end stops so that the filament guide just touches the sides.</p>
+      <hr class="section-divider" style="margin:12px 0;">
+
+      <div id="servoSideSegment" class="segmented" role="tablist" aria-label="Calibration side">
+        <div id="servoSideIndicator" class="seg-indicator"></div>
+        <button id="servoSideL" class="seg-btn is-selected" type="button" role="tab" aria-selected="true">Left Side</button>
+        <button id="servoSideR" class="seg-btn" type="button" role="tab" aria-selected="false">Right Side</button>
+      </div>
     </div>
   </div>
 
@@ -1781,6 +1878,87 @@
       const wifiModalBtn = document.getElementById('wifiModalBtn');
       const wifiModalBackdrop = document.getElementById('wifiModalBackdrop');
       const wifiModalClose = document.getElementById('wifiModalClose');
+
+      // Respooler variant modal (auto-shown only when VAR is received as UNK)
+      const variantModalBackdrop = document.getElementById('variantModalBackdrop');
+      const variantModalClose    = document.getElementById('variantModalClose');
+      const variantV4            = document.getElementById('variantV4');
+      const variantPro           = document.getElementById('variantPro');
+      const variantIndicator     = document.getElementById('variantIndicator');
+      const infoVariantBtn       = document.getElementById('infoVariantBtn');
+
+      let variantModalWasShownThisConnection = false;
+      let variantModalAutoOpen = false;
+      let variantModalManualOpen = false;
+      function openVariantModal(opts = { manual: false }){
+        if (!variantModalBackdrop) return;
+        variantModalManualOpen = !!opts.manual;
+        variantModalAutoOpen = !variantModalManualOpen;
+        variantModalBackdrop.classList.add('show');
+      }
+      function closeVariantModal(){
+        if (!variantModalBackdrop) return;
+        variantModalBackdrop.classList.remove('show');
+        variantModalAutoOpen = false;
+        variantModalManualOpen = false;
+      }
+      function setVariantUI(which){
+        const v = String(which || '').toUpperCase();
+        const isV4 = (v === 'STD' || v === 'V4');
+        const isPro = (v === 'PRO');
+
+        if (variantV4) {
+          variantV4.classList.toggle('is-selected', isV4);
+          variantV4.setAttribute('aria-selected', isV4 ? 'true' : 'false');
+        }
+        if (variantPro) {
+          variantPro.classList.toggle('is-selected', isPro);
+          variantPro.setAttribute('aria-selected', isPro ? 'true' : 'false');
+        }
+        if (variantIndicator) {
+          const index = isPro ? 1 : 0;
+          variantIndicator.style.transform = `translateX(${index * 100}%)`;
+        }
+      }
+      async function chooseVariant(mapped){
+        const v = String(mapped || '').toUpperCase();
+        if (v !== 'STD' && v !== 'PRO') return;
+        try {
+          setVariantUI(v);
+          await window.webble.setBoardVariant(v);
+        } catch(e) {
+          console.error(e);
+        } finally {
+          variantModalWasShownThisConnection = true;
+          closeVariantModal();
+        }
+      }
+
+      if (variantModalClose) variantModalClose.addEventListener('click', () => closeVariantModal());
+      if (variantModalBackdrop) {
+        variantModalBackdrop.addEventListener('click', (e) => {
+          if (e.target === variantModalBackdrop) closeVariantModal();
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeVariantModal();
+      });
+      if (variantV4) variantV4.addEventListener('click', () => chooseVariant('STD'));
+      if (variantPro) variantPro.addEventListener('click', () => chooseVariant('PRO'));
+      if (infoVariantBtn) {
+        infoVariantBtn.addEventListener('click', () => {
+          try {
+            const st = window.webble?.getState ? window.webble.getState() : {};
+            const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
+            const raw = String(st?.boardVariant || '').trim().toUpperCase();
+            const mapped = (did && (raw === 'PRO' || raw === 'STD')) ? raw : 'STD';
+            setVariantUI(mapped);
+          } catch(_) {
+            setVariantUI('STD');
+          }
+          openVariantModal({ manual: true });
+        });
+      }
 
       function openWifiModal(){
         if (!wifiModalBackdrop) return;
@@ -2230,6 +2408,36 @@
       window.webble.on('status', s => {
         updateInfoMeta(s);
         updateStatusPills(s);
+
+        // Auto-show variant picker ONLY when the Board explicitly sent an unknown variant.
+        // (Older firmware won't send VAR at all => didReceiveBoardVariant stays false => no popup.)
+        try {
+          const isConn = window.webble.getState().connected === true;
+          const did = (s && Object.prototype.hasOwnProperty.call(s, 'didReceiveBoardVariant')) ? !!s.didReceiveBoardVariant : false;
+          const raw = String(s?.boardVariant || '').trim().toUpperCase();
+          const isUnknown = did && raw === 'UNK';
+          const isOpen = !!variantModalBackdrop?.classList?.contains('show');
+
+          // Enable/disable the quick-switch button with connection state
+          if (infoVariantBtn) infoVariantBtn.disabled = !isConn;
+
+          if (isConn && isUnknown && !variantModalWasShownThisConnection && !isOpen) {
+            // Default UI selection to V4 when unknown
+            setVariantUI('STD');
+            openVariantModal({ manual: false });
+            variantModalWasShownThisConnection = true;
+          }
+
+          // If we have a known variant, reflect it in the UI.
+          if (did && (raw === 'PRO' || raw === 'STD')) {
+            setVariantUI(raw);
+
+            // Only auto-close when it was auto-opened due to UNK.
+            if (variantModalAutoOpen) {
+              closeVariantModal();
+            }
+          }
+        } catch(_) {}
         try {
           const isConn = window.webble.getState().connected === true;
           const scanning = !!s.isScanningForSSIDs;
@@ -2316,6 +2524,11 @@
         if (durMinus) durMinus.disabled = !isConn;
         if (durPlus)  durPlus.disabled = !isConn;
         if (servoSideSegment) servoSideSegment.classList.toggle('is-disabled', !isConn);
+      });
+
+      window.webble.on('disconnected', () => {
+        variantModalWasShownThisConnection = false;
+        closeVariantModal();
       });
 
       try {
