@@ -1,0 +1,1225 @@
+:root {
+  --bg: 242 242 247;
+  --text: 17 17 17;
+  --accent: #0E7AFE;
+  --accent-dark: #1364C4;
+  --action-font: 1.1rem;
+  --btn-h: 52px;
+
+  --flasher-bg: 255 255 255;
+  --flasher-text: 17 17 17;
+  --background-secondary: 255 255 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: 15 17 21;
+    --text: 234 234 234;
+
+    --flasher-bg: 28 28 30;
+    --flasher-text: 234 234 234;
+    --background-secondary: 44 44 46;
+  }
+}
+
+body {
+  margin: 0;
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: 1rem;
+  line-height: 1.3;
+  max-width: 1150px;
+  margin-inline: auto;
+
+  /* Vertically center without causing overflow from padding */
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+button {
+  -webkit-tap-highlight-color:  transparent;
+  font-family: inherit;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 1.1rem;
+}
+
+.header-logo img {
+  max-height: 120px;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+.header-text {
+  margin-top: 0.4rem;
+}
+
+h1 {
+  margin-top: 0rem;
+  margin-bottom: 0.2rem;
+  font-size: 2rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+
+/* Top status pills (UI only) */
+.status-pills {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 14px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.status-pill {
+  background: #ffffff;
+  border-radius: 28px; /* match card border radius */
+  padding: 0 13px;
+  height: 56px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  box-sizing: border-box; /* prevent size change when border appears */
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-pill {
+    background: rgb(28,28,30);
+    border: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  #lts-update select,
+  #lts-update input[type="password"],
+  #lts-update input[type="text"] {
+    background: rgba(255,255,255,0.08);
+    color: rgb(var(--text));
+    border-color: rgba(255,255,255,0.18);
+  }
+}
+
+.status-pill svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  color: rgb(var(--text));
+  opacity: 0.95;
+}
+.status-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.status-pill-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  min-width: 0;
+}
+
+.status-pill-title {
+  font-size: 1.1rem;      /* match .lts-btn */
+  font-weight: 600;       /* match .lts-btn */
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-pill-subtitle {
+  margin-top: 4px;
+  font-size: 1.1rem;      /* match settings card text */
+  font-weight: 400;
+  opacity: 0.45;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 450px) {
+  .status-pill svg {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+  }
+  .status-pill-title,
+  .status-pill-subtitle {
+    font-size: 1.0rem;
+  }
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 1rem;
+  margin-top: 0;
+  border: none;
+  box-sizing: border-box; /* prevent size change when border appears */
+}
+
+/* Slightly tighter top padding for the Control card */
+.card.control-card {
+  padding-top: 0.6rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: rgb(28,28,30);
+    border: none;
+  }
+}
+
+/* Pill-style card (e.g. Speed) */
+.card.pill-card {
+  padding: 0 16px;
+  height: 56px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+}
+
+
+/* Two-column layout for Control + Settings cards */
+.cards-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.8rem; /* spacing below the status pills */
+  align-items: stretch;
+}
+
+/* Stack multiple cards inside the left column (Control + Speed) */
+.card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+}
+
+.info-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem;
+  overflow: hidden;
+  position: relative;
+
+  /* Stable layout vars */
+  --info-img-pad: 1rem;
+  --info-outline-gap: 1rem;
+  --info-footer-pad: 16px;
+  --info-btn-h: var(--btn-h);
+  --info-meta-gap: 1rem;
+
+  /* Frame styling */
+  --info-frame-radius: 12px;
+  --info-frame-border: #d1d5db;
+  --info-frame-pad: 0.35rem;
+  --info-frame-pad-top-extra: 0.3rem;
+
+  /* Caption */
+  --info-cap-h: 22px;
+  --info-cap-gap: 4px;
+
+  /* Image */
+  --respooler-img: url("Respooler.png");
+
+  /* Use grid to avoid absolute/cqh sizing flicker */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    "frame meta"
+    "footer footer";
+  column-gap: var(--info-meta-gap);
+  row-gap: var(--info-outline-gap);
+  align-items: stretch;
+}
+
+
+.info-meta {
+  grid-area: meta;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.info-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.info-meta-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.55;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-meta-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 450px) {
+  .info-meta-label { font-size: 0.9rem; }
+  .info-meta-value { font-size: 1.0rem; }
+  .info-respooler-caption { font-size: 1.0rem; }
+}
+
+
+.info-card-footer {
+  grid-area: footer;
+  position: relative;
+  z-index: 1;
+  padding: 0;
+}
+.info-frame {
+  grid-area: frame;
+  border: 1px solid var(--info-frame-border);
+  border-radius: var(--info-frame-radius);
+  box-sizing: border-box;
+
+  /* Make width and height always square */
+  height: 100%;
+  aspect-ratio: 1 / 1;
+
+  /* Inner padding to mimic the old pseudo-element padding behavior */
+  padding: calc(var(--info-frame-pad) + var(--info-frame-pad-top-extra))
+           var(--info-frame-pad)
+           var(--info-frame-pad)
+           var(--info-frame-pad);
+
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: none;
+  min-width: 0;
+  position: relative;
+}
+
+.info-frame-img {
+  background-image: var(--respooler-img, url("Respooler.png"));
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  min-height: 0;
+}
+
+.info-frame-cap {
+  height: var(--info-cap-h);
+  margin-top: var(--info-cap-gap);
+  padding-bottom: 2px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Respooler variant quick switch (top-right inside image outline) */
+.info-variant-btn {
+  position: absolute;
+  top: 2.3px;
+  right: 2px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  border: none;
+  color: rgb(var(--text));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;   /* prevent emoji/text metrics from affecting centering */
+  line-height: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  z-index: 5;
+  pointer-events: auto; /* allow clicks even though .info-frame is pointer-events:none */
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Hidden by default; JS shows it only when Board actually sent VAR (UNK/PRO/STD) */
+#infoVariantBtn { display: none; }
+
+.info-variant-btn:hover,
+.info-variant-btn:active,
+.info-variant-btn:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.info-variant-btn picture,
+.info-variant-btn img {
+  display: block;
+}
+
+.info-variant-btn img {
+  width: 20px;
+  height: 20px;
+}
+
+.info-variant-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+@media (prefers-color-scheme: dark) {
+  .info-frame {
+    border-color: rgba(255,255,255,0.18);
+  }
+}
+
+.info-card-footer-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+.info-connect-btn {
+  height: var(--info-btn-h);
+  padding: 0 1.0rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  width: auto;
+  box-sizing: border-box;
+}
+
+.info-wifi-btn {
+  height: var(--info-btn-h);
+  border-radius: 12px;
+  padding: 0 1.0rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-size: var(--action-font);
+  box-sizing: border-box;
+}
+
+button.info-wifi-btn {
+  height: var(--info-btn-h);
+  border-radius: 12px;
+  padding: 0 1.0rem;
+  font-size: var(--action-font);
+}
+
+.card-stack-spacer {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 870px) {
+  .cards-row {
+    grid-template-columns: 1fr;
+  }
+
+  .info-card {
+    height: 250px;
+    min-height: 250px;
+    max-height: 250px;
+
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      "frame meta"
+      "footer footer";
+  }
+
+  .info-frame {
+    height: 100%;
+    width: auto;
+    max-width: 52vw;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (max-height: 870px) {
+  body {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .header {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-logo img {
+    max-height: 80px;
+    max-width: 38vw;
+  }
+
+  .header-text {
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .header-text h1 {
+    text-align: left;
+  }
+}
+
+@media (max-width: 400px) and (max-height: 870px) {
+  .header {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 450px) and (max-height: 870px) {
+  .header-logo img {
+    max-width: 100px;
+  }
+}
+
+/* Slightly lift the whole layout when header is stacked (default). */
+.page-content {
+  transform: translateY(-18px);
+}
+
+/* When header is side-by-side (small height), don't lift the content. */
+@media (max-height: 870px) {
+  .page-content {
+    transform: none;
+  }
+}
+
+/* Web Flasher Button-Style */
+.lts-btn {
+  height: var(--btn-h);
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background-color: #1a1a1a;
+  color: #fff !important;
+  border: none;
+  font-size: var(--action-font);
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.lts-btn:disabled {
+  background-color: #1a1a1a;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spezifische Farben für Control-Buttons (Block A) */
+#wbConnect, #wbConnect:hover, #wbConnect:active, #wbConnect[disabled] {
+  background:#1a1a1a !important;   /* black in light mode */
+  color:#ffffff !important;
+  border:none !important;
+  box-shadow:none !important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Match Web Flasher connect button styling */
+  #wbConnect, #wbConnect:hover, #wbConnect:active {
+    background: rgb(var(--text)) !important; /* same "white" as flasher */
+    color: #000000 !important;
+  }
+  #wbConnect[disabled] {
+    background: rgba(234, 234, 234, 0.7) !important;
+    color: #000000 !important;
+  }
+}
+
+#wbStart, #wbStart:hover, #wbStart:active, #wbStart[disabled] {
+  background:#d1e9ff !important;
+  color:#0088fe !important;
+  border:none !important;
+  box-shadow:none !important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+@media (prefers-color-scheme: dark) {
+  #wbStart, #wbStart:hover, #wbStart:active, #wbStart[disabled] {
+    background:#153a56 !important;
+  }
+}
+
+#variantSaveBtn, #variantSaveBtn:hover, #variantSaveBtn:active, #variantSaveBtn[disabled] {
+  background:#d1e9ff !important;
+  color:#0088fe !important;
+  border:none !important;
+  box-shadow:none !important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+@media (prefers-color-scheme: dark) {
+  #variantSaveBtn, #variantSaveBtn:hover, #variantSaveBtn:active, #variantSaveBtn[disabled] {
+    background:#153a56 !important;
+  }
+}
+
+#wbStop, #wbStop:hover, #wbStop:active, #wbStop[disabled] {
+  background:#ffdbdc !important;
+  color:#fe383c !important;
+  border:none !important;
+  box-shadow:none !important;
+  -webkit-appearance:none;
+  appearance:none;
+}
+@media (prefers-color-scheme: dark) {
+  #wbStop, #wbStop:hover, #wbStop:active, #wbStop[disabled] {
+    background:#492326 !important;
+  }
+}
+
+/* Progress bar (Block A, leicht angepasst) */
+#wbProg {
+  width:100%;
+  height:14px;
+  background:#e5e7eb;
+  border-radius:9999px;
+  overflow:hidden;
+  margin:10px 0 12px 0;
+}
+@media (prefers-color-scheme: dark) {
+  #wbProg {
+    background: rgba(255,255,255,0.08);
+  }
+}
+.section-divider {
+  border: 0;
+  border-top: 1px solid #d1d5db;
+}
+
+@media (prefers-color-scheme: dark) {
+  .section-divider {
+    border-top-color: rgba(255,255,255,0.18);
+  }
+}
+
+#wbProgBar {
+  height:100%;
+  width:0%;
+  background:#0c4c98;
+  transition: width 0.35s ease, background-color 0.35s ease, background 0.35s ease;
+  will-change: width, background-color;
+}
+@media (prefers-reduced-motion: reduce) {
+  #wbProgBar { transition: none; }
+}
+
+#wbStatusText {
+  display:inline-block;
+  will-change: opacity, transform;
+}
+#wbProgPct,
+#wbStatusText,
+#wbProgRem {
+  font-size: 1.1rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  #wbStatusText { transition: none !important; }
+}
+
+/* Block B – zusätzliche Styles */
+/* Typography for settings card (match Web Flasher sizing) */
+#lts-settings label,
+#lts-settings select,
+#lts-settings input[type="range"],
+#lts-settings input[type="checkbox"],
+#lts-settings span,
+#lts-settings #speedVal {
+  font-size: 1.1rem;
+}
+/* Typography for speed card (match settings card sizing) */
+#lts-speed label,
+#lts-speed input[type="range"],
+#lts-speed span,
+#lts-speed #speedVal {
+  font-size: 1.1rem;
+}
+/* Typography for WiFi/Update sheet (match settings card sizing) */
+#lts-update label,
+#lts-update select,
+#lts-update input[type="password"],
+#lts-update input[type="text"],
+#lts-update span {
+  font-size: 1.1rem;
+}
+/* WiFi sheet: bring labels/fields closer to the left */
+#wifiModalBackdrop .form-grid {
+  grid-template-columns: max-content 1fr;
+}
+#wifiModalBackdrop .form-label {
+  text-align: left;
+  padding-right: 10px;
+}
+/* Custom accent color for sliders and checkmarks */
+input[type="range"],
+input[type="checkbox"] {
+  accent-color: #1364C4;
+}
+@media (prefers-color-scheme: dark) {
+  input[type="range"],
+  input[type="checkbox"] {
+    accent-color: #1364C4;
+  }
+}
+
+/* Kleine Typo-Anpassungen für schmale Screens */
+@media (max-width: 450px) {
+  h1 { font-size: 1.9rem; }
+  .header-logo img { max-width: 60px; }
+  :root { --action-font: 1.0rem; --btn-h: 48px; }
+  .lts-btn {
+    font-size: 1.0rem;
+  }
+  #wbProgPct,
+  #wbStatusText,
+  #wbProgRem {
+    font-size: 1.0rem;
+  }
+  #lts-settings label,
+  #lts-settings select,
+  #lts-settings input[type="range"],
+  #lts-settings input[type="checkbox"],
+  #lts-settings span,
+  #lts-settings #speedVal {
+    font-size: 1.0rem;
+  }
+  #lts-speed label,
+  #lts-speed input[type="range"],
+  #lts-speed span,
+  #lts-speed #speedVal {
+    font-size: 1.0rem;
+  }
+  /* Servo calibration sheet typography */
+  #servoModalBackdrop .modal-title {
+    font-size: 1.1rem;
+  }
+  #servoModalBackdrop .seg-btn {
+    font-size: 1.0rem;
+  }
+  #servoModalBackdrop .angle-text {
+    font-size: 1.0rem;
+  }
+  #servoModalBackdrop .servo-desc {
+    font-size: 1.0rem;
+  }
+  /* WiFi sheet typography (match settings card sizing on small screens) */
+  #wifiModalBackdrop .modal-title {
+    font-size: 1.1rem;
+  }
+  #lts-update label,
+  #lts-update select,
+  #lts-update input[type="password"],
+  #lts-update input[type="text"],
+  #lts-update span {
+    font-size: 1.0rem;
+  }
+}
+
+/* --- Respooler variant modal --- */
+#variantModalBackdrop .variant-desc {
+  margin: 0 0 14px 0;
+  opacity: 0.55;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+#variantModalBackdrop .variant-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+}
+
+#variantModalBackdrop .variant-tile {
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  padding: 10px 10px 12px 10px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  display: grid;
+  grid-template-rows: 110px auto;
+  align-items: center;
+  justify-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  color: rgb(var(--text));
+  box-shadow: none;
+  outline: none;
+}
+
+#variantModalBackdrop .variant-tile img {
+  width: 100%;
+  height: 110px;
+  object-fit: contain;
+  display: block;
+}
+
+#variantModalBackdrop .variant-tile-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+}
+
+#variantModalBackdrop .variant-tile.is-selected {
+  box-shadow: 0 0 0 2px #1364C4 inset;
+}
+
+
+@media (prefers-color-scheme: dark) {
+  #variantModalBackdrop .variant-tile {
+    border-color: rgba(255,255,255,0.18);
+  }
+}
+
+@media (max-width: 450px) {
+  #variantModalBackdrop .modal-title {
+    font-size: 1.1rem;
+  }
+  #variantModalBackdrop .variant-desc {
+    font-size: 1.0rem;
+  }
+}
+
+/* --- Servo calibration modal --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 9999;
+}
+@media (prefers-color-scheme: dark) {
+  .modal-backdrop {
+    background: rgba(0,0,0,0.62);
+  }
+}
+.modal-backdrop.show { display: flex; }
+
+.modal {
+  width: min(410px, 100%);
+  background: #ffffff;
+  border-radius: 29px;
+  padding: 1rem;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.22);
+  border: 1px solid #d1d5db; /* match section divider color */
+  position: relative;
+}
+@media (prefers-color-scheme: dark) {
+  .modal {
+    background: rgb(28,28,30);
+    border: 1px solid rgba(255,255,255,0.18); /* match dark divider color */
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 0.75rem;
+  position: relative;
+  padding-right: 44px;   /* reserve space for the close button */
+}
+
+/* Servo modal now mirrors the Variant modal layout */
+#servoModalBackdrop .modal-header {
+  margin-bottom: 0.75rem;
+}
+
+#servoModalBackdrop .servo-desc {
+  margin: 0 0 14px 0;
+  opacity: 0.55;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 30px; /* match close button height for exact vertical centering */
+}
+
+.icon-btn {
+  border: none;
+  background: #e5e7eb; /* match grey buttons */
+  color: rgb(var(--text));
+  font-size: 1.7rem;
+  width: 30px;
+  height: 30px;
+  padding-bottom: 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .icon-btn {
+    background: rgba(255,255,255,0.14);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  transform: none;
+  z-index: 20;           /* ensure it stays above modal header/contents */
+  pointer-events: auto;  /* ensure it can receive clicks */
+}
+
+.mini-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem;
+  font-size: 1.0rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e5e7eb; /* match segmented picker background */
+  color: rgb(var(--text));
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Compact mini button for text-only actions (e.g. Calibrate) */
+.mini-btn.compact {
+  height: 26px;              /* match +/- buttons height */
+  padding: 0 0.75rem;        /* no vertical padding */
+  border-radius: 10px;       /* match +/- buttons */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;               /* shrink to fit content */
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* Slightly tighter right padding for Calibrate button (space after chevron) */
+#servoCalBtn.mini-btn.compact {
+  padding-right: 0.55rem;
+}
+.mini-btn.compact .btn-chevron {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  position: relative;
+}
+
+.mini-btn.compact .btn-chevron svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  .mini-btn { background: rgba(255,255,255,0.14); }
+}
+.mini-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+}
+
+/* Segmented +/- control like iOS (grey background, non-pill radius) */
+.stepper-seg {
+  display: inline-flex;
+  align-items: stretch;
+  height: 26px;
+  border-radius: 10px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.stepper-seg-btn {
+  width: 33px;
+  border: none;
+  background: transparent;
+  color: rgb(var(--text));
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.stepper-seg-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stepper-seg-divider {
+  width: 1px;
+  background: #d1d5db; /* same as dividers */
+}
+
+@media (prefers-color-scheme: dark) {
+  .stepper-seg {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.18);
+  }
+  .stepper-seg-divider {
+    background: rgba(255,255,255,0.18);
+    opacity: 1;
+  }
+}
+.stepper .stepper-glyph {
+  display: inline-block;
+  position: relative;
+  top: -1.7px; /* adjust this value (+/- px) to move the glyph */
+}
+.stepper-value {
+  text-align: left;              /* align like other settings values */
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+}
+
+.modal .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  column-gap: 0px;
+  width: 100%;
+  margin: 0;
+  margin-top: 10px;
+}
+.modal .row label { text-align: right; padding-right: 12px; }
+.modal .row input[type="range"] { width: min(260px, 100%); justify-self: start; }
+
+.segmented {
+  display: flex;
+  padding: 0.2rem;
+  background: #e5e7eb;
+  border-radius: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  margin-top: 0;
+}
+
+.segmented.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .segmented {
+    background: rgba(255,255,255,0.08);
+  }
+}
+
+.seg-indicator {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  height: calc(100% - 0.5rem);
+  width: calc(50% - 0.25rem);
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  transform: translateX(0%);
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+@media (prefers-color-scheme: dark) {
+  .seg-indicator {
+    background: rgba(255,255,255,0.14);
+  }
+}
+
+.seg-btn {
+  flex: 1 1 0;
+  padding: 0.4rem 0.9rem;
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  color: rgb(var(--text));
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.seg-btn.is-selected {
+  font-weight: 600; /* selected state emphasis, matches Web Flasher */
+}
+.seg-btn:focus {
+  outline: none;
+}
+
+.cal-row {
+  margin-top: 0px;
+  display: grid;
+  grid-template-columns: 58px 1fr 58px;
+  align-items: center;
+  gap: 12px;
+}
+.arrow-btn {
+  border: none;
+  border-radius: 10px;
+  height: 36px;
+  width: 58px;
+  cursor: pointer;
+  background: #e5e7eb; /* match segmented picker background */
+  color: rgb(var(--text));
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.arrow-btn .arrow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+.arrow-btn .arrow-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.arrow-btn .arrow-icon.left svg {
+  transform: rotate(180deg);
+}
+@media (prefers-color-scheme: dark) {
+  .arrow-btn { background: rgba(255,255,255,0.14); }
+}
+.angle-text {
+  text-align: center;
+  font-size: 1.1rem;           /* match settings card text */
+  font-weight: 400;            /* match settings card text */
+  opacity: 1;                  /* same visual weight as settings */
+  font-variant-numeric: tabular-nums;
+}
+/* --- Small UI utilities (no visual change) --- */
+.section-base {
+  display: block;
+  width: 100%;
+  margin: 0;
+  line-height: 1.5;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: rgb(var(--flasher-text));
+}
+.section-base.pos-rel { position: relative; }
+
+.section-control {
+  max-width: none;
+  padding-bottom: 0;
+  border-radius: 18px;
+  background: transparent;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  column-gap: 0px;
+  width: 100%;
+  margin: 0;
+}
+
+.form-label {
+  text-align: right;
+  padding-right: 12px;
+}
+
+.form-control {
+  justify-self: start;
+}
+
+.ghost-divider {
+  visibility: hidden;
+  font-size: 20px;
+  line-height: 1px;
+  margin: 0;
+  padding: 0;
+}
+
+.wb-topline {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin: 0;
+}
+
+/* (removed .cal-desc rule, replaced by .servo-desc for servo modal) */
