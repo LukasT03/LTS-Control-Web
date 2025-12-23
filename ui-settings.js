@@ -127,21 +127,34 @@
       const cur = st?.fw ? String(st.fw).trim() : '';
 
       // Rebuild the FW line so we can place an inline Update button.
-      // We intentionally use pointer-events blocking via the button itself only.
+      // IMPORTANT: keep the Update button visible even if the version text is ellipsized.
       infoFw.textContent = '';
 
       if (!cur) {
         infoFw.textContent = '—';
       } else {
-        // Base text: current firmware version
-        infoFw.appendChild(document.createTextNode(cur));
+        // Build a flex row: left text can ellipsize, right button stays visible.
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '10px';
+        row.style.minWidth = '0';
+
+        const left = document.createElement('span');
+        left.style.flex = '1';
+        left.style.minWidth = '0';
+        left.style.overflow = 'hidden';
+        left.style.textOverflow = 'ellipsis';
+        left.style.whiteSpace = 'nowrap';
 
         // If we know the latest version, show either (up to date) or an inline Update button.
         if (latestBoardFw) {
           const cmp = compareVersions(cur, latestBoardFw);
 
           if (cmp >= 0) {
-            infoFw.appendChild(document.createTextNode(' (up to date)'));
+            left.textContent = cur + ' (up to date)';
+            left.title = left.textContent;
+
             // Ensure any previously created update button is removed.
             if (infoFwUpdateBtn && infoFwUpdateBtn.parentElement) {
               infoFwUpdateBtn.parentElement.removeChild(infoFwUpdateBtn);
@@ -151,15 +164,20 @@
               infoFwUpdateBtn.textContent = 'Update';
               infoFwUpdateBtn.disabled = false;
             }
+
+            row.appendChild(left);
+            infoFw.appendChild(row);
           } else {
-            // Create (once) and reuse a green Update button that triggers OTA.
+            // Update available: show version on the left and a green Update button on the right.
+            left.textContent = cur;
+            left.title = cur;
+
             if (!infoFwUpdateBtn) {
               infoFwUpdateBtn = document.createElement('button');
               infoFwUpdateBtn.type = 'button';
               infoFwUpdateBtn.textContent = 'Update';
 
               // Match the Variant Save button styling as closely as possible.
-              // If the Save button exists, copy its classes.
               try {
                 const variantSaveBtn = document.getElementById('variantSaveBtn');
                 if (variantSaveBtn && variantSaveBtn.className) {
@@ -168,7 +186,6 @@
               } catch(_) {}
 
               // Force the requested green look without touching CSS files.
-              infoFwUpdateBtn.style.marginLeft = '10px';
               infoFwUpdateBtn.style.background = '#34C759';
               infoFwUpdateBtn.style.borderColor = '#34C759';
               infoFwUpdateBtn.style.color = '#fff';
@@ -176,7 +193,6 @@
               infoFwUpdateBtn.addEventListener('click', async () => {
                 try {
                   infoFwUpdateBtn.disabled = true;
-                  const prev = infoFwUpdateBtn.textContent;
                   infoFwUpdateBtn.textContent = 'Updating…';
 
                   // Exact exported name (no guessing):
@@ -185,21 +201,21 @@
                   } else {
                     console.warn('window.webble.otaUpdate is not available');
                   }
-
-                  // UI will refresh from status updates; restore label in case it doesn't.
-                  infoFwUpdateBtn.textContent = prev;
                 } catch (e) {
                   console.error(e);
                   infoFwUpdateBtn.textContent = 'Update';
+                  infoFwUpdateBtn.disabled = false;
                 } finally {
-                  // Keep disabled state while the board reports updating.
+                  // Keep disabled while the board reports Updating.
                   // Re-enabled by updateInfoMeta() when status is no longer Updating.
                 }
               });
             }
 
-            infoFw.appendChild(document.createTextNode(' '));
-            infoFw.appendChild(infoFwUpdateBtn);
+            row.appendChild(left);
+            row.appendChild(infoFwUpdateBtn);
+            infoFw.appendChild(row);
+
             // Sync Update button with OTA state
             try {
               const isUpdating = String(st?.statusCode || '').toUpperCase() === 'U';
@@ -207,12 +223,17 @@
                 infoFwUpdateBtn.disabled = true;
                 infoFwUpdateBtn.textContent = 'Updating…';
               } else {
-                // If we previously showed Updating…, restore to Update when not updating.
                 if (infoFwUpdateBtn.textContent === 'Updating…') infoFwUpdateBtn.textContent = 'Update';
                 infoFwUpdateBtn.disabled = false;
               }
             } catch(_) {}
           }
+        } else {
+          // No latest version info available yet
+          left.textContent = cur;
+          left.title = cur;
+          row.appendChild(left);
+          infoFw.appendChild(row);
         }
       }
     }
