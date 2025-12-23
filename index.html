@@ -160,36 +160,39 @@
             <hr class="section-divider" style="margin:12px 0;">
 
             <!-- Servo (PRO boards) -->
-            <div class="form-grid" style="margin-top:8px;">
-              <label class="form-label">Servo Calibration:</label>
-              <button id="servoCalBtn" class="mini-btn compact form-control">
-                Calibrate
-                <span class="btn-chevron" aria-hidden="true">
-                  <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
-                    <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </span>
-              </button>
-            </div>
-
-            <div class="form-grid" style="margin-top:8px;">
-              <label class="form-label">Step Distance:</label>
-              <div class="stepper form-control">
-                <div class="stepper-seg" role="group" aria-label="Step distance controls">
-                  <button id="servoStepMinus" class="stepper-seg-btn" type="button" aria-label="Decrease step distance"><span class="stepper-glyph">−</span></button>
-                  <div class="stepper-seg-divider" aria-hidden="true"></div>
-                  <button id="servoStepPlus" class="stepper-seg-btn" type="button" aria-label="Increase step distance"><span class="stepper-glyph">+</span></button>
-                </div>
-                <span id="servoStepVal" class="stepper-value">1.75 mm</span>
+            <div id="servoSettingsGroup" class="servo-settings-group" aria-disabled="true">
+              <div class="servo-settings-overlay" aria-hidden="true"></div>
+              <div class="form-grid" style="margin-top:8px;">
+                <label class="form-label">Servo Calibration:</label>
+                <button id="servoCalBtn" class="mini-btn compact form-control">
+                  Calibrate
+                  <span class="btn-chevron" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                      <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </button>
               </div>
-            </div>
 
-            <div class="form-grid" style="margin-top:8px;">
-              <label for="servoHomeSetting" class="form-label">Home Position:</label>
-              <select id="servoHomeSetting" class="form-control" style="width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
-                <option value="R">Right</option>
-                <option value="L">Left</option>
-              </select>
+              <div class="form-grid" style="margin-top:8px;">
+                <label class="form-label">Step Distance:</label>
+                <div class="stepper form-control">
+                  <div class="stepper-seg" role="group" aria-label="Step distance controls">
+                    <button id="servoStepMinus" class="stepper-seg-btn" type="button" aria-label="Decrease step distance"><span class="stepper-glyph">−</span></button>
+                    <div class="stepper-seg-divider" aria-hidden="true"></div>
+                    <button id="servoStepPlus" class="stepper-seg-btn" type="button" aria-label="Increase step distance"><span class="stepper-glyph">+</span></button>
+                  </div>
+                  <span id="servoStepVal" class="stepper-value">1.75 mm</span>
+                </div>
+              </div>
+
+              <div class="form-grid" style="margin-top:8px;">
+                <label for="servoHomeSetting" class="form-label">Home Position:</label>
+                <select id="servoHomeSetting" class="form-control" style="width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
+                  <option value="R">Right</option>
+                  <option value="L">Left</option>
+                </select>
+              </div>
             </div>
 
             <hr class="section-divider" style="margin:12px 0;">

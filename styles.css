@@ -1223,3 +1223,35 @@ input[type="checkbox"] {
 }
 
 /* (removed .cal-desc rule, replaced by .servo-desc for servo modal) */
+
+
+/* --- Servo settings gated by Respooler variant (overlay disable) --- */
+.servo-settings-group {
+  position: relative;
+  border-radius: 14px; /* match other UI radii */
+}
+
+.servo-settings-group.is-disabled {
+  opacity: 0.55;
+}
+
+.servo-settings-overlay {
+  position: absolute;
+  inset: -6px 0 -6px 0; /* slightly extend to cover row spacing */
+  border-radius: 14px;
+  background: rgba(255,255,255,0.3);
+  z-index: 10;
+  display: none;
+  pointer-events: all; /* block clicks */
+  cursor: default;
+}
+
+.servo-settings-group.is-disabled .servo-settings-overlay {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  .servo-settings-overlay {
+    background: rgba(28,28,30,0.5);
+  }
+}

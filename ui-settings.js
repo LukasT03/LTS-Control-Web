@@ -438,6 +438,31 @@
     const servoStepPlus  = document.getElementById('servoStepPlus');
     const servoStepVal   = document.getElementById('servoStepVal');
 
+    const servoSettingsGroup = document.getElementById('servoSettingsGroup');
+
+    function isRespoolerProFromState(st){
+      try {
+        const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
+        const raw = String(st?.boardVariant || '').trim().toUpperCase();
+        return did && raw === 'PRO';
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function setServoSettingsEnabled(enabled){
+      const on = !!enabled;
+      if (servoSettingsGroup) {
+        servoSettingsGroup.classList.toggle('is-disabled', !on);
+        servoSettingsGroup.setAttribute('aria-disabled', on ? 'false' : 'true');
+      }
+      // Also set disabled attributes for accessibility (overlay already blocks pointer events)
+      if (servoCalBtn) servoCalBtn.disabled = !on;
+      if (servoStepMinus) servoStepMinus.disabled = !on;
+      if (servoStepPlus) servoStepPlus.disabled = !on;
+      if (servoHomeSetting) servoHomeSetting.disabled = !on;
+    }
+
     // Modal
     const servoModalBackdrop = document.getElementById('servoModalBackdrop');
     const servoModalClose    = document.getElementById('servoModalClose');
@@ -610,7 +635,13 @@
       } catch(_) {}
     }
 
-    if (servoCalBtn) servoCalBtn.addEventListener('click', () => openServoModal());
+    if (servoCalBtn) {
+      servoCalBtn.addEventListener('click', () => {
+        // Only allow opening calibration on Respooler Pro
+        if (servoSettingsGroup?.classList?.contains('is-disabled')) return;
+        openServoModal();
+      });
+    }
     if (servoModalClose) servoModalClose.addEventListener('click', closeServoModal);
     if (servoModalBackdrop) {
       servoModalBackdrop.addEventListener('click', (e) => {
@@ -828,14 +859,12 @@
 
       // Disable servo controls when not connected
       const isConn = window.webble.getState().connected === true;
-      if (servoCalBtn) servoCalBtn.disabled = !isConn;
-      if (servoStepMinus) servoStepMinus.disabled = !isConn;
-      if (servoStepPlus) servoStepPlus.disabled = !isConn;
+      const isPro = isRespoolerProFromState(s || window.webble.getState?.() || {});
+      setServoSettingsEnabled(isConn && isPro);
       if (servoSideL) servoSideL.disabled = !isConn;
       if (servoSideR) servoSideR.disabled = !isConn;
       if (servoArrowLeft)  servoArrowLeft.disabled = !isConn;
       if (servoArrowRight) servoArrowRight.disabled = !isConn;
-      if (servoHomeSetting) servoHomeSetting.disabled = !isConn;
       if (motorMinus) motorMinus.disabled = !isConn;
       if (motorPlus)  motorPlus.disabled = !isConn;
       if (durMinus) durMinus.disabled = !isConn;
@@ -852,6 +881,12 @@
       const initial = window.webble.getState();
       updateStatusPills(initial);
       updateInfoMeta(initial);
+
+      try {
+        const isConn0 = window.webble.getState().connected === true;
+        const isPro0 = isRespoolerProFromState(initial);
+        setServoSettingsEnabled(isConn0 && isPro0);
+      } catch (_) {}
 
       if (typeof initial.servoStepMm === 'number') {
         servoStepLocal = initial.servoStepMm;
