@@ -194,12 +194,15 @@
         row.style.minWidth = '0';
         // Let the row wrap if needed, but keep things aligned.
         row.style.flexWrap = 'wrap';
+        row.style.position = 'relative';
 
         const left = document.createElement('span');
         left.style.flex = '1';
         left.style.minWidth = '0';
         // Keep it readable; the allowed texts are short so no ellipsis needed.
         left.style.whiteSpace = 'nowrap';
+        // Ensure the text element can never intercept clicks meant for the button.
+        left.style.pointerEvents = 'none';
 
         return { row, left };
       }
@@ -209,6 +212,12 @@
         if (!infoFwUpdateBtn) {
           infoFwUpdateBtn = document.createElement('button');
           infoFwUpdateBtn.type = 'button';
+
+          // Make sure the button is always clickable even if surrounding layout overlays exist.
+          infoFwUpdateBtn.style.pointerEvents = 'auto';
+          infoFwUpdateBtn.style.cursor = 'pointer';
+          infoFwUpdateBtn.style.position = 'relative';
+          infoFwUpdateBtn.style.zIndex = '5';
 
           // Match the Variant Save button styling as closely as possible.
           try {
