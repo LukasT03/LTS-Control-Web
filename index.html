@@ -390,6 +390,9 @@
       box-shadow: none !important;
     }
 
+    /* Hidden by default; JS shows it only when Board actually sent VAR (UNK/PRO/STD) */
+    #infoVariantBtn { display: none; }
+
     .info-variant-btn:hover,
     .info-variant-btn:active,
     .info-variant-btn:focus {
@@ -1547,7 +1550,7 @@
         <h2 class="modal-title">Select Respooler Variant</h2>
       </div>
 
-      <p class="variant-desc">Your Board reported an unknown Respooler variant. Please select the correct one and press Save.</p>
+      <p id="variantDesc" class="variant-desc">Your Board reported an unknown Respooler variant. Please select the correct one and press Save.</p>
 
       <div class="variant-tiles" role="group" aria-label="Respooler variant">
         <button id="variantV4" class="variant-tile" type="button" aria-pressed="false">
@@ -1917,6 +1920,18 @@
 
     function updateInfoMeta(s){
       const st = s || (window.webble?.getState ? window.webble.getState() : {});
+      // Variant selector button: only show when connected AND Board actually sent VAR (UNK/PRO/STD).
+      try {
+        const btn = document.getElementById('infoVariantBtn');
+        if (btn) {
+          const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
+          const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
+          const raw = String(st?.boardVariant || '').trim().toUpperCase();
+          const show = !!isConn && did && (raw === 'UNK' || raw === 'PRO' || raw === 'STD');
+          btn.style.display = show ? '' : 'none';
+          btn.disabled = !show;
+        }
+      } catch(_) {}
       if (infoBoard) infoBoard.textContent = inferBoardVersion(st);
       if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
       if (infoFw) {
@@ -1964,6 +1979,9 @@
       let variantModalWasShownThisConnection = false;
       let variantModalAutoOpen = false;
       let variantModalManualOpen = false;
+      const variantDesc = document.getElementById('variantDesc');
+      const VARIANT_DESC_AUTO = 'Your Board reported an unknown Respooler variant. Please select the correct one and press Save.';
+      const VARIANT_DESC_MANUAL = 'Select the Respooler variant that this Board is connected to.';
       let pendingVariant = null;
       const variantSaveBtn = document.getElementById('variantSaveBtn');
       const updateVariantSaveState = () => {
@@ -1977,6 +1995,9 @@
         if (!variantModalBackdrop) return;
         variantModalManualOpen = !!opts.manual;
         variantModalAutoOpen = !variantModalManualOpen;
+        if (variantDesc) {
+          variantDesc.textContent = variantModalManualOpen ? VARIANT_DESC_MANUAL : VARIANT_DESC_AUTO;
+        }
         variantModalBackdrop.classList.add('show');
       }
       function closeVariantModal(){
