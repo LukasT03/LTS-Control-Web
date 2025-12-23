@@ -404,13 +404,27 @@
           infoWifiActionBtn = document.createElement('button');
           infoWifiActionBtn.type = 'button';
 
-          // Match the Calibrate button styling exactly (same className).
+          // Match the Calibrate button styling + structure (chevron + label).
           try {
             const calBtn = document.getElementById('servoCalBtn');
-            if (calBtn && calBtn.className) {
-              infoWifiActionBtn.className = calBtn.className;
+            if (calBtn) {
+              if (calBtn.className) infoWifiActionBtn.className = calBtn.className;
+              // Copy HTML structure so we also get the chevron.
+              infoWifiActionBtn.innerHTML = calBtn.innerHTML;
             }
           } catch (_) {}
+
+          // Ensure a stable label hook exists for later updates.
+          // If the copied HTML doesn't include it, create it.
+          if (!infoWifiActionBtn.querySelector('#wifiModalBtnLabel')) {
+            // If the button already contains text nodes/elements, wrap them in a span.
+            const span = document.createElement('span');
+            span.id = 'wifiModalBtnLabel';
+            // Move existing text into the label span.
+            // (If the copied HTML already had a layout, this will just set label below.)
+            span.textContent = '';
+            infoWifiActionBtn.appendChild(span);
+          }
 
           // Ensure it behaves like a normal clickable button.
           infoWifiActionBtn.style.pointerEvents = 'auto';
@@ -428,7 +442,10 @@
           });
         }
 
-        infoWifiActionBtn.textContent = btnLabel;
+        const lbl = infoWifiActionBtn.querySelector('#wifiModalBtnLabel')
+          || infoWifiActionBtn.querySelector('.btn-label')
+          || infoWifiActionBtn;
+        lbl.textContent = btnLabel;
         infoWifiActionBtn.disabled = false;
         row.appendChild(infoWifiActionBtn);
       }
