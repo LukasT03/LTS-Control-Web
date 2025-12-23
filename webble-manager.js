@@ -25,6 +25,8 @@
     isScanningForSSIDs: false,
     availableSSIDs: null,
 
+    otaSuccess: null,
+
     boardVariant: 'UNK',
     didReceiveBoardVariant: false,
 
@@ -300,6 +302,11 @@
         if ('WIFI_RESULT' in d) state.wifiLastResult = (typeof d.WIFI_RESULT === 'boolean') ? d.WIFI_RESULT : bool(d.WIFI_RESULT);
         if ('WIFI_CONN_RESULT' in d) state.wifiConnectionResult = (typeof d.WIFI_CONN_RESULT === 'boolean') ? d.WIFI_CONN_RESULT : bool(d.WIFI_CONN_RESULT);
 
+        if ('OTA_OK' in d) {
+          // OTA result from firmware (true/false). Keep null until we receive a value.
+          state.otaSuccess = (typeof d.OTA_OK === 'boolean') ? d.OTA_OK : bool(d.OTA_OK);
+        }
+
         if ('TRQ' in d) {
           const n = Number(d.TRQ);
           if (Number.isFinite(n)) {
@@ -363,6 +370,8 @@
     start: () => sendCmd('START'),
     stop:  () => sendCmd('STOP'),
     pause: () => sendCmd('PAUSE'),
+    otaUpdate: () => sendCmd('OTA'),
+    triggerOTAUpdate: () => sendCmd('OTA'),
     wifiScan: () => { state.isScanningForSSIDs = true; emit('state', { ...state }); return sendCmd('WIFI_SCAN'); },
     wifiConnect: () => sendCmd('WIFI_CONNECT'),
     sendWiFiSSID: (ssid) => { beginEdit('WIFI_SSID'); holdKey('WIFI_SSID', 700); return sendSet('WIFI_SSID', String(ssid ?? '')); },

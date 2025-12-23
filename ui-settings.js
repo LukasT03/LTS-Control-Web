@@ -13,6 +13,9 @@
   const infoFw = document.getElementById('infoFw');
   const infoWifi = document.getElementById('infoWifi');
 
+  // Info FW update button (rendered inline inside #infoFw when an update is available)
+  let infoFwUpdateBtn = null;
+
   // --- Latest firmware check (for Info Card) ---
   const LATEST_BOARD_FW_URL = 'https://raw.githubusercontent.com/LukasT03/LTS-Respooler/main/Firmware/latest_board_firmware.txt';
   let latestBoardFw = null;
@@ -122,12 +125,96 @@
     if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
     if (infoFw) {
       const cur = st?.fw ? String(st.fw).trim() : '';
-      let suffix = '';
-      if (cur && latestBoardFw) {
-        const cmp = compareVersions(cur, latestBoardFw);
-        suffix = (cmp >= 0) ? ' (up to date)' : ' (update available)';
+
+      // Rebuild the FW line so we can place an inline Update button.
+      // We intentionally use pointer-events blocking via the button itself only.
+      infoFw.textContent = '';
+
+      if (!cur) {
+        infoFw.textContent = '—';
+      } else {
+        // Base text: current firmware version
+        infoFw.appendChild(document.createTextNode(cur));
+
+        // If we know the latest version, show either (up to date) or an inline Update button.
+        if (latestBoardFw) {
+          const cmp = compareVersions(cur, latestBoardFw);
+
+          if (cmp >= 0) {
+            infoFw.appendChild(document.createTextNode(' (up to date)'));
+            // Ensure any previously created update button is removed.
+            if (infoFwUpdateBtn && infoFwUpdateBtn.parentElement) {
+              infoFwUpdateBtn.parentElement.removeChild(infoFwUpdateBtn);
+            }
+            // Reset label/disabled for next time it appears.
+            if (infoFwUpdateBtn) {
+              infoFwUpdateBtn.textContent = 'Update';
+              infoFwUpdateBtn.disabled = false;
+            }
+          } else {
+            // Create (once) and reuse a green Update button that triggers OTA.
+            if (!infoFwUpdateBtn) {
+              infoFwUpdateBtn = document.createElement('button');
+              infoFwUpdateBtn.type = 'button';
+              infoFwUpdateBtn.textContent = 'Update';
+
+              // Match the Variant Save button styling as closely as possible.
+              // If the Save button exists, copy its classes.
+              try {
+                const variantSaveBtn = document.getElementById('variantSaveBtn');
+                if (variantSaveBtn && variantSaveBtn.className) {
+                  infoFwUpdateBtn.className = variantSaveBtn.className;
+                }
+              } catch(_) {}
+
+              // Force the requested green look without touching CSS files.
+              infoFwUpdateBtn.style.marginLeft = '10px';
+              infoFwUpdateBtn.style.background = '#34C759';
+              infoFwUpdateBtn.style.borderColor = '#34C759';
+              infoFwUpdateBtn.style.color = '#fff';
+
+              infoFwUpdateBtn.addEventListener('click', async () => {
+                try {
+                  infoFwUpdateBtn.disabled = true;
+                  const prev = infoFwUpdateBtn.textContent;
+                  infoFwUpdateBtn.textContent = 'Updating…';
+
+                  // Exact exported name (no guessing):
+                  if (typeof window.webble?.otaUpdate === 'function') {
+                    await window.webble.otaUpdate();
+                  } else {
+                    console.warn('window.webble.otaUpdate is not available');
+                  }
+
+                  // UI will refresh from status updates; restore label in case it doesn't.
+                  infoFwUpdateBtn.textContent = prev;
+                } catch (e) {
+                  console.error(e);
+                  infoFwUpdateBtn.textContent = 'Update';
+                } finally {
+                  // Keep disabled state while the board reports updating.
+                  // Re-enabled by updateInfoMeta() when status is no longer Updating.
+                }
+              });
+            }
+
+            infoFw.appendChild(document.createTextNode(' '));
+            infoFw.appendChild(infoFwUpdateBtn);
+            // Sync Update button with OTA state
+            try {
+              const isUpdating = String(st?.statusCode || '').toUpperCase() === 'U';
+              if (isUpdating) {
+                infoFwUpdateBtn.disabled = true;
+                infoFwUpdateBtn.textContent = 'Updating…';
+              } else {
+                // If we previously showed Updating…, restore to Update when not updating.
+                if (infoFwUpdateBtn.textContent === 'Updating…') infoFwUpdateBtn.textContent = 'Update';
+                infoFwUpdateBtn.disabled = false;
+              }
+            } catch(_) {}
+          }
+        }
       }
-      infoFw.textContent = cur ? (cur + suffix) : '—';
     }
     if (infoWifi) infoWifi.textContent = mapWifiStatus(st);
     // Switch respooler image depending on variant
