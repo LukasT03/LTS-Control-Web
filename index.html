@@ -454,7 +454,7 @@
       font-size: var(--action-font);
       box-sizing: border-box;
     }
-    /* Ensure Info-card WiFi button matches Connect button sizing */
+
     button.info-wifi-btn {
       height: var(--info-btn-h);
       border-radius: 12px;
@@ -462,7 +462,6 @@
       font-size: var(--action-font);
     }
 
-    /* Keep spacer class for compatibility (not used now) */
     .card-stack-spacer {
       flex: 1 1 auto;
     }
@@ -492,7 +491,6 @@
       }
     }
 
-    /* When screen height is small, place header logo + title side-by-side (like Web Flasher) */
     @media (max-height: 870px) {
       body {
         padding-left: 1.5rem;
@@ -1982,11 +1980,18 @@
         variantSaveBtn.disabled = !pendingVariant;
       };
       function openVariantModal(opts = { manual: false }){
-        pendingVariant = null;
-        setVariantUI(null);
+        const manual = !!opts.manual;
+
+        // Auto-open (UNK): start with no selection.
+        // Manual open (button): keep whatever we preselected from the current Board state.
+        if (!manual) {
+          pendingVariant = null;
+          setVariantUI(null);
+        }
         updateVariantSaveState();
+
         if (!variantModalBackdrop) return;
-        variantModalManualOpen = !!opts.manual;
+        variantModalManualOpen = manual;
         variantModalAutoOpen = !variantModalManualOpen;
         if (variantDesc) {
           variantDesc.textContent = variantModalManualOpen ? VARIANT_DESC_MANUAL : VARIANT_DESC_AUTO;
