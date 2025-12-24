@@ -414,16 +414,46 @@
             }
           } catch (_) {}
 
-          // Ensure a stable label hook exists for later updates.
-          // If the copied HTML doesn't include it, create it.
+          // Ensure a stable label hook exists for later updates (WITHOUT duplicating the label).
+          // We reuse the existing label span from the Calibrate button and just retarget it.
           if (!infoWifiActionBtn.querySelector('#wifiModalBtnLabel')) {
-            // If the button already contains text nodes/elements, wrap them in a span.
-            const span = document.createElement('span');
-            span.id = 'wifiModalBtnLabel';
-            // Move existing text into the label span.
-            // (If the copied HTML already had a layout, this will just set label below.)
-            span.textContent = '';
-            infoWifiActionBtn.appendChild(span);
+            let labelEl = infoWifiActionBtn.querySelector('.btn-label');
+
+            // Fallback: pick the span with the longest text (usually the label, not the chevron).
+            if (!labelEl) {
+              const spans = Array.from(infoWifiActionBtn.querySelectorAll('span'));
+              let best = null;
+              let bestLen = 0;
+              for (const sp of spans) {
+                const t = (sp.textContent || '').trim();
+                if (!t) continue;
+                if (t.length > bestLen) { best = sp; bestLen = t.length; }
+              }
+              labelEl = best;
+            }
+
+            if (labelEl) {
+              labelEl.id = 'wifiModalBtnLabel';
+              // Clear the old label text (e.g. "Calibrate") so only our dynamic text is shown.
+              labelEl.textContent = '';
+            } else {
+              // Last resort: create a label span at the front.
+              const span = document.createElement('span');
+              span.id = 'wifiModalBtnLabel';
+              span.className = 'btn-label';
+              span.textContent = '';
+              infoWifiActionBtn.prepend(span);
+            }
+
+            // Also remove leftover non-empty direct text nodes under the button
+            // (prevents "Calibrate › Change" when the label was a bare text node).
+            try {
+              for (const n of Array.from(infoWifiActionBtn.childNodes)) {
+                if (n && n.nodeType === Node.TEXT_NODE && (n.textContent || '').trim().length) {
+                  n.textContent = '';
+                }
+              }
+            } catch (_) {}
           }
 
           // Ensure it behaves like a normal clickable button.
