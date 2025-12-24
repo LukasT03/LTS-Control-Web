@@ -972,8 +972,9 @@ input[type="checkbox"] {
   white-space: nowrap;
 }
 
-/* Slightly tighter right padding for Calibrate button (space after chevron) */
-#servoCalBtn.mini-btn.compact {
+/* Slightly tighter right padding for Calibrate-style buttons (space after chevron) */
+#servoCalBtn.mini-btn.compact,
+#wifiModalBtn.mini-btn.compact {
   padding-right: 0.55rem;
 }
 .mini-btn.compact .btn-chevron {

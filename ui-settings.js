@@ -165,6 +165,7 @@
     } catch(_) {}
     if (infoBoard) infoBoard.textContent = inferBoardVersion(st);
     if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
+    let fwHandled = false;
     if (infoFw) {
       const curRaw = st?.fw ? String(st.fw).trim() : '';
       const cur = normalizeVersion(curRaw);
@@ -291,78 +292,73 @@
         return infoFwUpdateBtn;
       }
 
-      // Fast path: same state => only keep disabled in sync
+      // Fast path: same FW state => do not rebuild FW row, but DO continue so Wi‑Fi can update.
       if (key === infoFwLastRenderKey) {
-        try {
-          if (infoFwUpdateBtn) {
-            // Keep the disabled attribute correct for the current label/state.
-            // (Label itself is only updated on rebuild to guarantee the 5 allowed statuses.)
-            infoFwUpdateBtn.disabled = infoFwUpdateBtn.hasAttribute('disabled') ? true : false;
+        fwHandled = true;
+      } else {
+        infoFwLastRenderKey = key;
+      }
+
+      if (!fwHandled) {
+        // If we don't have a current version, render the simplest allowed state.
+        if (!cur) {
+          infoFw.textContent = '—';
+          fwHandled = true;
+        } else
+        // 1) Up to date
+        if (!updateAvailable) {
+          const { row, left } = ensureRow();
+          left.textContent = `${cur} (up to date)`;
+          row.appendChild(left);
+          infoFw.appendChild(row);
+          fwHandled = true;
+        } else {
+          // From here: update is available (cur < latest)
+          const { row, left } = ensureRow();
+          left.textContent = cur;
+          row.appendChild(left);
+
+          const btn = ensureBtn();
+
+          // 2) Updating...
+          if (isUpdating) {
+            btn.textContent = 'Updating...';
+            btn.disabled = true;
+            btn.dataset.fwState = 'updating';
+            row.appendChild(btn);
+            infoFw.appendChild(row);
+            fwHandled = true;
+          } else
+          // 3) Update failed!
+          // Only show this if the user actually initiated an OTA update in this connection.
+          if (otaOk === false && otaUserInitiatedThisConnection) {
+            btn.textContent = 'Update failed!';
+            btn.disabled = false; // allow retry
+            btn.dataset.fwState = 'failed';
+            row.appendChild(btn);
+            infoFw.appendChild(row);
+            fwHandled = true;
+          } else
+          // 4) Update available, no Wi-Fi
+          if (wifiOk !== true) {
+            btn.textContent = 'Update available, no Wi-Fi';
+            btn.disabled = true;
+            btn.dataset.fwState = 'no-wifi';
+            row.appendChild(btn);
+            infoFw.appendChild(row);
+            fwHandled = true;
+          } else {
+            // 5) Update to <latest>
+            btn.textContent = `Update to ${latest}`;
+            btn.disabled = false;
+            btn.dataset.fwState = 'ready';
+            row.appendChild(btn);
+            infoFw.appendChild(row);
+            fwHandled = true;
           }
-        } catch(_) {}
-        return;
+        }
       }
-      infoFwLastRenderKey = key;
-
-      // If we don't have a current version, render the simplest allowed state.
-      if (!cur) {
-        infoFw.textContent = '—';
-        return;
-      }
-
-      // 1) Up to date
-      if (!updateAvailable) {
-        const { row, left } = ensureRow();
-        left.textContent = `${cur} (up to date)`;
-        row.appendChild(left);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      // From here: update is available (cur < latest)
-      const { row, left } = ensureRow();
-      left.textContent = cur;
-      row.appendChild(left);
-
-      const btn = ensureBtn();
-
-      // 2) Updating...
-      if (isUpdating) {
-        btn.textContent = 'Updating...';
-        btn.disabled = true;
-        btn.dataset.fwState = 'updating';
-        row.appendChild(btn);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      // 3) Update failed!
-      // Only show this if the user actually initiated an OTA update in this connection.
-      if (otaOk === false && otaUserInitiatedThisConnection) {
-        btn.textContent = 'Update failed!';
-        btn.disabled = false; // allow retry
-        btn.dataset.fwState = 'failed';
-        row.appendChild(btn);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      // 4) Update available, no Wi-Fi
-      if (wifiOk !== true) {
-        btn.textContent = 'Update available, no Wi-Fi';
-        btn.disabled = true;
-        btn.dataset.fwState = 'no-wifi';
-        row.appendChild(btn);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      // 5) Update to <latest>
-      btn.textContent = `Update to ${latest}`;
-      btn.disabled = false;
-      btn.dataset.fwState = 'ready';
-      row.appendChild(btn);
-      infoFw.appendChild(row);
+      fwHandled = true;
     }
     if (infoWifi) {
       const wifiText = mapWifiStatus(st);
