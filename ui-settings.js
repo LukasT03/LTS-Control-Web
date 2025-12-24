@@ -124,14 +124,18 @@
         ? String(st.WIFI_SSID)
         : null;
 
-    if (ok === true) return ssid ? ('Connected: ' + ssid) : 'Connected';
-    if (ok === false) return 'Not connected';
+    // IMPORTANT: Some callers may pass a partial object; fall back to global state for connection.
+    const isConn = (typeof st?.connected === 'boolean')
+      ? st.connected
+      : (window.webble?.getState?.().connected === true);
 
-    // If we're connected to the Board but Wi‑Fi state is unknown (older firmware / not reported),
-    // show a sensible default instead of a dash.
-    const isConn = (typeof st?.connected === 'boolean') ? st.connected : false;
-    if (isConn) return 'Not connected';
+    // When connected to the Board, never show a dash for Wi‑Fi — default to "Not connected".
+    if (isConn) {
+      if (ok === true) return ssid ? ('Connected: ' + ssid) : 'Connected';
+      return 'Not connected';
+    }
 
+    // Not connected to the Board => show dash.
     return '—';
   }
 
