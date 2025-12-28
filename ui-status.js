@@ -121,27 +121,24 @@
   //   we treat Wi-Fi as unknown and render "Not connected" (never '-') once connected.
   let haveFreshStatusThisConnection = false;
   let connEpoch = 0;
-  // Some status payloads don't include a `connected` flag and getState() can lag.
-  // We keep our own connection flag so the UI never falls back to "—" while actually connected.
-  let isConnectedUI = false;
 
   function mapWifiStatus(st){
     // Prefer explicit boolean if present, otherwise rely on our connection lifecycle flag.
     const isConn = (typeof st?.connected === 'boolean')
       ? st.connected
-      : (isConnectedUI === true);
+      : (window.webble?.getState?.().connected === true);
 
-    if (!isConn) return '—';
+    if (!isConn) return 'Not Connected';
 
     // Connected to Board: never show "—" or "-"
-    if (!haveFreshStatusThisConnection) return 'Not connected';
+    if (!haveFreshStatusThisConnection) return 'Not Connected';
 
     const ok = getWifiOk(st);
     if (ok === true) return 'Connected';
-    if (ok === false) return 'Not connected';
+    if (ok === false) return 'Not Connected';
 
     // Missing/unknown wifi fields on connected boards => show Not connected (never "—")
-    return 'Not connected';
+    return 'Not Connected';
   }
 
   // -------------------- DOM refs (Status UI) --------------------
@@ -149,6 +146,33 @@
   const infoRespooler = document.getElementById('infoRespooler');
   const infoFw = document.getElementById('infoFw');
   const infoWifi = document.getElementById('infoWifi');
+
+  function applyDisconnectedDefaults(){
+    // User-requested defaults when NOT connected (including first load):
+    // - Board version: Unknown
+    // - Board Firmware: Unknown
+    // - Wifi status: Not Connected
+    // - Respooler Variant: Respooler V4
+    if (infoBoard) infoBoard.textContent = 'Unknown';
+    if (infoFw) infoFw.textContent = 'Unknown';
+    if (infoWifi) infoWifi.textContent = 'Not Connected';
+    if (infoRespooler) infoRespooler.textContent = 'Respooler V4';
+
+    // Hide variant quick-switch button while disconnected
+    try {
+      const btn = document.getElementById('infoVariantBtn');
+      if (btn) {
+        btn.style.display = 'none';
+        btn.disabled = true;
+      }
+    } catch(_) {}
+
+    // Reset respooler image to default
+    try {
+      const card = document.querySelector('.info-card');
+      if (card) card.style.setProperty('--respooler-img', 'url("Respooler.png")');
+    } catch(_) {}
+  }
 
   const pillConnSub = document.getElementById('pillConnSub');
   const pillFilSub  = document.getElementById('pillFilSub');
@@ -315,7 +339,13 @@
     const st = s || (window.webble?.getState ? window.webble.getState() : {});
     const isConn = (typeof st?.connected === 'boolean')
       ? st.connected
-      : (isConnectedUI === true);
+      : (window.webble?.getState?.().connected === true);
+
+    // If not connected, show the requested defaults and don't render per-board details.
+    if (!isConn) {
+      applyDisconnectedDefaults();
+      return;
+    }
 
     // Variant quick switch button visibility
     try {
@@ -450,54 +480,41 @@
         return infoFwUpdateBtn;
       }
 
-      if (key === infoFwLastRenderKey) return;
-      infoFwLastRenderKey = key;
+      // IMPORTANT: never `return` from here — this function also renders Wi‑Fi.
+      if (key !== infoFwLastRenderKey) {
+        infoFwLastRenderKey = key;
 
-      if (!cur) { infoFw.textContent = '—'; return; }
+        if (!cur) {
+          infoFw.textContent = '—';
+        } else if (!updateAvailable) {
+          const { row, left } = ensureRow();
+          left.textContent = `${cur} (up to date)`;
+          row.appendChild(left);
+          infoFw.appendChild(row);
+        } else {
+          const { row, left } = ensureRow();
+          left.textContent = cur;
+          row.appendChild(left);
+          const btn = ensureBtn();
 
-      // Up to date
-      if (!updateAvailable) {
-        const { row, left } = ensureRow();
-        left.textContent = `${cur} (up to date)`;
-        row.appendChild(left);
-        infoFw.appendChild(row);
-        return;
+          if (isUpdating) {
+            btn.textContent = 'Updating...';
+            btn.disabled = true;
+          } else if (otaOk === false && otaUserInitiatedThisConnection) {
+            btn.textContent = 'Update failed!';
+            btn.disabled = false;
+          } else if (wifiOk !== true) {
+            btn.textContent = 'Update available, no Wi‑Fi';
+            btn.disabled = true;
+          } else {
+            btn.textContent = `Update to ${latest}`;
+            btn.disabled = false;
+          }
+
+          row.appendChild(btn);
+          infoFw.appendChild(row);
+        }
       }
-
-      // Update available states
-      const { row, left } = ensureRow();
-      left.textContent = cur;
-      row.appendChild(left);
-      const btn = ensureBtn();
-
-      if (isUpdating) {
-        btn.textContent = 'Updating...';
-        btn.disabled = true;
-        row.appendChild(btn);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      if (otaOk === false && otaUserInitiatedThisConnection) {
-        btn.textContent = 'Update failed!';
-        btn.disabled = false;
-        row.appendChild(btn);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      if (wifiOk !== true) {
-        btn.textContent = 'Update available, no Wi-Fi';
-        btn.disabled = true;
-        row.appendChild(btn);
-        infoFw.appendChild(row);
-        return;
-      }
-
-      btn.textContent = `Update to ${latest}`;
-      btn.disabled = false;
-      row.appendChild(btn);
-      infoFw.appendChild(row);
     }
 
     // Wi-Fi row (text + action button)
@@ -514,74 +531,77 @@
         btnLabel,
       ].join('|');
 
-      if (key === infoWifiLastRenderKey) return;
-      infoWifiLastRenderKey = key;
+      if (key === infoWifiLastRenderKey) {
+        // No re-render needed.
+      } else {
+        infoWifiLastRenderKey = key;
 
-      infoWifi.textContent = '';
+        infoWifi.textContent = '';
 
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.justifyContent = 'space-between';
-      row.style.gap = '10px';
-      row.style.minWidth = '0';
-      row.style.flexWrap = 'wrap';
-      row.style.position = 'relative';
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+        row.style.gap = '10px';
+        row.style.minWidth = '0';
+        row.style.flexWrap = 'wrap';
+        row.style.position = 'relative';
 
-      const left = document.createElement('span');
-      left.style.flex = '1';
-      left.style.minWidth = '0';
-      left.style.whiteSpace = 'nowrap';
-      left.style.pointerEvents = 'none';
-      left.textContent = wifiText || '—';
-      row.appendChild(left);
+        const left = document.createElement('span');
+        left.style.flex = '1';
+        left.style.minWidth = '0';
+        left.style.whiteSpace = 'nowrap';
+        left.style.pointerEvents = 'none';
+        left.textContent = wifiText || '—';
+        row.appendChild(left);
 
-      if (isConn) {
-        if (!infoWifiActionBtn) {
-          infoWifiActionBtn = document.createElement('button');
-          infoWifiActionBtn.type = 'button';
+        if (isConn) {
+          if (!infoWifiActionBtn) {
+            infoWifiActionBtn = document.createElement('button');
+            infoWifiActionBtn.type = 'button';
 
-          // Match Calibrate button styling if possible
-          try {
-            const calBtn = document.getElementById('servoCalBtn');
-            if (calBtn && calBtn.className) infoWifiActionBtn.className = calBtn.className;
-          } catch(_) {}
-
-          infoWifiActionBtn.innerHTML = `
-            <span id="wifiModalBtnLabel" class="btn-label"></span>
-            <span class="btn-chevron" aria-hidden="true">
-              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
-                <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-          `;
-          const ch = infoWifiActionBtn.querySelector('.btn-chevron');
-          if (ch) ch.style.marginRight = '0';
-
-          infoWifiActionBtn.style.pointerEvents = 'auto';
-          infoWifiActionBtn.style.cursor = 'pointer';
-          infoWifiActionBtn.style.position = 'relative';
-          infoWifiActionBtn.style.zIndex = '5';
-
-          infoWifiActionBtn.addEventListener('click', (ev) => {
-            ev.preventDefault();
-            ev.stopPropagation();
+            // Match Calibrate button styling if possible
             try {
-              const backdrop = document.getElementById('wifiModalBackdrop');
-              if (backdrop) backdrop.classList.add('show');
+              const calBtn = document.getElementById('servoCalBtn');
+              if (calBtn && calBtn.className) infoWifiActionBtn.className = calBtn.className;
             } catch(_) {}
-          });
+
+            infoWifiActionBtn.innerHTML = `
+              <span id="wifiModalBtnLabel" class="btn-label"></span>
+              <span class="btn-chevron" aria-hidden="true">
+                <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                  <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            `;
+            const ch = infoWifiActionBtn.querySelector('.btn-chevron');
+            if (ch) ch.style.marginRight = '0';
+
+            infoWifiActionBtn.style.pointerEvents = 'auto';
+            infoWifiActionBtn.style.cursor = 'pointer';
+            infoWifiActionBtn.style.position = 'relative';
+            infoWifiActionBtn.style.zIndex = '5';
+
+            infoWifiActionBtn.addEventListener('click', (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              try {
+                const backdrop = document.getElementById('wifiModalBackdrop');
+                if (backdrop) backdrop.classList.add('show');
+              } catch(_) {}
+            });
+          }
+
+          const labelEl = infoWifiActionBtn.querySelector('#wifiModalBtnLabel');
+          if (labelEl) labelEl.textContent = btnLabel;
+          else infoWifiActionBtn.textContent = btnLabel;
+
+          infoWifiActionBtn.disabled = false;
+          row.appendChild(infoWifiActionBtn);
         }
 
-        const labelEl = infoWifiActionBtn.querySelector('#wifiModalBtnLabel');
-        if (labelEl) labelEl.textContent = btnLabel;
-        else infoWifiActionBtn.textContent = btnLabel;
-
-        infoWifiActionBtn.disabled = false;
-        row.appendChild(infoWifiActionBtn);
+        infoWifi.appendChild(row);
       }
-
-      infoWifi.appendChild(row);
     }
   }
 
@@ -712,22 +732,23 @@
     // Initial UI
     try {
       const initial = window.webble.getState();
-      updateStatusPills(initial);
-      updateInfoMeta(initial);
+      const isConn = initial && initial.connected === true;
+      updateStatusPills(isConn ? initial : { connected: false });
+      if (isConn) updateInfoMeta(initial);
+      else applyDisconnectedDefaults();
 
       // Wi-Fi modal initial
       try {
         const w = window.webble.getWiFi?.();
         populateSsids(w?.ssids || [], w?.ssid || '');
         if (w?.connected === true) setWifiStatusText('Connected');
-        else if (w?.connected === false) setWifiStatusText('Not connected');
+        else if (w?.connected === false) setWifiStatusText('Not Connected');
         else setWifiStatusText('\u00A0');
       } catch(_) {}
     } catch(_) {}
 
     // Connection lifecycle
     window.webble.on('connected', () => {
-      isConnectedUI = true;
       connEpoch++;
       haveFreshStatusThisConnection = false;
 
@@ -748,7 +769,6 @@
         const st = window.webble?.getState ? window.webble.getState() : {};
         const stSafe = {
           ...st,
-          connected: true,
           wifiConnected: null,
           WIFI_OK: null,
           wifiConnectionResult: null,
@@ -762,7 +782,6 @@
     });
 
     window.webble.on('disconnected', () => {
-      isConnectedUI = false;
       connEpoch++;
       haveFreshStatusThisConnection = false;
 
@@ -775,18 +794,18 @@
       infoFwLastRenderKey = null;
       infoWifiLastRenderKey = null;
 
-      // show disconnected UI
+      // Clear stale Board-specific info (getState() can still contain the previous device).
       try {
-        const st = window.webble?.getState ? window.webble.getState() : {};
-        updateStatusPills({ ...st, connected: false });
-        updateInfoMeta({ ...st, connected: false });
+        updateStatusPills({ connected: false });
+
+        applyDisconnectedDefaults();
+
         setWifiStatusText('\u00A0');
       } catch(_) {}
     });
 
     // Status updates
     window.webble.on('status', (s) => {
-      isConnectedUI = true;
       // Mark that we now have a fresh payload for this connection
       haveFreshStatusThisConnection = true;
 
@@ -797,9 +816,8 @@
         if (typeof s?.otaSuccess === 'boolean') otaLocalPendingUntil = 0;
       } catch(_) {}
 
-      const sRender = (s && typeof s === 'object') ? { ...s, connected: true } : { connected: true };
-      updateStatusPills(sRender);
-      updateInfoMeta(sRender);
+      updateStatusPills(s);
+      updateInfoMeta(s);
 
       // Variant auto-open on UNK
       try {
@@ -841,14 +859,14 @@
         } else if (s.wifiConnected === true) {
           setWifiStatusText('Connected');
         } else if (s.wifiConnected === false) {
-          setWifiStatusText('Not connected');
+          setWifiStatusText('Not Connected');
         } else if (s.wifiConnectionResult != null) {
           setWifiStatusText(s.wifiConnectionResult ? 'Connected' : 'Connection failed');
         } else if (s.wifiLastResult != null) {
           setWifiStatusText(s.wifiLastResult ? 'OK' : 'Failed');
         } else {
           // No Wi-Fi fields reported (older firmware): if connected, default to Not connected
-          setWifiStatusText(isConn ? 'Not connected' : '\u00A0');
+          setWifiStatusText(isConn ? 'Not Connected' : '\u00A0');
         }
       } catch(_) {}
     });

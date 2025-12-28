@@ -260,24 +260,35 @@ h1 {
 .info-meta {
   grid-area: meta;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 10px;
+
+  /* Use a 3-row grid so top and bottom rows "stick" to the edges */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  align-self: stretch;
+
   min-width: 0;
   pointer-events: none;
+}
+
+/* Center the middle status block within the flexible row */
+.info-meta-row:nth-child(2) {
+  align-self: center;
 }
 
 .info-meta-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
   min-width: 0;
+
+  /* Keep row height stable even when action buttons appear */
+  min-height: 46px;
 }
 
 .info-meta-label {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 400;
   opacity: 0.55;
   line-height: 1.1;
   white-space: nowrap;
@@ -289,10 +300,44 @@ h1 {
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+
+  /* Stable single-line layout (buttons should not cause wrapping / height changes) */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  min-height: 26px;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-variant-numeric: tabular-nums;
+}
+
+/* If JS injects an inner flex row (text + button), force it to stay on one line */
+.info-meta-value > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+}
+
+/* Truncate left text instead of wrapping when the button is present */
+.info-meta-value > div > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Buttons in meta values should never shrink or wrap */
+.info-meta-value button {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 @media (max-width: 450px) {
