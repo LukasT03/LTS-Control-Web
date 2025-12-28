@@ -69,24 +69,11 @@
             </div>
             <div class="info-meta-row">
               <div class="info-meta-label">Board firmware</div>
-              <div id="infoFw" class="info-meta-value" style="display:flex; align-items:center; gap:10px; min-width:0;">
-                <span id="infoFwText" style="flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</span>
-                <button id="infoFwUpdateBtn" class="mini-btn compact" type="button" style="display:none; flex:0 0 auto;">Update</button>
-              </div>
+              <div id="infoFw" class="info-meta-value" style="min-width:0;">—</div>
             </div>
             <div class="info-meta-row">
               <div class="info-meta-label">Wi‑Fi status</div>
-              <div id="infoWifi" class="info-meta-value" style="display:flex; align-items:center; gap:10px; min-width:0;">
-                <span id="infoWifiText" style="flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">—</span>
-                <button id="wifiModalBtn" class="mini-btn compact" type="button" style="display:none; flex:0 0 auto;">
-                  <span id="wifiModalBtnLabel">Connect</span>
-                  <span class="btn-chevron" aria-hidden="true">
-                    <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
-                      <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </span>
-                </button>
-              </div>
+              <div id="infoWifi" class="info-meta-value" style="min-width:0;">—</div>
             </div>
           </div>
 
@@ -389,6 +376,7 @@
   <!-- UI logic split -->
   <script src="ui-control.js"></script>
   <script src="ui-settings.js"></script>
+  <script src="ui-status.js"></script>
 
 </body>
 </html>
