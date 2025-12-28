@@ -480,7 +480,6 @@
         return infoFwUpdateBtn;
       }
 
-      // IMPORTANT: never `return` from here — this function also renders Wi‑Fi.
       if (key !== infoFwLastRenderKey) {
         infoFwLastRenderKey = key;
 
