@@ -972,10 +972,14 @@ input[type="checkbox"] {
   white-space: nowrap;
 }
 
-/* Slightly tighter right padding for Calibrate-style buttons (space after chevron) */
-#servoCalBtn.mini-btn.compact,
-#wifiModalBtn.mini-btn.compact {
+/* Apply the same tighter right padding to ALL compact mini buttons that have a chevron */
+.mini-btn.compact:has(.btn-chevron) {
   padding-right: 0.55rem;
+}
+
+/* Ensure no extra space after the chevron itself */
+.mini-btn.compact:has(.btn-chevron) .btn-chevron {
+  margin-right: 0;
 }
 .mini-btn.compact .btn-chevron {
   margin-left: 8px;

@@ -108,43 +108,57 @@
     return 'Unknown';
   }
 
+  function coerceBool(v){
+    if (typeof v === 'boolean') return v;
+    if (typeof v === 'number') {
+      if (v === 1) return true;
+      if (v === 0) return false;
+    }
+    if (typeof v === 'string') {
+      const t = v.trim().toLowerCase();
+      if (t === 'true' || t === '1' || t === 'yes' || t === 'ok') return true;
+      if (t === 'false' || t === '0' || t === 'no') return false;
+    }
+    return null;
+  }
+
   function mapWifiStatus(s){
     const st = s || {};
 
-    // Prefer explicit boolean from firmware, but fall back to other known fields.
-    const ok = (typeof st?.wifiConnected === 'boolean') ? st.wifiConnected
-      : (typeof st?.WIFI_OK === 'boolean') ? st.WIFI_OK
-      : (typeof st?.wifiConnectionResult === 'boolean') ? st.wifiConnectionResult
-      : (typeof st?.wifiLastResult === 'boolean') ? st.wifiLastResult
+    const ok = (coerceBool(st?.wifiConnected) != null) ? coerceBool(st.wifiConnected)
+      : (coerceBool(st?.WIFI_OK) != null) ? coerceBool(st.WIFI_OK)
+      : (coerceBool(st?.wifiConnectionResult) != null) ? coerceBool(st.wifiConnectionResult)
+      : (coerceBool(st?.wifiLastResult) != null) ? coerceBool(st.wifiLastResult)
       : null;
 
-    const ssid = (st?.wifiSSID != null && String(st.wifiSSID).trim().length)
-      ? String(st.wifiSSID)
-      : (st?.WIFI_SSID != null && String(st.WIFI_SSID).trim().length)
-        ? String(st.WIFI_SSID)
-        : null;
-
-    // IMPORTANT: Some callers may pass a partial object; fall back to global state for connection.
+    // We treat any connected-to-Board state as "Wi‑Fi not connected" unless we explicitly know it's connected.
     const isConn = (typeof st?.connected === 'boolean')
       ? st.connected
       : (window.webble?.getState?.().connected === true);
 
-    // When connected to the Board, never show a dash for Wi‑Fi — default to "Not connected".
-    if (isConn) {
-      if (ok === true) return ssid ? ('Connected: ' + ssid) : 'Connected';
-      return 'Not connected';
-    }
+    if (ok === true) return 'Connected';
+    if (ok === false) return 'Not connected';
 
-    // Not connected to the Board => show dash.
+    // If we're connected to the Board but Wi‑Fi state is unknown/missing, show "Not connected" (never "—").
+    if (isConn) return 'Not connected';
+
     return '—';
   }
 
   function getWifiOk(st){
-    if (typeof st?.wifiConnected === 'boolean') return st.wifiConnected;
-    if (typeof st?.WIFI_OK === 'boolean') return st.WIFI_OK;
+    const v1 = coerceBool(st?.wifiConnected);
+    if (v1 != null) return v1;
+
+    const v2 = coerceBool(st?.WIFI_OK);
+    if (v2 != null) return v2;
+
     // Fall back to last known result fields if present
-    if (typeof st?.wifiConnectionResult === 'boolean') return st.wifiConnectionResult;
-    if (typeof st?.wifiLastResult === 'boolean') return st.wifiLastResult;
+    const v3 = coerceBool(st?.wifiConnectionResult);
+    if (v3 != null) return v3;
+
+    const v4 = coerceBool(st?.wifiLastResult);
+    if (v4 != null) return v4;
+
     return null;
   }
 
@@ -153,11 +167,9 @@
     try {
       const btn = document.getElementById('infoVariantBtn');
       if (btn) {
-        const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
+        const isConn = (st?.connected != null) ? !!st.connected : !!(window.webble?.getState?.().connected);
         const did = (st && Object.prototype.hasOwnProperty.call(st, 'didReceiveBoardVariant')) ? !!st.didReceiveBoardVariant : false;
         const raw = String(st?.boardVariant || '').trim().toUpperCase();
-        // Only show the manual selector when the Board reported a *known* variant.
-        // For UNK we auto-open the modal, and we don't show the manual button.
         const show = !!isConn && did && (raw === 'PRO' || raw === 'STD');
         btn.style.display = show ? 'inline-flex' : 'none';
         btn.disabled = !show;
@@ -165,26 +177,18 @@
     } catch(_) {}
     if (infoBoard) infoBoard.textContent = inferBoardVersion(st);
     if (infoRespooler) infoRespooler.textContent = mapRespoolerVersion(st);
-    let fwHandled = false;
     if (infoFw) {
       const curRaw = st?.fw ? String(st.fw).trim() : '';
       const cur = normalizeVersion(curRaw);
 
-      const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
+      const isConn = (st?.connected != null) ? !!st.connected : !!(window.webble?.getState?.().connected);
       const isUpdatingFromBoard = String(st?.statusCode || '').trim().toUpperCase() === 'U';
       const wifiOk = (typeof st?.wifiConnected === 'boolean') ? st.wifiConnected : null;
       const otaOk = (typeof st?.otaSuccess === 'boolean') ? st.otaSuccess : null;
-
-      // If the latest version is unknown (fetch failed / not loaded), we must still render using ONLY
-      // the allowed statuses. In that case, treat it as "up to date" (no button).
       const latest = normalizeVersion(latestBoardFw);
       const hasLatest = !!latest;
-
-      // Update available?
       const cmp = (cur && hasLatest) ? compareVersions(cur, latest) : 1;
       const updateAvailable = !!cur && hasLatest && (cmp < 0);
-
-      // Local pending: show "Updating..." immediately after click, even before the Board switches status.
       const now = Date.now();
       const isLocalPending = now < otaLocalPendingUntil;
       const isUpdating = isUpdatingFromBoard || isLocalPending;
@@ -269,10 +273,7 @@
                 return;
               }
 
-          // Mark that the user initiated an OTA update in this connection.
           otaUserInitiatedThisConnection = true;
-
-          // Immediately show "Updating..." (allowed state), even if Board status is delayed.
           otaLocalPendingUntil = Date.now() + 15000;
           try { updateInfoMeta(stNow); } catch(_) {}
 
@@ -292,77 +293,82 @@
         return infoFwUpdateBtn;
       }
 
-      // Fast path: same FW state => do not rebuild FW row, but DO continue so Wi‑Fi can update.
+      // Fast path: same state => only keep disabled in sync
       if (key === infoFwLastRenderKey) {
-        fwHandled = true;
-      } else {
-        infoFwLastRenderKey = key;
-      }
-
-      if (!fwHandled) {
-        // If we don't have a current version, render the simplest allowed state.
-        if (!cur) {
-          infoFw.textContent = '—';
-          fwHandled = true;
-        } else
-        // 1) Up to date
-        if (!updateAvailable) {
-          const { row, left } = ensureRow();
-          left.textContent = `${cur} (up to date)`;
-          row.appendChild(left);
-          infoFw.appendChild(row);
-          fwHandled = true;
-        } else {
-          // From here: update is available (cur < latest)
-          const { row, left } = ensureRow();
-          left.textContent = cur;
-          row.appendChild(left);
-
-          const btn = ensureBtn();
-
-          // 2) Updating...
-          if (isUpdating) {
-            btn.textContent = 'Updating...';
-            btn.disabled = true;
-            btn.dataset.fwState = 'updating';
-            row.appendChild(btn);
-            infoFw.appendChild(row);
-            fwHandled = true;
-          } else
-          // 3) Update failed!
-          // Only show this if the user actually initiated an OTA update in this connection.
-          if (otaOk === false && otaUserInitiatedThisConnection) {
-            btn.textContent = 'Update failed!';
-            btn.disabled = false; // allow retry
-            btn.dataset.fwState = 'failed';
-            row.appendChild(btn);
-            infoFw.appendChild(row);
-            fwHandled = true;
-          } else
-          // 4) Update available, no Wi-Fi
-          if (wifiOk !== true) {
-            btn.textContent = 'Update available, no Wi-Fi';
-            btn.disabled = true;
-            btn.dataset.fwState = 'no-wifi';
-            row.appendChild(btn);
-            infoFw.appendChild(row);
-            fwHandled = true;
-          } else {
-            // 5) Update to <latest>
-            btn.textContent = `Update to ${latest}`;
-            btn.disabled = false;
-            btn.dataset.fwState = 'ready';
-            row.appendChild(btn);
-            infoFw.appendChild(row);
-            fwHandled = true;
+        try {
+          if (infoFwUpdateBtn) {
+            // Keep the disabled attribute correct for the current label/state.
+            // (Label itself is only updated on rebuild to guarantee the 5 allowed statuses.)
+            infoFwUpdateBtn.disabled = infoFwUpdateBtn.hasAttribute('disabled') ? true : false;
           }
-        }
+        } catch(_) {}
+        return;
       }
-      fwHandled = true;
+      infoFwLastRenderKey = key;
+
+      // If we don't have a current version, render the simplest allowed state.
+      if (!cur) {
+        infoFw.textContent = '—';
+        return;
+      }
+
+      // 1) Up to date
+      if (!updateAvailable) {
+        const { row, left } = ensureRow();
+        left.textContent = `${cur} (up to date)`;
+        row.appendChild(left);
+        infoFw.appendChild(row);
+        return;
+      }
+
+      // From here: update is available (cur < latest)
+      const { row, left } = ensureRow();
+      left.textContent = cur;
+      row.appendChild(left);
+
+      const btn = ensureBtn();
+
+      // 2) Updating...
+      if (isUpdating) {
+        btn.textContent = 'Updating...';
+        btn.disabled = true;
+        btn.dataset.fwState = 'updating';
+        row.appendChild(btn);
+        infoFw.appendChild(row);
+        return;
+      }
+
+      // 3) Update failed!
+      // Only show this if the user actually initiated an OTA update in this connection.
+      if (otaOk === false && otaUserInitiatedThisConnection) {
+        btn.textContent = 'Update failed!';
+        btn.disabled = false; // allow retry
+        btn.dataset.fwState = 'failed';
+        row.appendChild(btn);
+        infoFw.appendChild(row);
+        return;
+      }
+
+      // 4) Update available, no Wi-Fi
+      if (wifiOk !== true) {
+        btn.textContent = 'Update available, no Wi-Fi';
+        btn.disabled = true;
+        btn.dataset.fwState = 'no-wifi';
+        row.appendChild(btn);
+        infoFw.appendChild(row);
+        return;
+      }
+
+      // 5) Update to <latest>
+      btn.textContent = `Update to ${latest}`;
+      btn.disabled = false;
+      btn.dataset.fwState = 'ready';
+      row.appendChild(btn);
+      infoFw.appendChild(row);
     }
     if (infoWifi) {
       const wifiText = mapWifiStatus(st);
-      const isConn = (typeof st?.connected === 'boolean') ? st.connected : (window.webble?.getState?.().connected === true);
+      const isConn = (st?.connected != null) ? !!st.connected : !!(window.webble?.getState?.().connected);
       const wifiOk = getWifiOk(st);
       // Button text depends ONLY on the connected state (unknown => treat as not connected)
       const btnLabel = (wifiOk === true) ? 'Change' : 'Connect';
@@ -404,57 +410,26 @@
           infoWifiActionBtn = document.createElement('button');
           infoWifiActionBtn.type = 'button';
 
-          // Match the Calibrate button styling + structure (chevron + label).
+          // Match the Calibrate button styling exactly (same className).
           try {
             const calBtn = document.getElementById('servoCalBtn');
-            if (calBtn) {
-              if (calBtn.className) infoWifiActionBtn.className = calBtn.className;
-              // Copy HTML structure so we also get the chevron.
-              infoWifiActionBtn.innerHTML = calBtn.innerHTML;
+            if (calBtn && calBtn.className) {
+              infoWifiActionBtn.className = calBtn.className;
             }
           } catch (_) {}
 
-          // Ensure a stable label hook exists for later updates (WITHOUT duplicating the label).
-          // We reuse the existing label span from the Calibrate button and just retarget it.
-          if (!infoWifiActionBtn.querySelector('#wifiModalBtnLabel')) {
-            let labelEl = infoWifiActionBtn.querySelector('.btn-label');
-
-            // Fallback: pick the span with the longest text (usually the label, not the chevron).
-            if (!labelEl) {
-              const spans = Array.from(infoWifiActionBtn.querySelectorAll('span'));
-              let best = null;
-              let bestLen = 0;
-              for (const sp of spans) {
-                const t = (sp.textContent || '').trim();
-                if (!t) continue;
-                if (t.length > bestLen) { best = sp; bestLen = t.length; }
-              }
-              labelEl = best;
-            }
-
-            if (labelEl) {
-              labelEl.id = 'wifiModalBtnLabel';
-              // Clear the old label text (e.g. "Calibrate") so only our dynamic text is shown.
-              labelEl.textContent = '';
-            } else {
-              // Last resort: create a label span at the front.
-              const span = document.createElement('span');
-              span.id = 'wifiModalBtnLabel';
-              span.className = 'btn-label';
-              span.textContent = '';
-              infoWifiActionBtn.prepend(span);
-            }
-
-            // Also remove leftover non-empty direct text nodes under the button
-            // (prevents "Calibrate › Change" when the label was a bare text node).
-            try {
-              for (const n of Array.from(infoWifiActionBtn.childNodes)) {
-                if (n && n.nodeType === Node.TEXT_NODE && (n.textContent || '').trim().length) {
-                  n.textContent = '';
-                }
-              }
-            } catch (_) {}
-          }
+          // Simple: label + chevron (same structure as the Calibrate button).
+          infoWifiActionBtn.innerHTML = `
+            <span id="wifiModalBtnLabel" class="btn-label"></span>
+            <span class="btn-chevron" aria-hidden="true">
+              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                <path d="M6 3.25L10.5 8 6 12.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          `;
+          // Match Calibrate button spacing: no extra right padding after the chevron
+          const ch = infoWifiActionBtn.querySelector('.btn-chevron');
+          if (ch) ch.style.marginRight = '0';
 
           // Ensure it behaves like a normal clickable button.
           infoWifiActionBtn.style.pointerEvents = 'auto';
@@ -472,10 +447,11 @@
           });
         }
 
-        const lbl = infoWifiActionBtn.querySelector('#wifiModalBtnLabel')
-          || infoWifiActionBtn.querySelector('.btn-label')
-          || infoWifiActionBtn;
-        lbl.textContent = btnLabel;
+        // Update ONLY the label text so the chevron stays.
+        const labelEl = infoWifiActionBtn.querySelector('#wifiModalBtnLabel');
+        if (labelEl) labelEl.textContent = btnLabel;
+        else infoWifiActionBtn.textContent = btnLabel;
+
         infoWifiActionBtn.disabled = false;
         row.appendChild(infoWifiActionBtn);
       }
@@ -759,7 +735,8 @@
     try {
       const w = window.webble.getWiFi?.();
       populateSsids(w?.ssids || [], w?.ssid || '');
-      if (w?.connected && w?.ssid) setWifiStatusText('Connected: ' + w.ssid);
+      if (w?.connected === true) setWifiStatusText('Connected');
+      else if (w?.connected === false) setWifiStatusText('Not connected');
     } catch(_) {}
 
     const led = document.getElementById('led');
@@ -1155,12 +1132,17 @@
 
         if (scanning) {
           setWifiStatusText('Scanning…');
-        } else if (s.wifiConnected) {
-          setWifiStatusText(s.wifiSSID ? ('Connected: ' + s.wifiSSID) : 'Connected');
+        } else if (s.wifiConnected === true) {
+          setWifiStatusText('Connected');
+        } else if (s.wifiConnected === false) {
+          setWifiStatusText('Not connected');
         } else if (s.wifiConnectionResult != null) {
           setWifiStatusText(s.wifiConnectionResult ? 'Connected' : 'Connection failed');
         } else if (s.wifiLastResult != null) {
           setWifiStatusText(s.wifiLastResult ? 'OK' : 'Failed');
+        } else {
+          // No Wi‑Fi fields reported (older firmware). If Board is connected, default to Not connected.
+          setWifiStatusText(isConn ? 'Not connected' : '\u00A0');
         }
       } catch(_) {}
 
