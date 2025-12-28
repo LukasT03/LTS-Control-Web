@@ -491,7 +491,11 @@
 
         if (!cur) {
           // While connected but firmware has not been reported yet, keep a stable placeholder.
-          infoFw.textContent = 'Unknown';
+          // Use the same injected row structure as other states (avoids Safari layout quirks with text nodes).
+          const { row, left } = ensureRow();
+          left.textContent = 'Unknown';
+          row.appendChild(left);
+          infoFw.appendChild(row);
         } else if (!updateAvailable) {
           const { row, left } = ensureRow();
           left.textContent = `${cur} (up to date)`;
