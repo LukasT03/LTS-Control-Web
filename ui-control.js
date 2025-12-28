@@ -24,7 +24,7 @@
   if (ui.buttons) ui.buttons.style.display = 'block';
   if (ui.connectWrap) ui.connectWrap.style.display = 'block';
 
-  let statusHoldUntil = 0; // timestamp ms until which we force "Connected!"
+  let statusHoldUntil = 0; // timestamp ms (kept for smooth connect transition)
 
   function setStatusTextAnimated(text, colorOrNull){
     const el = ui.statusText;
@@ -80,17 +80,10 @@
     if(on && justConnected){
       statusHoldUntil = Date.now() + 1500;
     }
-    if (ui.statusText) {
-      if (on) {
-        const withinHold = statusHoldUntil && Date.now() < statusHoldUntil;
-        if (withinHold) {
-          setStatusTextAnimated('Connected!', 'rgb(52,199,89)');
-        } else {
-          setStatusTextAnimated('Connected', '');
-        }
-      } else {
-        setStatusTextAnimated('Not connected', '');
-      }
+    // Do not force a generic "Connected" label on connect.
+    // The real status (e.g. Idle/Running/Updating) is rendered from the next status payload.
+    if (ui.statusText && !on) {
+      setStatusTextAnimated('Not connected', '');
     }
     if(!on && ui.progBar){ ui.progBar.style.width = '0%'; }
     if(!on && ui.progPct){ ui.progPct.textContent = '0 %'; }
@@ -173,10 +166,7 @@
         }
       }
 
-      const now = Date.now();
-      if (ui.statusText && isConn && statusHoldUntil && now < statusHoldUntil) {
-        setStatusTextAnimated('Connected!', 'rgb(52,199,89)');
-      } else if (ui.statusText) {
+      if (ui.statusText) {
         const vis = statusVisual({ ...s, connected: isConn });
         setStatusTextAnimated(vis.text, '');
       }
