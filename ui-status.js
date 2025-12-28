@@ -403,19 +403,25 @@
 
       function ensureRow(){
         infoFw.textContent = '';
-        const row = document.createElement('div');
+
+        // Use a <span> so the CSS rule `.info-meta-value > div { justify-content: space-between !important; }`
+        // does NOT apply. We want the button directly after the text.
+        const row = document.createElement('span');
         row.style.display = 'flex';
         row.style.alignItems = 'center';
-        row.style.justifyContent = 'space-between';
+        row.style.justifyContent = 'flex-start';
         row.style.gap = '10px';
+        row.style.width = '100%';
         row.style.minWidth = '0';
-        row.style.flexWrap = 'wrap';
+        row.style.flexWrap = 'nowrap';
         row.style.position = 'relative';
 
         const left = document.createElement('span');
-        left.style.flex = '1';
+        left.style.flex = '0 1 auto';
         left.style.minWidth = '0';
         left.style.whiteSpace = 'nowrap';
+        left.style.overflow = 'hidden';
+        left.style.textOverflow = 'ellipsis';
         left.style.pointerEvents = 'none';
         return { row, left };
       }
@@ -538,19 +544,24 @@
 
         infoWifi.textContent = '';
 
-        const row = document.createElement('div');
+        // Use a <span> so the CSS rule `.info-meta-value > div { justify-content: space-between !important; }`
+        // does NOT apply. We want the button directly after the text.
+        const row = document.createElement('span');
         row.style.display = 'flex';
         row.style.alignItems = 'center';
-        row.style.justifyContent = 'space-between';
+        row.style.justifyContent = 'flex-start';
         row.style.gap = '10px';
+        row.style.width = '100%';
         row.style.minWidth = '0';
-        row.style.flexWrap = 'wrap';
+        row.style.flexWrap = 'nowrap';
         row.style.position = 'relative';
 
         const left = document.createElement('span');
-        left.style.flex = '1';
+        left.style.flex = '0 1 auto';
         left.style.minWidth = '0';
         left.style.whiteSpace = 'nowrap';
+        left.style.overflow = 'hidden';
+        left.style.textOverflow = 'ellipsis';
         left.style.pointerEvents = 'none';
         left.textContent = wifiText || '—';
         row.appendChild(left);
