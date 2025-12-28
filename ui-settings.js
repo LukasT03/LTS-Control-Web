@@ -53,6 +53,33 @@
     const endUI   = (key) => { uiEditing.delete(key); try { window.webble.commitEdit(key); } catch(_){} };
     const isUIEditing = (key) => uiEditing.has(key);
 
+    // -------------------- Connectivity-safe setters --------------------
+    // The Settings UI should stay interactive even when disconnected.
+    // We queue outgoing writes and flush them on the next successful connection.
+    const queuedWrites = new Map();
+    function isConnectedNow(){
+      try { return window.webble?.getState?.().connected === true; } catch(_) { return false; }
+    }
+    function runOrQueue(key, fn){
+      if (isConnectedNow()) {
+        try { fn(); } catch(e) { console.warn('Setting write failed:', key, e); }
+        return;
+      }
+      queuedWrites.set(key, fn);
+    }
+    try {
+      window.webble.on('connected', () => {
+        try {
+          // Flush last-write-wins.
+          const entries = Array.from(queuedWrites.entries());
+          queuedWrites.clear();
+          for (const [, fn] of entries) {
+            try { fn(); } catch(_) {}
+          }
+        } catch(_) {}
+      });
+    } catch(_) {}
+
     const pending = new Map();
     function setPending(key, val, ms = 900) {
       pending.set(key, { val: String(val), until: Date.now() + ms });
@@ -69,7 +96,7 @@
       if (!el) return;
       el.addEventListener('pointerdown', () => beginUI(key));
       if (onLocal) el.addEventListener('input', e => onLocal(e.target.value));
-      const commit = (v) => { try { setter(v); } finally { endUI(key); } };
+      const commit = (v) => { try { runOrQueue(key, () => setter(v)); } finally { endUI(key); } };
       el.addEventListener('pointerup',   e => commit(e.target.value));
       el.addEventListener('change',      e => commit(e.target.value));
       el.addEventListener('pointercancel', () => endUI(key));
@@ -78,16 +105,16 @@
     function bindCheckbox(el, key, setter){
       if (!el) return;
       el.addEventListener('pointerdown', () => beginUI(key));
-      el.addEventListener('change', e => { try { setter(e.target.checked); } finally { endUI(key); } });
+      el.addEventListener('change', e => { try { runOrQueue(key, () => setter(e.target.checked)); } finally { endUI(key); } });
       el.addEventListener('pointercancel', () => endUI(key));
-      el.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') { try { setter(el.checked); } finally { endUI(key); } } });
+      el.addEventListener('keyup', (e)=>{ if(e.key==='Enter' || e.key===' ') { try { runOrQueue(key, () => setter(el.checked)); } finally { endUI(key); } } });
       el.addEventListener('blur', () => { if (uiEditing.has(key)) endUI(key); });
     }
     function bindSelect(el, key, setter){
       if (!el) return;
       el.addEventListener('pointerdown', () => beginUI(key));
       el.addEventListener('focusin',   () => beginUI(key));
-      el.addEventListener('change',    e => { try { setter(e.target.value); } finally { endUI(key); } });
+      el.addEventListener('change',    e => { try { runOrQueue(key, () => setter(e.target.value)); } finally { endUI(key); } });
       el.addEventListener('blur',      () => { if (uiEditing.has(key)) endUI(key); });
     }
 
@@ -169,7 +196,7 @@
     }
     function commitMotor(){
       beginUI('POW');
-      try { window.webble.setPower(motorLocal); } finally { endUI('POW'); }
+      try { runOrQueue('POW', () => window.webble.setPower(motorLocal)); } finally { endUI('POW'); }
     }
     updateMotorUI();
 
@@ -193,7 +220,7 @@
       beginUI('DUR');
       try {
         setPending('DUR', durLocal);
-        window.webble.setDurationAt80(durLocal);
+        runOrQueue('DUR', () => window.webble.setDurationAt80(durLocal));
       } finally {
         endUI('DUR');
       }
@@ -271,7 +298,7 @@
 
     function commitServoStep(){
       beginUI('SV_STP');
-      try { window.webble.setServoStepMm(servoStepLocal); } finally { endUI('SV_STP'); }
+      try { runOrQueue('SV_STP', () => window.webble.setServoStepMm(servoStepLocal)); } finally { endUI('SV_STP'); }
     }
 
     if (servoStepMinus) servoStepMinus.addEventListener('click', () => {
@@ -296,7 +323,7 @@
       // Side selection should also move the servo to that side
       try {
         if (window.webble && typeof window.webble.servoGoto === 'function') {
-          window.webble.servoGoto(calSide);
+          runOrQueue('SV_GOTO', () => window.webble.servoGoto(calSide));
         }
       } catch(_) {}
 
@@ -327,10 +354,10 @@
     function commitAngle(){
       if (calSide === 'L') {
         beginUI('SV_L');
-        try { window.webble.setServoAngleL(angleL); } finally { endUI('SV_L'); }
+        try { runOrQueue('SV_L', () => window.webble.setServoAngleL(angleL)); } finally { endUI('SV_L'); }
       } else {
         beginUI('SV_R');
-        try { window.webble.setServoAngleR(angleR); } finally { endUI('SV_R'); }
+        try { runOrQueue('SV_R', () => window.webble.setServoAngleR(angleR)); } finally { endUI('SV_R'); }
       }
     }
 
@@ -423,40 +450,9 @@
         }
       }
 
-      // Enable/disable settings controls that depend on connection + variant
-      const isConn = (typeof st.connected === 'boolean')
-        ? st.connected
-        : (window.webble?.getState?.().connected === true);
-
+      // Servo settings are only available on Respooler Pro (variant gating only — NOT connection gating).
       const isPro = isRespoolerProFromState(st || window.webble?.getState?.() || {});
-      setServoSettingsEnabled(isConn && isPro);
-
-      if (servoSideL) servoSideL.disabled = !isConn;
-      if (servoSideR) servoSideR.disabled = !isConn;
-      if (servoArrowLeft)  servoArrowLeft.disabled = !isConn;
-      if (servoArrowRight) servoArrowRight.disabled = !isConn;
-
-      if (motorMinus) motorMinus.disabled = !isConn;
-      if (motorPlus)  motorPlus.disabled = !isConn;
-      if (durMinus) durMinus.disabled = !isConn;
-      if (durPlus)  durPlus.disabled = !isConn;
-
-      if (servoSideSegment) servoSideSegment.classList.toggle('is-disabled', !isConn);
-
-      // Disable input controls when not connected
-      try {
-        const disable = !isConn;
-        if (led) led.disabled = disable;
-        if (useFil) useFil.disabled = disable;
-        if (dir) dir.disabled = disable;
-        if (hs) hs.disabled = disable;
-        if (autoStop) autoStop.disabled = disable;
-        if (jin) jin.disabled = disable;
-        if (wgt) wgt.disabled = disable;
-        if (fan) fan.disabled = disable;
-        if (fanAlways) fanAlways.disabled = disable;
-        if (speed) speed.disabled = disable;
-      } catch(_) {}
+      setServoSettingsEnabled(isPro);
     }
 
     window.webble.on('status', s => {

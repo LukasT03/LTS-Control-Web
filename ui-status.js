@@ -485,7 +485,8 @@
         infoFwLastRenderKey = key;
 
         if (!cur) {
-          infoFw.textContent = '—';
+          // While connected but firmware has not been reported yet, keep a stable placeholder.
+          infoFw.textContent = 'Unknown';
         } else if (!updateAvailable) {
           const { row, left } = ensureRow();
           left.textContent = `${cur} (up to date)`;
