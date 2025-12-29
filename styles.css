@@ -551,6 +551,19 @@ button.info-wifi-btn {
   }
 }
 
+/* When typography switches to the smaller size (<=450px), also make the stacked Info Card more compact */
+@media (max-width: 450px) {
+  .info-card {
+    height: 228px;
+    min-height: 228px;
+    max-height: 228px;
+  }
+
+  .info-frame {
+    max-width: 48vw;
+  }
+}
+
 @media (max-height: 870px) {
   body {
     padding-left: 1.5rem;
