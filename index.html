@@ -372,6 +372,17 @@
     </div>
   </div>
 
+  <script>
+    window.addEventListener("load", () => {
+      const ov = document.getElementById("pageFadeOverlay");
+      if (ov) {
+        setTimeout(() => {
+          ov.style.opacity = "0";
+          setTimeout(() => ov.remove(), 1000);
+        }, 350);
+      }
+    });
+  </script>
   <!-- BLE Manager (unchanged) -->
   <script src="webble-manager.js"></script>
 

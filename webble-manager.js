@@ -1,25 +1,4 @@
 (() => {
-  // -------------------- Page fade overlay (on load) --------------------
-  // Fades out and removes #pageFadeOverlay after the page finished loading.
-  (function setupPageFadeOverlay() {
-    const run = () => {
-      const ov = document.getElementById("pageFadeOverlay");
-      if (!ov) return;
-      setTimeout(() => {
-        ov.style.opacity = "0";
-        setTimeout(() => { try { ov.remove(); } catch {} }, 1000);
-      }, 350);
-    };
-
-    if (document.readyState === "complete") {
-      // If this script loads after the load event already fired
-      setTimeout(run, 0);
-      return;
-    }
-
-    window.addEventListener("load", run);
-  })();
-
   if (window.webble && window.webble.__ready) return;
 
   const serviceUUID = '9E05D06D-68A7-4E1F-A503-AE26713AC101'.toLowerCase();
