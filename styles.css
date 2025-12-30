@@ -38,7 +38,7 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* keep status pills/header pinned to top */
+  justify-content: center;
 }
 
 button {
