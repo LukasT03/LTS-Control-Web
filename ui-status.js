@@ -155,6 +155,12 @@
   let infoHeightSyncRAF = 0;
   let infoHeightRO = null;
 
+  // Safari-only: keep the Respooler image frame from collapsing too narrow.
+  // We only apply this in the 2-column desktop layout; stacked layout uses its own sizing.
+  const ua = navigator.userAgent;
+  const isSafari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|FxiOS/i.test(ua);
+  let safariFrameSyncRAF = 0;
+
   function qsFirst(selectors){
     for (const sel of selectors) {
       const el = document.querySelector(sel);
@@ -172,6 +178,66 @@
       const n = parseFloat(first);
       return Number.isFinite(n) ? n : 0;
     } catch(_) { return 0; }
+  }
+
+  function pxNum(v){
+    const n = parseFloat(String(v || '0'));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function computeAndApplySafariInfoFrameWidth(){
+    if (!isSafari) return;
+
+    const infoCard = document.querySelector('.info-card');
+    const infoFrame = infoCard?.querySelector('.info-frame');
+    if (!infoCard || !infoFrame) return;
+
+    // Only enforce this in the 2-column desktop layout.
+    if (!mqTwoColDesktop.matches) {
+      // Remove inline sizing when leaving desktop so stacked rules behave normally.
+      infoFrame.style.removeProperty('width');
+      infoFrame.style.removeProperty('max-width');
+      infoFrame.style.removeProperty('justify-self');
+      return;
+    }
+
+    // Use the already-computed frame height as the source of truth (height is correct).
+    const frameH = infoFrame.getBoundingClientRect().height;
+    if (!Number.isFinite(frameH) || frameH <= 0) return;
+
+    const cs = getComputedStyle(infoCard);
+    const padL = pxNum(cs.paddingLeft);
+    const padR = pxNum(cs.paddingRight);
+    const colGap = pxNum(cs.columnGap);
+
+    const cardW = infoCard.getBoundingClientRect().width;
+    const innerW = Math.max(0, cardW - padL - padR);
+
+    // Keep enough space for the meta column so it doesn’t get squeezed.
+    const minMetaW = 170;
+    const maxFrameW = Math.max(0, innerW - colGap - minMetaW);
+
+    // Desired: square based on height, but never exceed available width.
+    let w = Math.min(frameH, maxFrameW);
+
+    // Guard rail: if there is no room, don't force a width that would break layout.
+    if (!Number.isFinite(w) || w <= 0) return;
+
+    w = Math.round(w);
+
+    // Pin to the left edge of the card padding (user requirement: ~1rem left padding stays intact).
+    infoFrame.style.justifySelf = 'start';
+    infoFrame.style.width = `${w}px`;
+    infoFrame.style.maxWidth = `${w}px`;
+  }
+
+  function scheduleSafariInfoFrameWidthSync(){
+    if (!isSafari) return;
+    if (safariFrameSyncRAF) return;
+    safariFrameSyncRAF = requestAnimationFrame(() => {
+      safariFrameSyncRAF = 0;
+      computeAndApplySafariInfoFrameWidth();
+    });
   }
 
   function computeAndApplyInfoCardHeight(){
@@ -221,6 +287,7 @@
 
     const px = Math.round(infoH);
     document.documentElement.style.setProperty('--info-card-h-desktop', `${px}px`);
+    scheduleSafariInfoFrameWidthSync();
   }
 
   function scheduleInfoCardHeightSync(){
@@ -228,6 +295,7 @@
     infoHeightSyncRAF = requestAnimationFrame(() => {
       infoHeightSyncRAF = 0;
       computeAndApplyInfoCardHeight();
+      scheduleSafariInfoFrameWidthSync();
     });
   }
 
@@ -253,12 +321,14 @@
     }
 
     window.addEventListener('resize', scheduleInfoCardHeightSync, { passive: true });
+    window.addEventListener('resize', scheduleSafariInfoFrameWidthSync, { passive: true });
     try {
       mqTwoColDesktop.addEventListener('change', scheduleInfoCardHeightSync);
     } catch(_) {
       // Safari < 14 fallback
       try { mqTwoColDesktop.addListener(scheduleInfoCardHeightSync); } catch(_) {}
     }
+    scheduleSafariInfoFrameWidthSync();
   }
 
   function applyDisconnectedDefaults(){

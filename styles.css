@@ -383,6 +383,7 @@ h1 {
   padding: 0;
   min-height: 0;
 }
+
 .info-frame {
   grid-area: frame;
   border: 1px solid var(--info-frame-border);
@@ -411,22 +412,7 @@ h1 {
   position: relative;
 }
 
-/* Safari/WebKit: prevent the frame column from collapsing too narrow (keeps Chrome layout unchanged) */
-@supports (background: -webkit-named-image(i)) {
-  /* Give the left track an explicit (bounded) size so it can't collapse, but also can't grow so much that the footer/meta wrap */
-  .info-card { grid-template-columns: clamp(160px, 22vw, 210px) 1fr; }
-  .info-frame { min-width: 0 !important; }
 
-  @media (max-width: 870px) {
-    .info-card { grid-template-columns: clamp(140px, 32vw, 190px) 1fr; }
-    .info-frame { min-width: 0 !important; }
-  }
-
-  @media (max-width: 450px) {
-    .info-card { grid-template-columns: clamp(120px, 38vw, 170px) 1fr; }
-    .info-frame { min-width: 0 !important; }
-  }
-}
 
 .info-frame-img {
   background-image: var(--respooler-img, url("Respooler.png"));
