@@ -16,7 +16,7 @@
     statusCode: null, statusText: null,
     isUpdating: false,
     tempBuf: [], chipTempAvg: null,
-    speed: 80, hs: false, led: 50, fan: 80, fanAlways: false,
+    speed: 85, hs: false, led: 50, fan: 60, fanAlways: false,
     useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 895,
     wifiConnected: null,
     wifiSSID: null,

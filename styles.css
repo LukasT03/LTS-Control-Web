@@ -6,7 +6,6 @@
   --action-font: 1.1rem;
   --btn-h: 52px;
   --info-card-h-desktop: 245px; /* desktop fixed height (aims to match Chrome) */
-
   --flasher-bg: 255 255 255;
   --flasher-text: 17 17 17;
   --background-secondary: 255 255 255;
@@ -179,7 +178,7 @@ h1 {
 
 /* Slightly tighter top padding for the Control card */
 .card.control-card {
-  padding-top: 0.6rem;
+  padding-top: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -547,15 +546,15 @@ button.info-wifi-btn {
   min-height: 0;
 }
 
-@media (max-width: 870px) {
+@media (max-width: 880px) {
   .cards-row {
     grid-template-columns: 1fr;
   }
 
   .info-card {
-    height: 250px;
-    min-height: 250px;
-    max-height: 250px;
+    height: 238px;
+    min-height: 238px;
+    max-height: 238px;
 
     grid-template-columns: auto 1fr;
     grid-template-rows: 1fr auto;
@@ -575,9 +574,9 @@ button.info-wifi-btn {
 /* When typography switches to the smaller size (<=450px), also make the stacked Info Card more compact */
 @media (max-width: 450px) {
   .info-card {
-    height: 228px;
-    min-height: 228px;
-    max-height: 228px;
+    height: 222px;
+    min-height: 222px;
+    max-height: 222px;
   }
 
   .info-frame {
@@ -833,6 +832,8 @@ input[type="checkbox"] {
   .lts-btn {
     font-size: 1.0rem;
   }
+
+  .info-frame-cap { font-size: 1.0rem; }
   #wbProgPct,
   #wbStatusText,
   #wbProgRem {
@@ -950,6 +951,9 @@ input[type="checkbox"] {
     font-size: 1.1rem;
   }
   #variantModalBackdrop .variant-desc {
+    font-size: 1.0rem;
+  }
+  #variantModalBackdrop .variant-tile-label {
     font-size: 1.0rem;
   }
   #wifiModalBackdrop .wifi-desc {
