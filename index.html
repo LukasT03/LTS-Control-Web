@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div id="pageRoot" style="position:relative;">
+    <div id="pageFadeOverlay" style="position:absolute; inset:0; background:rgb(var(--bg)); z-index:9999; opacity:1; transition:opacity 0.65s ease-out;"></div>
 
   <div class="page-content">
 
@@ -378,5 +380,6 @@
   <script src="ui-settings.js"></script>
   <script src="ui-status.js"></script>
 
+  </div>
 </body>
 </html>
