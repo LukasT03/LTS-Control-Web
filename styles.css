@@ -289,9 +289,9 @@ h1 {
   grid-area: meta;
   z-index: 1;
 
-  /* Use a 3-row grid so top and bottom rows "stick" to the edges */
+  /* Pin 3 rows: top, centered middle, bottom (so the last value has no extra space underneath) */
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
   align-self: stretch;
 
@@ -300,10 +300,17 @@ h1 {
   pointer-events: none;
 }
 
-/* Center the middle status block within the flexible row */
+
+/* Center the middle status block within the flexible (1fr) grid row */
 .info-meta-row:nth-child(2) {
   align-self: center;
 }
+
+/* Keep the last row from reserving extra height (prevents a larger gap above it) */
+.info-meta-row:nth-child(3) {
+  min-height: 0;
+}
+
 
 .info-meta-row {
   display: flex;
