@@ -56,7 +56,7 @@
   function statusVisual(s){
     const code = (s && s.statusCode) ? String(s.statusCode).toUpperCase() : null;
     const txt  = (s && s.statusText) || null;
-    const byFlags = s?.run ? {t:'Running…', c:'rgb(52,199,89)'} : (s && s.connected ? {t:'Connected', c:'rgb(52,199,89)'} : {t:'Not connected', c:''});
+    const byFlags = s?.run ? {t:'Running…', c:'rgb(52,199,89)'} : (s && s.connected ? {t:'Connected', c:'rgb(52,199,89)'} : {t:'Not Connected', c:''});
     if(!code) return { text: txt || byFlags.t, color: byFlags.c };
     switch(code){
       case 'R': return { text: txt || 'Running…',   color:'rgb(52,199,89)' };
@@ -83,7 +83,7 @@
     // Do not force a generic "Connected" label on connect.
     // The real status (e.g. Idle/Running/Updating) is rendered from the next status payload.
     if (ui.statusText && !on) {
-      setStatusTextAnimated('Not connected', '');
+      setStatusTextAnimated('Not Connected', '');
     }
     if(!on && ui.progBar){ ui.progBar.style.width = '0%'; }
     if(!on && ui.progPct){ ui.progPct.textContent = '0 %'; }

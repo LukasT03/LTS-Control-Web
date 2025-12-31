@@ -424,9 +424,19 @@
   function populateSsids(ssids, selected){
     if (!wifiSsid) return;
 
-    const list = (Array.isArray(ssids) ? ssids : []).map(s => String(s));
-    const cur = (selected != null) ? String(selected) : String(wifiSsid.value || '');
-    const keep = cur;
+    const listRaw = (Array.isArray(ssids) ? ssids : []).map(s => String(s));
+
+    // While the modal is open, preserve whatever the user picked (even if the board doesn't report wifiSSID).
+    const modalOpen = !!wifiModalBackdrop && wifiModalBackdrop.classList.contains('show');
+    const keep = modalOpen
+      ? String(wifiSsid.value || '')
+      : ((selected != null) ? String(selected) : String(wifiSsid.value || ''));
+
+    // If the user has already selected something and a subsequent scan no longer contains it,
+    // keep it visible/selected while the modal is open.
+    const list = (modalOpen && keep && !listRaw.includes(keep))
+      ? [keep, ...listRaw]
+      : listRaw;
 
     // Don't rebuild while user is interacting.
     if (document.activeElement === wifiSsid) return;
@@ -435,7 +445,8 @@
     if (key === lastWifiSsidRenderKey) return;
     lastWifiSsidRenderKey = key;
 
-    wifiSsid.innerHTML = '<option value="" ' + (keep ? '' : 'selected') + '>Select…</option>';
+    const count = listRaw.length;
+    wifiSsid.innerHTML = '<option value="" ' + (keep ? '' : 'selected') + '>Select (' + count + ')</option>';
     list.forEach(v => {
       const opt = document.createElement('option');
       opt.value = v;
@@ -891,22 +902,19 @@
     }
 
     if (wifiSsid) {
-      wifiSsid.addEventListener('change', async (e) => {
+      wifiSsid.addEventListener('change', (e) => {
         const ssid = String(e.target.value || '');
+        // UX: Do not send anything on selection; only send when the user presses Connect.
         if (!ssid) return;
-        try {
-          await window.webble.sendWiFiSSID(ssid);
-          setWifiStatusText('SSID sent');
-        } catch(err) {
-          setWifiStatusText('SSID failed');
-          console.error(err);
-        }
+        try { setWifiStatusText('Ready'); } catch(_) {}
       });
     }
 
     if (wifiSendBtn) {
       wifiSendBtn.addEventListener('click', async () => {
-        const ssid = String(wifiSsid?.value || '').trim();
+        // IMPORTANT: Preserve leading/trailing spaces exactly as reported by the ESP32.
+        // Do NOT trim here, otherwise SSIDs with trailing/leading spaces can't be connected to.
+        const ssid = String(wifiSsid?.value || '');
         const pass = String(wifiPass?.value || '');
         if (!ssid) { setWifiStatusText('Select a network'); return; }
         try {
@@ -1059,7 +1067,9 @@
         if (wifiSendBtn) wifiSendBtn.disabled = !isConn || scanning;
 
         if (Array.isArray(s.availableSSIDs)) {
-          populateSsids(s.availableSSIDs, s.wifiSSID || '');
+          // While modal is open, preserve user selection; otherwise prefer board-reported wifiSSID.
+          const modalOpen = !!wifiModalBackdrop && wifiModalBackdrop.classList.contains('show');
+          populateSsids(s.availableSSIDs, modalOpen ? null : (s.wifiSSID || ''));
         }
 
         if (scanning) {

@@ -116,6 +116,23 @@ h1 {
   }
 }
 
+/* WiFi SSID picker should keep the same (light) appearance even in dark mode */
+@media (prefers-color-scheme: dark) {
+  #wifiModalBackdrop #wifiSsid {
+    color-scheme: light;         /* keep native control rendering light */
+    background: #ffffff;
+    color: #000000;
+    border-color: #d1d5db;
+  }
+}
+
+/* WiFi password field: in dark mode use the same border color as dividers */
+@media (prefers-color-scheme: dark) {
+  #wifiModalBackdrop #wifiPass {
+    border-color: rgba(255,255,255,0.18) !important;
+  }
+}
+
 .status-pill svg {
   width: 28px;
   height: 28px;
@@ -890,9 +907,15 @@ input[type="checkbox"] {
 /* --- WiFi modal description --- */
 #wifiModalBackdrop .wifi-desc {
   margin: 0 0 14px 0;
-  opacity: 0.55;
+  /* Do NOT use opacity here (it would also dim the inline status span). */
+  color: rgb(var(--text) / 0.65);
   font-size: 1.05rem;
   line-height: 1.25;
+}
+
+/* Inline WiFi status should be primary text color */
+#wifiModalBackdrop #wifiStatus {
+  color: rgb(var(--text));
 }
 
 #variantModalBackdrop .variant-tiles {
