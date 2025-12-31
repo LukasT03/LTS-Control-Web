@@ -243,6 +243,9 @@
     function openServoModal(){
       if (!servoModalBackdrop) return;
 
+      // Show first so setSide() can optionally move the servo only while the modal is open
+      servoModalBackdrop.classList.add('show');
+
       // When opening, align modal picker with current Home Position
       try {
         const hv = (servoHomeSetting && servoHomeSetting.value)
@@ -252,8 +255,6 @@
           setSide(hv);
         }
       } catch(_) {}
-
-      servoModalBackdrop.classList.add('show');
     }
 
     function closeServoModal(){
@@ -320,9 +321,11 @@
     function setSide(side){
       calSide = (side === 'R') ? 'R' : 'L';
 
-      // Side selection should also move the servo to that side
+      // Only move the servo when the calibration modal is open.
+      // This prevents an initial queued "goto L" that would run right after connecting.
       try {
-        if (window.webble && typeof window.webble.servoGoto === 'function') {
+        const modalOpen = !!servoModalBackdrop && servoModalBackdrop.classList.contains('show');
+        if (modalOpen && window.webble && typeof window.webble.servoGoto === 'function') {
           runOrQueue('SV_GOTO', () => window.webble.servoGoto(calSide));
         }
       } catch(_) {}
