@@ -417,7 +417,55 @@
 
   function setWifiStatusText(t){
     if (!wifiStatus) return;
-    wifiStatus.textContent = (t && String(t).trim().length) ? String(t) : '\u00A0';
+    const s = (t == null) ? '' : String(t);
+    wifiStatus.textContent = s.length ? s : '\u00A0';
+  }
+  // Wi‑Fi modal UI state (separate from info card Wi‑Fi row)
+  let wifiModalPhase = 'idle'; // 'idle' | 'scanning' | 'ready' | 'connecting' | 'success' | 'failed' | 'connected'
+  let wifiModalPendingSSID = '';
+  let wifiModalLastConnectedSSID = '';
+  let wifiModalSuccessTimer = 0;
+  let wifiModalConnectStartedAt = 0;
+  let wifiModalWasScanning = false;
+
+  function isRecentConnectAttempt(){
+    return !!wifiModalConnectStartedAt && (Date.now() - wifiModalConnectStartedAt) < 30000;
+  }
+
+  function getWifiSSIDFromStatus(s){
+    try {
+      const a = String(s?.wifiSSID ?? '').trimEnd();
+      const b = String(s?.WIFI_SSID ?? '').trimEnd();
+      // prefer explicit fields; fall back to WebBLE cached Wi‑Fi object; then picker selection
+      const w = window.webble?.getWiFi?.();
+      const c = String(w?.ssid ?? '').trimEnd();
+      const d = String(wifiSsid?.value ?? '').trimEnd();
+      return (a || b || c || d || '').replace(/^\s+/, '');
+    } catch(_) {
+      return '';
+    }
+  }
+
+  function clearWifiModalSuccessTimer(){
+    if (wifiModalSuccessTimer) {
+      try { clearTimeout(wifiModalSuccessTimer); } catch(_) {}
+      wifiModalSuccessTimer = 0;
+    }
+  }
+
+  let wifiModalLastScanning = false;
+
+  function refreshWifiConnectEnabled(){
+    try {
+      if (!wifiSendBtn) return;
+      const isConn = (window.webble?.getState?.().connected === true);
+      const scanning = !!wifiModalLastScanning;
+      const ssid = String(wifiSsid?.value || '');
+      const pass = String(wifiPass?.value || '');
+      const hasCreds = (ssid.length > 0) && (pass.length > 0);
+      const can = isConn && !scanning && hasCreds && (wifiModalPhase !== 'connecting');
+      wifiSendBtn.disabled = !can;
+    } catch(_) {}
   }
 
   let lastWifiSsidRenderKey = null;
@@ -798,6 +846,8 @@
               try {
                 const backdrop = document.getElementById('wifiModalBackdrop');
                 if (backdrop) backdrop.classList.add('show');
+                // Ensure Connect button state is correct immediately when opening.
+                refreshWifiConnectEnabled();
               } catch(_) {}
             });
           }
@@ -892,10 +942,19 @@
     if (wifiScanBtn) {
       wifiScanBtn.addEventListener('click', async () => {
         try {
-          setWifiStatusText('Scanning…');
+          wifiModalPhase = 'scanning';
+          wifiModalLastScanning = true;
+          wifiModalConnectStartedAt = 0;
+          clearWifiModalSuccessTimer();
+          setWifiStatusText('Scanning...');
+          refreshWifiConnectEnabled();
           await window.webble.wifiScan();
         } catch(e) {
-          setWifiStatusText('Scan failed');
+          // Scan error is NOT a Wi‑Fi connection result from the ESP32.
+          wifiModalPhase = 'idle';
+          setWifiStatusText('Ready for connection');
+          wifiModalLastScanning = false;
+          refreshWifiConnectEnabled();
           console.error(e);
         }
       });
@@ -905,8 +964,18 @@
       wifiSsid.addEventListener('change', (e) => {
         const ssid = String(e.target.value || '');
         // UX: Do not send anything on selection; only send when the user presses Connect.
-        if (!ssid) return;
-        try { setWifiStatusText('Ready'); } catch(_) {}
+        if (!ssid) { refreshWifiConnectEnabled(); return; }
+        wifiModalPhase = 'ready';
+        wifiModalPendingSSID = ssid;
+        clearWifiModalSuccessTimer();
+        try { setWifiStatusText('Ready for connection'); } catch(_) {}
+        refreshWifiConnectEnabled();
+      });
+    }
+
+    if (wifiPass) {
+      wifiPass.addEventListener('input', () => {
+        refreshWifiConnectEnabled();
       });
     }
 
@@ -916,15 +985,23 @@
         // Do NOT trim here, otherwise SSIDs with trailing/leading spaces can't be connected to.
         const ssid = String(wifiSsid?.value || '');
         const pass = String(wifiPass?.value || '');
-        if (!ssid) { setWifiStatusText('Select a network'); return; }
+        if (!ssid) { setWifiStatusText('Ready for connection'); refreshWifiConnectEnabled(); return; }
+        if (!pass) { setWifiStatusText('Ready for connection'); refreshWifiConnectEnabled(); return; }
         try {
-          setWifiStatusText('Sending…');
+          wifiModalPhase = 'connecting';
+          wifiModalConnectStartedAt = Date.now();
+          wifiModalPendingSSID = ssid;
+          clearWifiModalSuccessTimer();
+          setWifiStatusText('Connecting...');
+          refreshWifiConnectEnabled();
           await window.webble.sendWiFiSSID(ssid);
           await window.webble.sendWiFiPassword(pass);
           await window.webble.wifiConnect();
-          setWifiStatusText('Connecting…');
         } catch(e) {
-          setWifiStatusText('Send failed');
+          // Local write error is NOT a connection result from the ESP32.
+          wifiModalPhase = 'idle';
+          setWifiStatusText('Ready for connection');
+          refreshWifiConnectEnabled();
           console.error(e);
         }
       });
@@ -951,9 +1028,15 @@
       try {
         const w = window.webble.getWiFi?.();
         populateSsids(w?.ssids || [], w?.ssid || '');
-        if (w?.connected === true) setWifiStatusText('Connected');
-        else if (w?.connected === false) setWifiStatusText('Not Connected');
-        else setWifiStatusText('\u00A0');
+        if (w?.connected === true) {
+          wifiModalPhase = 'connected';
+          wifiModalLastConnectedSSID = String(w?.ssid || '');
+          const ssidText = wifiModalLastConnectedSSID ? `Connected to "${wifiModalLastConnectedSSID}"` : 'Connected successfully!';
+          setWifiStatusText(ssidText);
+        } else {
+          wifiModalPhase = 'idle';
+          setWifiStatusText('Ready for connection');
+        }
       } catch(_) {}
     } catch(_) {}
 
@@ -980,6 +1063,14 @@
       variantModalWasShownThisConnection = false;
       closeVariantModal();
 
+      // reset Wi‑Fi modal UI state for this connection
+      wifiModalPhase = 'idle';
+      wifiModalPendingSSID = '';
+      wifiModalLastConnectedSSID = '';
+      wifiModalLastScanning = false;
+      clearWifiModalSuccessTimer();
+      refreshWifiConnectEnabled();
+
       // Immediately reflect connection without inheriting stale Wi-Fi state
       try {
         const st = window.webble?.getState ? window.webble.getState() : {};
@@ -1003,6 +1094,13 @@
 
       closeWifiModal();
       closeVariantModal();
+
+      wifiModalPhase = 'idle';
+      wifiModalPendingSSID = '';
+      wifiModalLastConnectedSSID = '';
+      wifiModalLastScanning = false;
+      clearWifiModalSuccessTimer();
+      refreshWifiConnectEnabled();
 
       otaLocalPendingUntil = 0;
       otaUserInitiatedThisConnection = false;
@@ -1060,11 +1158,12 @@
       try {
         const isConn = window.webble.getState().connected === true;
         const scanning = !!s.isScanningForSSIDs;
+        wifiModalLastScanning = scanning;
 
         if (wifiScanBtn) wifiScanBtn.disabled = !isConn || scanning;
         if (wifiSsid) wifiSsid.disabled = !isConn || scanning;
         if (wifiPass) wifiPass.disabled = !isConn;
-        if (wifiSendBtn) wifiSendBtn.disabled = !isConn || scanning;
+        refreshWifiConnectEnabled();
 
         if (Array.isArray(s.availableSSIDs)) {
           // While modal is open, preserve user selection; otherwise prefer board-reported wifiSSID.
@@ -1072,19 +1171,95 @@
           populateSsids(s.availableSSIDs, modalOpen ? null : (s.wifiSSID || ''));
         }
 
+        // Status text state machine (modal)
         if (scanning) {
-          setWifiStatusText('Scanning…');
-        } else if (s.wifiConnected === true) {
-          setWifiStatusText('Connected');
-        } else if (s.wifiConnected === false) {
-          setWifiStatusText('Not Connected');
-        } else if (s.wifiConnectionResult != null) {
-          setWifiStatusText(s.wifiConnectionResult ? 'Connected' : 'Connection failed');
-        } else if (s.wifiLastResult != null) {
-          setWifiStatusText(s.wifiLastResult ? 'OK' : 'Failed');
+          wifiModalWasScanning = true;
+          wifiModalPhase = 'scanning';
+          clearWifiModalSuccessTimer();
+          setWifiStatusText('Scanning...');
         } else {
-          // No Wi-Fi fields reported (older firmware): if connected, default to Not connected
-          setWifiStatusText(isConn ? 'Not Connected' : '\u00A0');
+          // Scan finished: prompt user to pick an SSID (do not treat scan end as failure).
+          if (wifiModalWasScanning) {
+            wifiModalWasScanning = false;
+
+            // If we're not in the middle of connecting, show the post-scan prompt.
+            if (wifiModalPhase !== 'connecting') {
+              const picked = String(wifiSsid?.value || '');
+              if (picked) {
+                wifiModalPhase = 'ready';
+                setWifiStatusText('Ready for connection');
+              } else {
+                wifiModalPhase = 'idle';
+                setWifiStatusText('Ready for connection');
+              }
+              // Continue; connection result handling below should NOT flip this to failed.
+            }
+          }
+          // Determine if the ESP32 reported a definitive connection RESULT.
+          // IMPORTANT: `wifiConnected` (WIFI_OK) is just the current state (often false while connecting)
+          // and must NOT be interpreted as an immediate failure.
+          const hasRes  = (s?.wifiConnectionResult != null);
+          const hasLast = (s?.wifiLastResult != null);
+          const wifiOkNow = (typeof s?.wifiConnected === 'boolean') ? s.wifiConnected : null;
+
+          const definitive = hasRes || hasLast;
+          const ok = hasRes
+            ? !!s.wifiConnectionResult
+            : (hasLast ? !!s.wifiLastResult : null);
+
+          // While connecting, NEVER overwrite the label unless we got a definitive success/fail.
+          if (wifiModalPhase === 'connecting' && !definitive) {
+            setWifiStatusText('Connecting...');
+          } else if (definitive && ok === true) {
+            const ssidNow = getWifiSSIDFromStatus(s);
+            const wasConnecting = (wifiModalPhase === 'connecting');
+            wifiModalLastConnectedSSID = ssidNow || wifiModalLastConnectedSSID || wifiModalPendingSSID || '';
+            wifiModalPhase = 'connected';
+            clearWifiModalSuccessTimer();
+
+            if (wasConnecting) {
+              // Show success message briefly, then show Connected to "SSID".
+              setWifiStatusText('Connected successfully!');
+              wifiModalSuccessTimer = setTimeout(() => {
+                wifiModalSuccessTimer = 0;
+                const ss = wifiModalLastConnectedSSID || '';
+                setWifiStatusText(ss ? `Connected to "${ss}"` : 'Connected successfully!');
+              }, 1200);
+            } else {
+              const ss = wifiModalLastConnectedSSID || '';
+              setWifiStatusText(ss ? `Connected to "${ss}"` : 'Connected successfully!');
+            }
+          } else if (definitive && ok === false) {
+            // Only show a failure if we actually initiated a connect attempt.
+            // Some firmwares may report wifiLastResult=false after scanning which is NOT a connection failure.
+            if (wifiModalPhase === 'connecting' || isRecentConnectAttempt()) {
+              wifiModalPhase = 'failed';
+              clearWifiModalSuccessTimer();
+              setWifiStatusText('Connection failed!');
+            } else {
+              // Post-scan / idle state: prompt user to pick an SSID.
+              const picked = String(wifiSsid?.value || '');
+              wifiModalPhase = picked ? 'ready' : 'idle';
+              setWifiStatusText('Ready for connection');
+            }
+          } else {
+            // Not scanning, not definitive.
+            // If we already know we're connected, show connected-to; otherwise show ready.
+            const ssidNow = getWifiSSIDFromStatus(s);
+            if (ssidNow) wifiModalLastConnectedSSID = ssidNow;
+
+            if (wifiOkNow === true) {
+              const ss = wifiModalLastConnectedSSID || getWifiSSIDFromStatus(s) || '';
+              if (ss) wifiModalLastConnectedSSID = ss;
+              wifiModalPhase = 'connected';
+              setWifiStatusText(ss ? `Connected to "${ss}"` : 'Connected successfully!');
+            } else if (wifiModalLastConnectedSSID && wifiModalPhase === 'connected') {
+              setWifiStatusText(`Connected to "${wifiModalLastConnectedSSID}"`);
+            } else {
+              if (wifiModalPhase !== 'ready') wifiModalPhase = 'idle';
+              setWifiStatusText('Ready for connection');
+            }
+          }
         }
       } catch(_) {}
     });
