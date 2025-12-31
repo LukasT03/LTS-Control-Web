@@ -493,8 +493,8 @@
     const manual = !!opts.manual;
 
     if (!manual) {
-      pendingVariant = 'STD';
-      setVariantUI('STD');
+      pendingVariant = null;
+      setVariantUI(null);
     }
     updateVariantSaveState();
 
