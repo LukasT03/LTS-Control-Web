@@ -785,14 +785,10 @@
       ].join('|');
 
       if (key === infoWifiLastRenderKey) {
-        // No re-render needed.
       } else {
         infoWifiLastRenderKey = key;
 
         infoWifi.textContent = '';
-
-        // Use a <span> so the CSS rule `.info-meta-value > div { justify-content: space-between !important; }`
-        // does NOT apply. We want the button directly after the text.
         const row = document.createElement('span');
         row.style.display = 'flex';
         row.style.alignItems = 'center';
@@ -818,7 +814,6 @@
             infoWifiActionBtn = document.createElement('button');
             infoWifiActionBtn.type = 'button';
 
-            // Match Calibrate button styling if possible
             try {
               const calBtn = document.getElementById('servoCalBtn');
               if (calBtn && calBtn.className) infoWifiActionBtn.className = calBtn.className;
@@ -846,7 +841,6 @@
               try {
                 const backdrop = document.getElementById('wifiModalBackdrop');
                 if (backdrop) backdrop.classList.add('show');
-                // Ensure Connect button state is correct immediately when opening.
                 refreshWifiConnectEnabled();
               } catch(_) {}
             });
@@ -864,7 +858,6 @@
       }
     }
   
-    // Layout sync (desktop): keep columns aligned even when text/buttons re-render
     try { scheduleInfoCardHeightSync(); } catch(_) {}
   }
 
@@ -950,7 +943,6 @@
           refreshWifiConnectEnabled();
           await window.webble.wifiScan();
         } catch(e) {
-          // Scan error is NOT a Wi‑Fi connection result from the ESP32.
           wifiModalPhase = 'idle';
           setWifiStatusText('Ready for connection');
           wifiModalLastScanning = false;
@@ -963,7 +955,6 @@
     if (wifiSsid) {
       wifiSsid.addEventListener('change', (e) => {
         const ssid = String(e.target.value || '');
-        // UX: Do not send anything on selection; only send when the user presses Connect.
         if (!ssid) { refreshWifiConnectEnabled(); return; }
         wifiModalPhase = 'ready';
         wifiModalPendingSSID = ssid;
@@ -981,8 +972,6 @@
 
     if (wifiSendBtn) {
       wifiSendBtn.addEventListener('click', async () => {
-        // IMPORTANT: Preserve leading/trailing spaces exactly as reported by the ESP32.
-        // Do NOT trim here, otherwise SSIDs with trailing/leading spaces can't be connected to.
         const ssid = String(wifiSsid?.value || '');
         const pass = String(wifiPass?.value || '');
         if (!ssid) { setWifiStatusText('Ready for connection'); refreshWifiConnectEnabled(); return; }
@@ -998,7 +987,6 @@
           await window.webble.sendWiFiPassword(pass);
           await window.webble.wifiConnect();
         } catch(e) {
-          // Local write error is NOT a connection result from the ESP32.
           wifiModalPhase = 'idle';
           setWifiStatusText('Ready for connection');
           refreshWifiConnectEnabled();
@@ -1007,7 +995,6 @@
       });
     }
 
-    // Initial firmware fetch + initial render
     fetchLatestBoardFw().then(() => {
       try {
         if (window.webble?.getState) {
@@ -1015,8 +1002,6 @@
         }
       } catch(_) {}
     });
-
-    // Initial UI
     try {
       const initial = window.webble.getState();
       const isConn = initial && initial.connected === true;
@@ -1024,7 +1009,6 @@
       if (isConn) updateInfoMeta(initial);
       else applyDisconnectedDefaults();
 
-      // Wi-Fi modal initial
       try {
         const w = window.webble.getWiFi?.();
         populateSsids(w?.ssids || [], w?.ssid || '');
@@ -1040,30 +1024,25 @@
       } catch(_) {}
     } catch(_) {}
 
-    // Height sync init (desktop, 2-column)
+    // Height sync init
     try {
       initInfoCardHeightSync();
       scheduleInfoCardHeightSync();
     } catch(_) {}
 
-    // Connection lifecycle
     window.webble.on('connected', () => {
       connEpoch++;
       haveFreshStatusThisConnection = false;
 
-      // reset caches so Info rows rebuild immediately
       infoFwLastRenderKey = null;
       infoWifiLastRenderKey = null;
 
-      // reset OTA UI for this connection
       otaLocalPendingUntil = 0;
       otaUserInitiatedThisConnection = false;
 
-      // reset variant modal behavior
       variantModalWasShownThisConnection = false;
       closeVariantModal();
 
-      // reset Wi‑Fi modal UI state for this connection
       wifiModalPhase = 'idle';
       wifiModalPendingSSID = '';
       wifiModalLastConnectedSSID = '';
@@ -1071,7 +1050,6 @@
       clearWifiModalSuccessTimer();
       refreshWifiConnectEnabled();
 
-      // Immediately reflect connection without inheriting stale Wi-Fi state
       try {
         const st = window.webble?.getState ? window.webble.getState() : {};
         const stSafe = {
@@ -1091,7 +1069,6 @@
     window.webble.on('disconnected', () => {
       connEpoch++;
       haveFreshStatusThisConnection = false;
-
       closeWifiModal();
       closeVariantModal();
 
@@ -1101,14 +1078,11 @@
       wifiModalLastScanning = false;
       clearWifiModalSuccessTimer();
       refreshWifiConnectEnabled();
-
       otaLocalPendingUntil = 0;
       otaUserInitiatedThisConnection = false;
-
       infoFwLastRenderKey = null;
       infoWifiLastRenderKey = null;
 
-      // Clear stale Board-specific info (getState() can still contain the previous device).
       try {
         updateStatusPills({ connected: false });
 
@@ -1120,10 +1094,8 @@
 
     // Status updates
     window.webble.on('status', (s) => {
-      // Mark that we now have a fresh payload for this connection
       haveFreshStatusThisConnection = true;
 
-      // OTA local pending reset when Board reports definitive state
       try {
         const isU = String(s?.statusCode || '').trim().toUpperCase() === 'U';
         if (!isU) otaLocalPendingUntil = 0;
@@ -1133,7 +1105,6 @@
       updateStatusPills(s);
       updateInfoMeta(s);
 
-      // Variant auto-open on UNK
       try {
         const isConn = window.webble.getState().connected === true;
         const did = (s && Object.prototype.hasOwnProperty.call(s, 'didReceiveBoardVariant')) ? !!s.didReceiveBoardVariant : false;
@@ -1154,7 +1125,6 @@
         }
       } catch(_) {}
 
-      // Wi-Fi modal live state
       try {
         const isConn = window.webble.getState().connected === true;
         const scanning = !!s.isScanningForSSIDs;
@@ -1166,23 +1136,18 @@
         refreshWifiConnectEnabled();
 
         if (Array.isArray(s.availableSSIDs)) {
-          // While modal is open, preserve user selection; otherwise prefer board-reported wifiSSID.
           const modalOpen = !!wifiModalBackdrop && wifiModalBackdrop.classList.contains('show');
           populateSsids(s.availableSSIDs, modalOpen ? null : (s.wifiSSID || ''));
         }
 
-        // Status text state machine (modal)
         if (scanning) {
           wifiModalWasScanning = true;
           wifiModalPhase = 'scanning';
           clearWifiModalSuccessTimer();
           setWifiStatusText('Scanning...');
         } else {
-          // Scan finished: prompt user to pick an SSID (do not treat scan end as failure).
           if (wifiModalWasScanning) {
             wifiModalWasScanning = false;
-
-            // If we're not in the middle of connecting, show the post-scan prompt.
             if (wifiModalPhase !== 'connecting') {
               const picked = String(wifiSsid?.value || '');
               if (picked) {
@@ -1192,12 +1157,8 @@
                 wifiModalPhase = 'idle';
                 setWifiStatusText('Ready for connection');
               }
-              // Continue; connection result handling below should NOT flip this to failed.
             }
           }
-          // Determine if the ESP32 reported a definitive connection RESULT.
-          // IMPORTANT: `wifiConnected` (WIFI_OK) is just the current state (often false while connecting)
-          // and must NOT be interpreted as an immediate failure.
           const hasRes  = (s?.wifiConnectionResult != null);
           const hasLast = (s?.wifiLastResult != null);
           const wifiOkNow = (typeof s?.wifiConnected === 'boolean') ? s.wifiConnected : null;
@@ -1207,7 +1168,6 @@
             ? !!s.wifiConnectionResult
             : (hasLast ? !!s.wifiLastResult : null);
 
-          // While connecting, NEVER overwrite the label unless we got a definitive success/fail.
           if (wifiModalPhase === 'connecting' && !definitive) {
             setWifiStatusText('Connecting...');
           } else if (definitive && ok === true) {
@@ -1218,7 +1178,6 @@
             clearWifiModalSuccessTimer();
 
             if (wasConnecting) {
-              // Show success message briefly, then show Connected to "SSID".
               setWifiStatusText('Connected successfully!');
               wifiModalSuccessTimer = setTimeout(() => {
                 wifiModalSuccessTimer = 0;
@@ -1230,21 +1189,16 @@
               setWifiStatusText(ss ? `Connected to "${ss}"` : 'Connected successfully!');
             }
           } else if (definitive && ok === false) {
-            // Only show a failure if we actually initiated a connect attempt.
-            // Some firmwares may report wifiLastResult=false after scanning which is NOT a connection failure.
             if (wifiModalPhase === 'connecting' || isRecentConnectAttempt()) {
               wifiModalPhase = 'failed';
               clearWifiModalSuccessTimer();
               setWifiStatusText('Connection failed!');
             } else {
-              // Post-scan / idle state: prompt user to pick an SSID.
               const picked = String(wifiSsid?.value || '');
               wifiModalPhase = picked ? 'ready' : 'idle';
               setWifiStatusText('Ready for connection');
             }
           } else {
-            // Not scanning, not definitive.
-            // If we already know we're connected, show connected-to; otherwise show ready.
             const ssidNow = getWifiSSIDFromStatus(s);
             if (ssidNow) wifiModalLastConnectedSSID = ssidNow;
 
