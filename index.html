@@ -10,7 +10,7 @@
   <style>
     @media (max-width: 450px) {
       #browserNotSupportedOverlay .not-sup-desc {
-        font-size: 1.2rem !important;
+        font-size: 1.15rem !important;
       }
     }
   </style>
@@ -18,7 +18,7 @@
 <body>
   <div id="pageRoot" style="position:relative;">
     <div id="pageFadeOverlay" style="position:fixed; inset:0; background:rgb(var(--bg)); z-index:9999; opacity:1; transition:opacity 0.35s ease-out;"></div>
-    <div id="browserNotSupportedOverlay" style="position:fixed; inset:0; width:100vw; height:100vh; background:rgb(var(--bg) / 0.95); z-index:9998; display:none; opacity:1; transition:opacity 0.35s ease-out; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; box-sizing:border-box; padding:calc(18px + env(safe-area-inset-top)) calc(28px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) calc(28px + env(safe-area-inset-left)); overflow:auto; -webkit-overflow-scrolling:touch;">
+    <div id="browserNotSupportedOverlay" style="position:fixed; inset:0; background:rgb(var(--bg) / 0.95); z-index:9998; display:none; opacity:1; transition:opacity 0.35s ease-out; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; box-sizing:border-box; padding:18px 28px 28px 28px; overflow:auto; -webkit-overflow-scrolling:touch;">
       <div style="max-width:560px; width:100%; margin-top:auto; margin-bottom:auto;">
         <img src="Logo.png" alt="Not supported" style="width:86px; height:86px; margin:0 auto 22px auto; display:block;" />
         <h1 style="margin:0 0 12px 0;">Browser Not Supported</h1>
@@ -420,11 +420,10 @@
 
         if (haveLook && notSup) {
           haveLook.addEventListener('click', () => {
-            // Let the user proceed at their own risk (fade out smoothly).
+            // Same behavior as the initial fade overlay: fade out, then remove.
             notSup.style.opacity = '0';
             setTimeout(() => {
-              notSup.style.display = 'none';
-              notSup.style.opacity = '1';
+              try { notSup.remove(); } catch (_) { notSup.style.display = 'none'; }
               // Allow scrolling again once the overlay is dismissed.
               setNoScroll(false);
             }, 1000);
