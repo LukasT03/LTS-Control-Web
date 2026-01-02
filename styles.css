@@ -4,7 +4,6 @@
   --accent: #0E7AFE;
   --accent-dark: #1364C4;
   --action-font: 1.1rem;
-  --action-font-lg: 1.2rem;
   --btn-h: 52px;
   --info-card-h-desktop: 245px; /* desktop fixed height (aims to match Chrome) */
 
@@ -837,7 +836,7 @@ input[type="checkbox"] {
 @media (max-width: 450px) {
   h1 { font-size: 1.9rem; }
   .header-logo img { max-width: 60px; }
-  :root { --action-font: 1.0rem; --action-font-lg: 1.1rem; --btn-h: 48px; }
+  :root { --action-font: 1.0rem; --btn-h: 48px; }
   .lts-btn {
     font-size: 1.0rem;
   }
