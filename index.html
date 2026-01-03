@@ -14,7 +14,15 @@
       }
       #browserNotSupportedOverlay .not-sup-actions {
         flex-direction: column !important;
-        align-items: center !important;
+        align-items: stretch !important;
+        width: max-content !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      #browserNotSupportedOverlay .not-sup-actions > a,
+      #browserNotSupportedOverlay .not-sup-actions > button {
+        width: 100% !important;
       }
       /* On narrow screens: show Download button first, then Have A Look */
       #browserNotSupportedOverlay .not-sup-actions > a {
@@ -440,7 +448,7 @@
               try { notSup.remove(); } catch (_) { notSup.style.display = 'none'; }
               // Allow scrolling again once the overlay is dismissed.
               setNoScroll(false);
-            }, 100);
+            }, 350);
           });
         }
 
