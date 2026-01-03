@@ -12,20 +12,24 @@
       #browserNotSupportedOverlay .not-sup-desc {
         font-size: 1.15rem !important;
       }
+      #browserNotSupportedOverlay .not-sup-actions {
+        flex-direction: column !important;
+        align-items: center !important;
+      }
     }
   </style>
 </head>
 <body>
   <div id="pageRoot" style="position:relative;">
     <div id="pageFadeOverlay" style="position:fixed; inset:0; background:rgb(var(--bg)); z-index:9999; opacity:1; transition:opacity 0.35s ease-out;"></div>
-    <div id="browserNotSupportedOverlay" style="position:fixed; inset:0; background:rgb(var(--bg) / 0.96); z-index:9998; display:none; opacity:1; transition:opacity 0.35s ease-out; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; box-sizing:border-box; padding:18px 28px 28px 28px; overflow:auto; -webkit-overflow-scrolling:touch;">
+    <div id="browserNotSupportedOverlay" style="position:fixed; inset:0; background:rgb(var(--bg) / 0.96); z-index:9998; display:none; opacity:1; transition:opacity 0.35s ease-out; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; box-sizing:border-box; padding:18px 40px 28px 40px; overflow:auto; -webkit-overflow-scrolling:touch;">
       <div style="max-width:560px; width:100%; margin-top:auto; margin-bottom:auto;">
         <img src="Logo.png" alt="Not supported" style="width:86px; height:86px; margin:0 auto 22px auto; display:block;" />
         <h1 style="margin:0 0 12px 0;">Browser Not Supported</h1>
         <div class="not-sup-desc" style="font-size:1.2rem; line-height:1.35; color:rgb(var(--text)); opacity:0.65; max-width:480px; margin:0 auto;">
           To connect to your Respooler, use a compatible browser like Chrome or Edge on desktop and Android. You can also download the app for iOS.
         </div>
-        <div style="display:flex; flex-direction:row; gap:12px; margin-top:22px; align-items:center; justify-content:center; width:100%; flex-wrap:wrap;">
+        <div class="not-sup-actions" style="display:flex; flex-direction:row; gap:12px; margin-top:22px; align-items:center; justify-content:center; width:100%; flex-wrap:wrap;">
           <button id="notSupHaveLookBtn" class="lts-btn" type="button" style="width:auto; padding:8px 20px; height:auto; min-height:0; line-height:1.2;">Have A Look</button>
           <a class="lts-btn" href="https://apps.apple.com/app/lts-control/id6742149969" target="_blank" rel="noopener" style="width:auto; padding:8px 20px; height:auto; min-height:0; line-height:1.2; text-decoration:none; background:#0E7AFE; border-color:#0E7AFE; color:#fff;">Download iOS App</a>
         </div>
