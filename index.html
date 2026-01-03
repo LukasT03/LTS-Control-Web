@@ -31,8 +31,12 @@
       #browserNotSupportedOverlay .not-sup-actions > button {
         order: 2;
       }
-      #browserNotSupportedOverlay .not-sup-title-break {
-        display: block;
+      /* On narrow screens: show only "Not Supported" */
+      #browserNotSupportedOverlay .not-sup-title-browser {
+        display: none;
+      }
+      #browserNotSupportedOverlay .not-sup-title-main {
+        display: inline;
       }
     }
   </style>
@@ -43,7 +47,7 @@
     <div id="browserNotSupportedOverlay" style="position:fixed; inset:0; background:rgb(var(--bg) / 0.96); z-index:9998; display:none; opacity:1; transition:opacity 0.35s ease-out; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; box-sizing:border-box; padding:18px 35px 28px 35px; overflow:auto; -webkit-overflow-scrolling:touch;">
       <div style="max-width:560px; width:100%; margin-top:auto; margin-bottom:auto;">
         <img src="Logo.png" alt="Not supported" style="width:86px; height:86px; margin:0 auto 22px auto; display:block;" />
-        <h1 style="margin:0 0 12px 0;">Browser <span class="not-sup-title-break">Not Supported</span></h1>
+        <h1 style="margin:0 0 12px 0;"><span class="not-sup-title-browser">Browser</span> <span class="not-sup-title-main">Not Supported</span></h1>
         <div class="not-sup-desc" style="font-size:1.2rem; line-height:1.35; color:rgb(var(--text)); opacity:0.65; max-width:480px; margin:0 auto;">
           To connect to your Respooler, use a compatible browser like Chrome or Edge on desktop and Android. You can also download the app for iOS.
         </div>
