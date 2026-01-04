@@ -572,7 +572,7 @@ button.info-wifi-btn {
   }
 }
 
-@media (max-height: 870px) {
+@media (max-height: 888px) {
   body {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
@@ -600,13 +600,13 @@ button.info-wifi-btn {
   }
 }
 
-@media (max-width: 400px) and (max-height: 870px) {
+@media (max-width: 400px) and (max-height: 888px) {
   .header {
     gap: 0.5rem;
   }
 }
 
-@media (max-width: 450px) and (max-height: 870px) {
+@media (max-width: 450px) and (max-height: 888px) {
   .header-logo img {
     max-width: 100px;
   }
@@ -618,7 +618,7 @@ button.info-wifi-btn {
 }
 
 /* When header is side-by-side (small height), don't lift the content. */
-@media (max-height: 870px) {
+@media (max-height: 888px) {
   .page-content {
     transform: none;
   }
