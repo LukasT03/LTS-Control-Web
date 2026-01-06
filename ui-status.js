@@ -9,7 +9,7 @@
 
   // -------------------- Latest firmware check (Info Card) --------------------
   const LATEST_BOARD_FW_URL =
-    'https://raw.githubusercontent.com/LukasT03/LTS-Respooler/main/Firmware/latest_board_firmware.txt';
+    'https://respooler.lts-design.com/Firmware/latest_board_firmware.txt';
 
   let latestBoardFw = null;
   let latestBoardFwPromise = null;
