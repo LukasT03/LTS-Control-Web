@@ -355,6 +355,28 @@
     </div>
   </div>
 
+  <!-- OTA success modal -->
+  <div id="otaSuccessModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Update successful">
+    <div class="modal">
+      <button id="otaSuccessModalClose" class="icon-btn modal-close" type="button" aria-label="Close" style="padding-bottom:0; font-size:0; line-height:0;">
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:16px;height:16px;display:block;">
+          <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div class="ota-success-hero" aria-hidden="true">
+        <img class="ota-check light-only" src="checkmark-green.png" alt="" />
+        <img class="ota-check dark-only" src="checkmark-green-dark.png" alt="" />
+      </div>
+      <div class="modal-header">
+        <h2 class="modal-title">Update successful!</h2>
+      </div>
+
+      <div class="ota-success-actions" style="margin-top:16px;">
+        <button id="otaReconnectBtn" class="lts-btn ota-success-btn" type="button">Reconnect Respooler</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Respooler variant modal (only when Board sends VAR=UNK) -->
   <div id="variantModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Respooler variant">
     <div class="modal">

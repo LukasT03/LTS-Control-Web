@@ -908,6 +908,62 @@ input[type="checkbox"] {
   color: rgb(var(--text));
 }
 
+/* --- OTA success modal --- */
+#otaSuccessModalBackdrop .modal {
+  width: min(360px, 100%);
+}
+
+#otaSuccessModalBackdrop .modal-header {
+  justify-content: center;
+}
+
+#otaSuccessModalBackdrop .modal-title {
+  text-align: center;
+  width: 100%;
+}
+
+#otaSuccessModalBackdrop .ota-success-hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 4px 0 6px 0;
+}
+
+#otaSuccessModalBackdrop .ota-check {
+  width: 62px;
+  height: 62px;
+  display: block;
+}
+
+#otaSuccessModalBackdrop .dark-only {
+  display: none;
+}
+
+#otaSuccessModalBackdrop .ota-success-actions {
+  display: flex;
+  align-items: stretch;
+}
+
+#otaSuccessModalBackdrop .ota-success-btn {
+  background: #d6f4de !important;
+  color: #34c759 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  #otaSuccessModalBackdrop .light-only {
+    display: none;
+  }
+
+  #otaSuccessModalBackdrop .dark-only {
+    display: block;
+  }
+
+  #otaSuccessModalBackdrop .ota-success-btn {
+    background: #204029 !important;
+    color: #34c759 !important;
+  }
+}
+
 #variantModalBackdrop .variant-tiles {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -372,6 +372,11 @@
   const wifiModalBackdrop = document.getElementById('wifiModalBackdrop');
   const wifiModalClose = document.getElementById('wifiModalClose');
 
+  // OTA success modal
+  const otaSuccessModalBackdrop = document.getElementById('otaSuccessModalBackdrop');
+  const otaSuccessModalClose = document.getElementById('otaSuccessModalClose');
+  const otaReconnectBtn = document.getElementById('otaReconnectBtn');
+
   // Legacy button (should no longer be used; keep hidden if still present in HTML)
   const wifiModalBtnLegacy = document.getElementById('wifiModalBtn');
   if (wifiModalBtnLegacy) wifiModalBtnLegacy.style.display = 'none';
@@ -406,6 +411,7 @@
   // Local OTA UI state
   let otaLocalPendingUntil = 0;
   let otaUserInitiatedThisConnection = false;
+  let otaSuccessLast = null;
 
   // Dark mode detection for icon variants
   const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -451,6 +457,16 @@
       try { clearTimeout(wifiModalSuccessTimer); } catch(_) {}
       wifiModalSuccessTimer = 0;
     }
+  }
+
+  function openOtaSuccessModal(){
+    if (!otaSuccessModalBackdrop) return;
+    otaSuccessModalBackdrop.classList.add('show');
+  }
+
+  function closeOtaSuccessModal(){
+    if (!otaSuccessModalBackdrop) return;
+    otaSuccessModalBackdrop.classList.remove('show');
   }
 
   let wifiModalLastScanning = false;
@@ -870,6 +886,13 @@
       });
     }
 
+    if (otaSuccessModalClose) otaSuccessModalClose.addEventListener('click', closeOtaSuccessModal);
+    if (otaSuccessModalBackdrop) {
+      otaSuccessModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === otaSuccessModalBackdrop) closeOtaSuccessModal();
+      });
+    }
+
     if (variantModalClose) variantModalClose.addEventListener('click', closeVariantModal);
     if (variantModalBackdrop) {
       variantModalBackdrop.addEventListener('click', (e) => {
@@ -880,9 +903,30 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeWifiModal();
+        closeOtaSuccessModal();
         closeVariantModal();
       }
     });
+
+    if (otaReconnectBtn) {
+      otaReconnectBtn.addEventListener('click', async (e) => {
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+          closeOtaSuccessModal();
+
+          const st = window.webble?.getState ? window.webble.getState() : {};
+          if (st && st.connected) {
+            try { window.webble.disconnect(); } catch(_) {}
+          }
+          if (typeof window.webble?.connect === 'function') {
+            await window.webble.connect();
+          }
+        } catch (err) {
+          alert(err?.message || err);
+        }
+      });
+    }
 
     // Variant choice
     if (variantV4) variantV4.addEventListener('click', () => {
@@ -1100,6 +1144,14 @@
         const isU = String(s?.statusCode || '').trim().toUpperCase() === 'U';
         if (!isU) otaLocalPendingUntil = 0;
         if (typeof s?.otaSuccess === 'boolean') otaLocalPendingUntil = 0;
+      } catch(_) {}
+
+      try {
+        const ok = (typeof s?.otaSuccess === 'boolean') ? s.otaSuccess : null;
+        if (ok === true && otaSuccessLast !== true) {
+          openOtaSuccessModal();
+        }
+        otaSuccessLast = ok;
       } catch(_) {}
 
       updateStatusPills(s);
