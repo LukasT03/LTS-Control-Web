@@ -9,6 +9,25 @@
 
   <link rel="stylesheet" href="styles.css" />
   <style>
+    .motor-hw-warning {
+      margin: 6px 0 0;
+      padding: 0 8px;
+      font-size: 0.85rem;
+      line-height: 1.35;
+      text-align: center;
+      color: #b45309;
+    }
+    @media (prefers-color-scheme: dark) {
+      .motor-hw-warning { color: #fbbf24; }
+    }
+    .power-hint {
+      margin: 6px 0 0;
+      padding: 0 8px;
+      font-size: 0.85rem;
+      line-height: 1.35;
+      text-align: center;
+      opacity: 0.6;
+    }
     @media (max-width: 450px) {
       #browserNotSupportedOverlay .not-sup-desc {
         font-size: 1.15rem !important;
@@ -271,6 +290,17 @@
                 <option value="3">High</option>
               </select>
             </div>
+            <div id="motorHwRow" class="form-grid" style="margin-top:8px; display:none;">
+              <label for="motorHw" class="form-label">Motor Hardware Version:</label>
+              <select id="motorHw" class="form-control" style="width:min(220px, 100%); border:1px solid #d1d5db; color:#000;">
+                <option value="0">Standard 17HS15-1504S 1.5A</option>
+                <option value="1">Alpha 17HS19-2004S1 2.0A</option>
+              </select>
+            </div>
+            <div id="motorHwNote" class="motor-hw-warning" style="display:none;">
+              Alpha raises the current at 120 % strength from 1.4 A to 1.7 A.
+              <strong>Warning:</strong> selecting Alpha with the standard 1.5 A motor may make it run too hot and burn out sooner.
+            </div>
 
             <hr class="section-divider" style="margin:12px 0;">
 
@@ -295,6 +325,20 @@
                 </div>
                 <span id="durVal" class="stepper-value">00m 00s</span>
               </div>
+            </div>
+
+            <!-- Power diagnostics (firmware that reports VBUS_MV / PG) -->
+            <div id="powerDiagGroup" style="display:none;">
+              <hr class="section-divider" style="margin:12px 0;">
+              <div class="form-grid" style="margin-top:8px;">
+                <div class="form-label">Power Source:</div>
+                <div id="powerSource" class="form-control">—</div>
+              </div>
+              <div id="powerPdRow" class="form-grid" style="margin-top:8px;">
+                <div class="form-label">USB-C PD:</div>
+                <div id="powerPd" class="form-control">—</div>
+              </div>
+              <div id="powerHint" class="power-hint">The motor needs 12 V.</div>
             </div>
           </section>
         </div>
