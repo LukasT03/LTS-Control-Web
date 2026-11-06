@@ -18,6 +18,8 @@
     tempBuf: [], chipTempAvg: null,
     speed: 85, hs: false, led: 50, fan: 60, fanAlways: false,
     useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 895,
+    // Firmware 1.2.3+ only; null means the connected firmware doesn't report it
+    hiCur: null, vbusMv: null, pg: null,
     wifiConnected: null,
     wifiSSID: null,
     wifiPassSet: null,
@@ -194,6 +196,7 @@
         const ok = await silentReconnect(2);
         if (!ok) {
           state.progress = 0; state.remaining = null; state.run = false;
+          state.hiCur = null; state.vbusMv = null; state.pg = null;
           state.doneHoldUntil = null;
           emit('disconnected', {});
           emit('state', {...state});
@@ -203,6 +206,7 @@
     }
 
     state.progress = 0; state.remaining = null; state.run = false;
+    state.hiCur = null; state.vbusMv = null; state.pg = null;
     state.doneHoldUntil = null;
     emit('disconnected', {});
     emit('state', {...state});
@@ -295,6 +299,9 @@
         if ('HAS_FIL' in d) state.hasFilament = bool(d.HAS_FIL);
         if ('DIR' in d && !isEditing('DIR') && !isHeld('DIR')) state.dir = bool(d.DIR);
         if (typeof d.POW === 'number' && !isEditing('POW') && !isHeld('POW')) state.pow = d.POW|0;
+        if ('HI_CUR' in d && !isEditing('HI_CUR') && !isHeld('HI_CUR')) state.hiCur = bool(d.HI_CUR);
+        if (typeof d.VBUS_MV === 'number') state.vbusMv = d.VBUS_MV|0;
+        if ('PG' in d) state.pg = bool(d.PG);
 
         if ('DUR' in d) {
           const n = Number(d.DUR);
@@ -408,6 +415,7 @@
     setUseFil: (on) => { beginEdit('USE_FIL'); holdKey('USE_FIL', 400); return sendSet('USE_FIL', on ? 1 : 0); },
     setDir: (on) => { beginEdit('DIR'); holdKey('DIR', 400); return sendSet('DIR', on ? 1 : 0); },
     setPower: (v) => { beginEdit('POW'); holdKey('POW', 400); return sendSet('POW', Number(v)); },
+    setHighCurrent: (on) => { beginEdit('HI_CUR'); holdKey('HI_CUR', 700); return sendSet('HI_CUR', on ? 1 : 0); },
     setTorque: (v) => {
       beginEdit('TRQ'); holdKey('TRQ', 700);
       const n = Number(v);

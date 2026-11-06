@@ -17,6 +17,14 @@
     const dir = document.getElementById('dir');
     const hs = document.getElementById('hs');
     const autoStop = document.getElementById('autoStop');
+    const motorHwRow = document.getElementById('motorHwRow');
+    const motorHw = document.getElementById('motorHw');
+    const motorHwNote = document.getElementById('motorHwNote');
+    const powerDiagGroup = document.getElementById('powerDiagGroup');
+    const powerSource = document.getElementById('powerSource');
+    const powerPdRow = document.getElementById('powerPdRow');
+    const powerPd = document.getElementById('powerPd');
+    const powerHint = document.getElementById('powerHint');
     const jin = document.getElementById('jin');
     const wgt = document.getElementById('wgt');
     const fan = document.getElementById('fan');
@@ -167,6 +175,35 @@
       if (servoHomeSetting) servoHomeSetting.disabled = !on;
     }
 
+    // Motor hardware version only exists on firmware that reports HI_CUR
+    function setMotorHwVisible(show){
+      if (motorHwRow) motorHwRow.style.display = show ? '' : 'none';
+      if (motorHwNote) motorHwNote.style.display = show ? '' : 'none';
+    }
+
+    // Real USB-C supplies are >= ~4.5 V at the board; below this VBUS is diode leakage / ADC noise,
+    // which means the DC jack is powering the board (its voltage isn't measured).
+    const DC_JACK_VBUS_THRESHOLD_MV = 3000;
+    function applyPowerDiagnostics(st){
+      const hasVbus = typeof st.vbusMv === 'number';
+      const hasPg = typeof st.pg === 'boolean';
+      if (powerDiagGroup) powerDiagGroup.style.display = (hasVbus || hasPg) ? '' : 'none';
+      if (!hasVbus && !hasPg) return;
+
+      const onDcJack = hasVbus && st.vbusMv < DC_JACK_VBUS_THRESHOLD_MV;
+      if (powerSource) {
+        powerSource.textContent = onDcJack ? 'DC Jack'
+          : hasVbus ? `USB-C ${(st.vbusMv / 1000).toFixed(1)} V` : 'USB-C';
+      }
+      if (powerPdRow) powerPdRow.style.display = (!onDcJack && hasPg) ? '' : 'none';
+      if (powerPd && hasPg) powerPd.textContent = st.pg ? 'Negotiated' : 'Not Negotiated';
+      if (powerHint) {
+        powerHint.textContent = onDcJack
+          ? "The board can't measure the DC jack voltage. The motor needs 12 V."
+          : 'The motor needs 12 V.';
+      }
+    }
+
     // -------------------- Bind settings controls --------------------
     bindSlider(led,   'LED',     (v)=>window.webble.setLED(v));
     bindCheckbox(useFil,'USE_FIL',(on)=>window.webble.setUseFil(on));
@@ -174,6 +211,23 @@
     bindCheckbox(hs,  'HS',      (on)=>window.webble.setHighSpeed(on));
 
     bindSelect(autoStop, 'TRQ', (v) => { setPending('TRQ', v); window.webble.setTorque(v); });
+    // Switching to Alpha needs explicit confirmation so a stray arrow key can't raise the motor current.
+    // Values applied from the board's status don't fire 'change', so a board already in Alpha never prompts.
+    let motorHwLast = '0';
+    bindSelect(motorHw, 'HI_CUR', (v) => {
+      if (v === '1' && motorHwLast !== '1') {
+        const ok = window.confirm(
+          'Switch to Alpha motor hardware?\n\n' +
+          'Only confirm if your respooler has the Alpha 17HS19-2004S1 (2.0 A) motor. ' +
+          'Alpha raises the motor current, and using it with the standard 1.5 A motor ' +
+          'may make it run too hot and burn out sooner.'
+        );
+        if (!ok) { motorHw.value = motorHwLast; return; }
+      }
+      motorHwLast = v;
+      setPending('HI_CUR', v);
+      window.webble.setHighCurrent(v === '1');
+    });
     bindSelect(jin,      'JIN', (v) => { setPending('JIN', v); window.webble.setJingle(v); });
     bindSelect(wgt,      'WGT', (v) => { setPending('WGT', v); window.webble.setTargetWeight(v); });
 
@@ -401,6 +455,14 @@
         const v = String(st.trq ?? 0);
         if (shouldApply('TRQ', v)) autoStop.value = v;
       }
+
+      const hasMotorHw = typeof st.hiCur === 'boolean';
+      setMotorHwVisible(hasMotorHw);
+      if (hasMotorHw && motorHw && !isUIEditing('HI_CUR')) {
+        const v = st.hiCur ? '1' : '0';
+        if (shouldApply('HI_CUR', v)) { motorHw.value = v; motorHwLast = v; }
+      }
+      applyPowerDiagnostics(st);
       if (jin && !isUIEditing('JIN')) {
         const v = String(st.jin ?? 0);
         if (shouldApply('JIN', v)) jin.value = v;
@@ -460,6 +522,10 @@
 
     window.webble.on('status', s => {
       try { applySettingsFromState(s); } catch(_) {}
+    });
+    window.webble.on('disconnected', () => {
+      setMotorHwVisible(false);
+      if (powerDiagGroup) powerDiagGroup.style.display = 'none';
     });
 
     // Initial
