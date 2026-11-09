@@ -17,7 +17,7 @@
     isUpdating: false,
     tempBuf: [], chipTempAvg: null,
     speed: 85, hs: false, led: 50, fan: 60, fanAlways: false,
-    useFil: true, filT: 100, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 840,
+    useFil: true, filT: 100, res: false, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 840,
     wifiConnected: null,
     wifiSSID: null,
     wifiPassSet: null,
@@ -292,6 +292,7 @@
         if (typeof d.FAN_SPD === 'number' && !isEditing('FAN_SPD') && !isHeld('FAN_SPD')) state.fan = d.FAN_SPD|0;
         if ('FAN_ALW' in d && !isEditing('FAN_ALW') && !isHeld('FAN_ALW')) state.fanAlways = bool(d.FAN_ALW);
         if ('USE_FIL' in d && !isEditing('USE_FIL') && !isHeld('USE_FIL')) state.useFil = bool(d.USE_FIL);
+        if ('RES' in d && !isEditing('RES') && !isHeld('RES')) state.res = bool(d.RES);
         if ('HAS_FIL' in d) state.hasFilament = bool(d.HAS_FIL);
         if ('DIR' in d && !isEditing('DIR') && !isHeld('DIR')) state.dir = bool(d.DIR);
         if (typeof d.POW === 'number' && !isEditing('POW') && !isHeld('POW')) state.pow = d.POW|0;
@@ -414,6 +415,7 @@
     setFanSpeed: (v) => { beginEdit('FAN_SPD'); holdKey('FAN_SPD', 400); return sendSet('FAN_SPD', Number(v)); },
     setFanAlways: (on) => { beginEdit('FAN_ALW'); holdKey('FAN_ALW', 400); return sendSet('FAN_ALW', on ? 1 : 0); },
     setUseFil: (on) => { beginEdit('USE_FIL'); holdKey('USE_FIL', 400); return sendSet('USE_FIL', on ? 1 : 0); },
+    setResume: (on) => { beginEdit('RES'); holdKey('RES', 400); return sendSet('RES', on ? 1 : 0); },
     setFilamentLossMs: (v) => {
       beginEdit('FIL_T'); holdKey('FIL_T', 700);
       const n = Number(v);

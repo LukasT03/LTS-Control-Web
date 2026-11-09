@@ -202,14 +202,38 @@
                 <div></div>
                 <label class="form-control"><input id="useFil" type="checkbox" checked> Use Filament Sensor</label>
               </div>
-              <!-- Firmware 1.3.3+ -->
-              <div id="filTRow" class="form-grid" hidden>
-                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="With a lower sensitivity, the Respooler only reacts to longer interruptions at the filament sensor."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label for="filT">Filament Sensor Sensitivity:</label></div>
-                <select id="filT" class="form-control">
-                  <option value="400">Low</option>
-                  <option value="200">Medium</option>
-                  <option value="100">High</option>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="settings-group">
+              <div class="form-grid">
+                <div></div>
+                <label class="form-control"><input id="dir" type="checkbox"> Change Direction</label>
+              </div>
+              <div class="form-grid">
+                <label class="form-label">Motor Strength:</label>
+                <div class="stepper form-control">
+                  <div class="stepper-seg" role="group" aria-label="Motor strength controls">
+                    <button id="motorMinus" class="stepper-seg-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+                    <div class="stepper-seg-divider" aria-hidden="true"></div>
+                    <button id="motorPlus" class="stepper-seg-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+                  </div>
+                  <span id="motorVal" class="stepper-value">100 %</span>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="Auto-Stop will stop the motor on high resistance."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label for="autoStop">Auto-Stop Sensitivity:</label></div>
+                <select id="autoStop" class="form-control">
+                  <option value="0">Off</option>
+                  <option value="1">Low</option>
+                  <option value="2">Medium</option>
+                  <option value="3">High</option>
                 </select>
+              </div>
+              <div class="form-grid">
+                <div></div>
+                <div class="form-control"><label><input id="hs" type="checkbox"> High-Speed</label><span class="info-tip" tabindex="0" role="img" aria-label="The High-Speed mode increases the speed of the motor. Auto-Stop is not available when active."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span></div>
               </div>
             </div>
 
@@ -242,41 +266,8 @@
               <div class="form-grid">
                 <label for="servoHomeSetting" class="form-label">Home Position:</label>
                 <select id="servoHomeSetting" class="form-control">
-                  <option value="R">Right</option>
                   <option value="L">Left</option>
-                </select>
-              </div>
-            </div>
-
-            <hr class="section-divider">
-
-            <div class="settings-group">
-              <div class="form-grid">
-                <label class="form-label">Motor Strength:</label>
-                <div class="stepper form-control">
-                  <div class="stepper-seg" role="group" aria-label="Motor strength controls">
-                    <button id="motorMinus" class="stepper-seg-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
-                    <div class="stepper-seg-divider" aria-hidden="true"></div>
-                    <button id="motorPlus" class="stepper-seg-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
-                  </div>
-                  <span id="motorVal" class="stepper-value">100 %</span>
-                </div>
-              </div>
-              <div class="form-grid">
-                <div></div>
-                <label class="form-control"><input id="dir" type="checkbox"> Change Direction</label>
-              </div>
-              <div class="form-grid">
-                <div></div>
-                <div class="form-control"><label><input id="hs" type="checkbox"> High-Speed</label><span class="info-tip" tabindex="0" role="img" aria-label="The High-Speed mode increases the speed of the motor. Auto-Stop is not available when active."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span></div>
-              </div>
-              <div class="form-grid">
-                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="Auto-Stop will stop the motor on high resistance."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label for="autoStop">Auto-Stop Sensitivity:</label></div>
-                <select id="autoStop" class="form-control">
-                  <option value="0">Off</option>
-                  <option value="1">Low</option>
-                  <option value="2">Medium</option>
-                  <option value="3">High</option>
+                  <option value="R">Right</option>
                 </select>
               </div>
             </div>
@@ -307,6 +298,20 @@
                   </div>
                   <span id="durVal" class="stepper-value">00m 00s</span>
                 </div>
+              </div>
+              <!-- Firmware 1.3.3+ -->
+              <div id="filTRow" class="form-grid" hidden>
+                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="With a lower sensitivity, the Respooler only reacts to longer interruptions at the filament sensor."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label for="filT">Sensor Sensitivity:</label></div>
+                <select id="filT" class="form-control">
+                  <option value="400">Low</option>
+                  <option value="200">Medium</option>
+                  <option value="100">High</option>
+                </select>
+              </div>
+              <!-- Firmware 1.3.3+ -->
+              <div id="resRow" class="form-grid" hidden>
+                <div></div>
+                <div class="form-control"><label><input id="res" type="checkbox"> Power Loss Recovery</label><span id="resTip" class="info-tip" tabindex="0" role="img" aria-label="If the power fails while respooling, the progress is kept."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span></div>
               </div>
             </div>
 

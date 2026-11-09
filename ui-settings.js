@@ -30,6 +30,9 @@
 
     const filTRow = document.getElementById('filTRow');
     const filT = document.getElementById('filT');
+    const resRow = document.getElementById('resRow');
+    const res = document.getElementById('res');
+    const resTip = document.getElementById('resTip');
 
     // Servo UI
     const servoSettingsGroup = document.getElementById('servoSettingsGroup');
@@ -157,8 +160,8 @@
       }
     }
 
-    // FIL_T was added in firmware 1.3.3
-    function supportsFilamentLossTime(fw){
+    // FIL_T and RES were added in firmware 1.3.3
+    function supportsFirmware133Settings(fw){
       const m = String(fw || '').match(/(\d+)\.(\d+)(?:\.(\d+))?/);
       if (!m) return false;
       const [maj, min, pat] = [m[1], m[2], m[3] || 0].map(Number);
@@ -168,6 +171,7 @@
     // -------------------- Bind settings controls --------------------
     bindSlider(led,   'LED',     (v)=>window.webble.setLED(v));
     bindCheckbox(useFil,'USE_FIL',(on)=>window.webble.setUseFil(on));
+    bindCheckbox(res, 'RES',     (on)=>window.webble.setResume(on));
     bindCheckbox(dir, 'DIR',     (on)=>window.webble.setDir(on));
     bindCheckbox(hs,  'HS',      (on)=>window.webble.setHighSpeed(on));
 
@@ -391,6 +395,7 @@
 
       if (led && !isUIEditing('LED'))      led.value = st.led ?? 50;
       if (useFil && !isUIEditing('USE_FIL'))  useFil.checked = (st.useFil !== false);
+      if (res && !isUIEditing('RES'))      res.checked = !!st.res;
 
       if (!isUIEditing('POW')) {
         motorLocal = clampPow(st.pow ?? 100);
@@ -463,9 +468,13 @@
       }
 
       // Settings the board does not support are hidden: servo only on Respooler Pro
-      // (variant, not connection), the sensor sensitivity from firmware 1.3.3.
+      // (variant, not connection), sensor sensitivity and resume from firmware 1.3.3.
       if (servoSettingsGroup) servoSettingsGroup.hidden = !isRespoolerProFromState(st);
-      if (filTRow) filTRow.hidden = !supportsFilamentLossTime(st.fw);
+      resTip?.setAttribute('aria-label', isRespoolerProFromState(st)
+        ? 'If the power fails while respooling, the progress and servo position are kept.'
+        : 'If the power fails while respooling, the progress is kept.');
+      if (filTRow) filTRow.hidden = !supportsFirmware133Settings(st.fw);
+      if (resRow) resRow.hidden = !supportsFirmware133Settings(st.fw);
     }
 
     window.webble.on('status', s => {
