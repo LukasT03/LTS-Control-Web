@@ -28,6 +28,9 @@
     const durMinus = document.getElementById('durMinus');
     const durPlus  = document.getElementById('durPlus');
 
+    const filTRow = document.getElementById('filTRow');
+    const filT = document.getElementById('filT');
+
     // Servo UI
     const servoSettingsGroup = document.getElementById('servoSettingsGroup');
     const servoCalBtn = document.getElementById('servoCalBtn');
@@ -126,7 +129,7 @@
 
     function clampDur(v){
       v = Number(v);
-      if (!Number.isFinite(v)) return 895;
+      if (!Number.isFinite(v)) return 840;
       v = Math.round(v);
       return Math.max(10, Math.min(60 * 180, v)); // 10s .. 180m
     }
@@ -154,17 +157,12 @@
       }
     }
 
-    function setServoSettingsEnabled(enabled){
-      const on = !!enabled;
-      if (servoSettingsGroup) {
-        servoSettingsGroup.classList.toggle('is-disabled', !on);
-        servoSettingsGroup.setAttribute('aria-disabled', on ? 'false' : 'true');
-      }
-      // Also set disabled attributes for accessibility (overlay already blocks pointer events)
-      if (servoCalBtn) servoCalBtn.disabled = !on;
-      if (servoStepMinus) servoStepMinus.disabled = !on;
-      if (servoStepPlus) servoStepPlus.disabled = !on;
-      if (servoHomeSetting) servoHomeSetting.disabled = !on;
+    // FIL_T was added in firmware 1.3.3
+    function supportsFilamentLossTime(fw){
+      const m = String(fw || '').match(/(\d+)\.(\d+)(?:\.(\d+))?/);
+      if (!m) return false;
+      const [maj, min, pat] = [m[1], m[2], m[3] || 0].map(Number);
+      return maj > 1 || (maj === 1 && (min > 3 || (min === 3 && pat >= 3)));
     }
 
     // -------------------- Bind settings controls --------------------
@@ -176,6 +174,15 @@
     bindSelect(autoStop, 'TRQ', (v) => { setPending('TRQ', v); window.webble.setTorque(v); });
     bindSelect(jin,      'JIN', (v) => { setPending('JIN', v); window.webble.setJingle(v); });
     bindSelect(wgt,      'WGT', (v) => { setPending('WGT', v); window.webble.setTargetWeight(v); });
+    bindSelect(filT,     'FIL_T', (v) => { setPending('FIL_T', v); window.webble.setFilamentLossMs(v); });
+
+    // Auto-Stop is unavailable in High-Speed mode, the sensor sensitivity without the sensor
+    function updateDependentSettings(){
+      if (autoStop && hs) autoStop.disabled = hs.checked;
+      if (filT && useFil) filT.disabled = !useFil.checked;
+    }
+    hs?.addEventListener('change', updateDependentSettings);
+    useFil?.addEventListener('change', updateDependentSettings);
 
     bindSlider(fan,   'FAN_SPD', (v)=>window.webble.setFanSpeed(v));
     bindCheckbox(fanAlways,'FAN_ALW',(on)=>window.webble.setFanAlways(on));
@@ -211,8 +218,8 @@
       commitMotor();
     });
 
-    // Reference Time (calibration time at 80) — DUR in seconds
-    let durLocal = 895;
+    // Reference Time (calibration time at 85 %) — DUR in seconds
+    let durLocal = 840;
     function updateDurUI(){
       if (durVal) durVal.textContent = fmtDur(durLocal);
     }
@@ -220,7 +227,7 @@
       beginUI('DUR');
       try {
         setPending('DUR', durLocal);
-        runOrQueue('DUR', () => window.webble.setDurationAt80(durLocal));
+        runOrQueue('DUR', () => window.webble.setDurationAt85(durLocal));
       } finally {
         endUI('DUR');
       }
@@ -270,11 +277,7 @@
     }
 
     if (servoCalBtn) {
-      servoCalBtn.addEventListener('click', () => {
-        // Only allow opening calibration on Respooler Pro
-        if (servoSettingsGroup?.classList?.contains('is-disabled')) return;
-        openServoModal();
-      });
+      servoCalBtn.addEventListener('click', openServoModal);
     }
     if (servoModalClose) servoModalClose.addEventListener('click', closeServoModal);
     if (servoModalBackdrop) {
@@ -430,6 +433,12 @@
         }
       }
 
+      updateDependentSettings();
+      if (filT && !isUIEditing('FIL_T')) {
+        const v = String(st.filT ?? 100);
+        if (shouldApply('FIL_T', v)) filT.value = v;
+      }
+
       // Servo values
       if (!isUIEditing('SV_STP')) {
         const v = Number(st.servoStepMm ?? st.SV_STP);
@@ -453,9 +462,10 @@
         }
       }
 
-      // Servo settings are only available on Respooler Pro (variant gating only — NOT connection gating).
-      const isPro = isRespoolerProFromState(st || window.webble?.getState?.() || {});
-      setServoSettingsEnabled(isPro);
+      // Settings the board does not support are hidden: servo only on Respooler Pro
+      // (variant, not connection), the sensor sensitivity from firmware 1.3.3.
+      if (servoSettingsGroup) servoSettingsGroup.hidden = !isRespoolerProFromState(st);
+      if (filTRow) filTRow.hidden = !supportsFilamentLossTime(st.fw);
     }
 
     window.webble.on('status', s => {

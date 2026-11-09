@@ -17,7 +17,7 @@
     isUpdating: false,
     tempBuf: [], chipTempAvg: null,
     speed: 85, hs: false, led: 50, fan: 60, fanAlways: false,
-    useFil: true, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 895,
+    useFil: true, filT: 100, hasFilament: null, dir: false, pow: 100, trq: 0, jin: 0, dur: 840,
     wifiConnected: null,
     wifiSSID: null,
     wifiPassSet: null,
@@ -332,6 +332,14 @@
             releaseKey('JIN'); endEdit('JIN');
           }
         }
+        if ('FIL_T' in d) {
+          const n = Number(d.FIL_T);
+          if (Number.isFinite(n)) {
+            const v = Math.max(0, Math.trunc(n));
+            if (!isEditing('FIL_T') && !isHeld('FIL_T')) state.filT = v;
+            releaseKey('FIL_T'); endEdit('FIL_T');
+          }
+        }
         if ('WGT' in d) {
           const n = Number(d.WGT);
           if (Number.isFinite(n)) {
@@ -406,6 +414,12 @@
     setFanSpeed: (v) => { beginEdit('FAN_SPD'); holdKey('FAN_SPD', 400); return sendSet('FAN_SPD', Number(v)); },
     setFanAlways: (on) => { beginEdit('FAN_ALW'); holdKey('FAN_ALW', 400); return sendSet('FAN_ALW', on ? 1 : 0); },
     setUseFil: (on) => { beginEdit('USE_FIL'); holdKey('USE_FIL', 400); return sendSet('USE_FIL', on ? 1 : 0); },
+    setFilamentLossMs: (v) => {
+      beginEdit('FIL_T'); holdKey('FIL_T', 700);
+      const n = Number(v);
+      if (!Number.isFinite(n)) { releaseKey('FIL_T'); endEdit('FIL_T'); return Promise.resolve(); }
+      return sendSet('FIL_T', Math.max(100, Math.min(400, Math.trunc(n))));
+    },
     setDir: (on) => { beginEdit('DIR'); holdKey('DIR', 400); return sendSet('DIR', on ? 1 : 0); },
     setPower: (v) => { beginEdit('POW'); holdKey('POW', 400); return sendSet('POW', Number(v)); },
     setTorque: (v) => {
@@ -420,7 +434,7 @@
       if (!Number.isFinite(n)) { releaseKey('JIN'); endEdit('JIN'); return Promise.resolve(); }
       return sendSet('JIN', Math.max(0, Math.trunc(n)));
     },
-    setDurationAt80: (v) => {
+    setDurationAt85: (v) => {
       beginEdit('DUR'); holdKey('DUR', 400);
       const n = Number(v);
       if (!Number.isFinite(n)) { releaseKey('DUR'); endEdit('DUR'); return Promise.resolve(); }

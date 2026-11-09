@@ -148,37 +148,15 @@
   const infoFw = document.getElementById('infoFw');
   const infoWifi = document.getElementById('infoWifi');
 
-  // -------------------- Layout: sync Info Card height to right column (desktop, 2-column layout) --------------------
-  // Goal: top + bottom aligned across Safari/Chrome without guessing a fixed px value.
-  // Formula (desktop): infoH = settingsH - pillsH - controlH - speedH - 3*gap
-  const mqTwoColDesktop = window.matchMedia('(min-width: 871px)');
-  let infoHeightSyncRAF = 0;
-  let infoHeightRO = null;
+  // -------------------- Layout: Safari info frame width (desktop, 2-column layout) --------------------
+  // Card heights are handled by CSS. Must match the 2-column breakpoint in styles.css.
+  const mqTwoColDesktop = window.matchMedia('(min-width: 881px)');
 
   // Safari-only: keep the Respooler image frame from collapsing too narrow.
   // We only apply this in the 2-column desktop layout; stacked layout uses its own sizing.
   const ua = navigator.userAgent;
   const isSafari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|FxiOS/i.test(ua);
   let safariFrameSyncRAF = 0;
-
-  function qsFirst(selectors){
-    for (const sel of selectors) {
-      const el = document.querySelector(sel);
-      if (el) return el;
-    }
-    return null;
-  }
-
-  function getGapPx(container){
-    try {
-      const cs = getComputedStyle(container);
-      // gap can be like "16px" or "16px 16px"; pick the row gap.
-      const g = String(cs.gap || cs.rowGap || '0').trim();
-      const first = g.split(/\s+/)[0] || '0';
-      const n = parseFloat(first);
-      return Number.isFinite(n) ? n : 0;
-    } catch(_) { return 0; }
-  }
 
   function pxNum(v){
     const n = parseFloat(String(v || '0'));
@@ -240,96 +218,19 @@
     });
   }
 
-  function computeAndApplyInfoCardHeight(){
-    // Only do this in the 2-column layout. Stacked layout uses explicit @media heights.
-    if (!mqTwoColDesktop.matches) return;
-
+  function initSafariInfoFrameWidthSync(){
+    if (!isSafari) return;
     const infoCard = document.querySelector('.info-card');
-    if (!infoCard) return;
-
-    // IMPORTANT: there are TWO .card-stack columns; we want the LEFT one that contains the Info Card.
-    const stack = infoCard.closest('.card-stack');
-    if (!stack) return;
-
-    // Left stack children in your HTML:
-    // status-pills, info-card, control-card, speed-card  => 3 gaps
-    const pills = stack.querySelector('.status-pills');
-
-    // Measure the actual CARD containers, not the inner <section> elements.
-    const settingsSection = document.getElementById('lts-settings');
-    const settingsCard = (settingsSection && settingsSection.closest('.card')) || qsFirst(['.settings-card', '.card.settings-card']);
-
-    const controlCard = stack.querySelector('.card.control-card')
-      || stack.querySelector('.control-card')
-      || (document.getElementById('lts-control')?.closest('.card') || null);
-
-    const speedCard = stack.querySelector('.card.speed-card')
-      || stack.querySelector('.speed-card')
-      || (document.getElementById('lts-speed')?.closest('.card') || null);
-
-    if (!settingsCard || !controlCard || !speedCard || !pills) return;
-
-    const gap = getGapPx(stack);
-    const settingsH = settingsCard.getBoundingClientRect().height;
-    const pillsH    = pills.getBoundingClientRect().height;
-    const controlH  = controlCard.getBoundingClientRect().height;
-    const speedH    = speedCard.getBoundingClientRect().height;
-
-    // There are 3 gaps between 4 children (pills, info, control, speed).
-    let infoH = settingsH - pillsH - controlH - speedH - (3 * gap);
-
-    // Guard rails to avoid negative / silly values during initial layout.
-    if (!Number.isFinite(infoH)) return;
-
-    // Keep a minimum so the internal grid doesn't collapse; don't artificially cap the max,
-    // otherwise the bottom alignment can never be exact.
-    infoH = Math.max(160, infoH);
-
-    const px = Math.round(infoH);
-    document.documentElement.style.setProperty('--info-card-h-desktop', `${px}px`);
-    scheduleSafariInfoFrameWidthSync();
-  }
-
-  function scheduleInfoCardHeightSync(){
-    if (infoHeightSyncRAF) return;
-    infoHeightSyncRAF = requestAnimationFrame(() => {
-      infoHeightSyncRAF = 0;
-      computeAndApplyInfoCardHeight();
-      scheduleSafariInfoFrameWidthSync();
-    });
-  }
-
-  function initInfoCardHeightSync(){
-    if (infoHeightRO) return;
-    infoHeightRO = new ResizeObserver(() => scheduleInfoCardHeightSync());
-
-    // Observe cards that influence the formula. If some aren't in the DOM yet, we'll still
-    // re-measure on resize/status updates via scheduleInfoCardHeightSync().
-    const toObs = [
-      '.card-stack',
-      '.info-card',
-      '.status-pills',
-      '#lts-settings', '.settings-card', '.card.settings-card',
-      '.card.control-card', '.control-card', '#lts-control',
-      '#lts-speed', '.speed-card', '.card.speed-card'
-    ];
-    for (const sel of toObs) {
-      const el = document.querySelector(sel);
-      if (el) {
-        try { infoHeightRO.observe(el); } catch(_) {}
-      }
-    }
-
-    window.addEventListener('resize', scheduleInfoCardHeightSync, { passive: true });
-    window.addEventListener('resize', scheduleSafariInfoFrameWidthSync, { passive: true });
+    if (infoCard) new ResizeObserver(scheduleSafariInfoFrameWidthSync).observe(infoCard);
     try {
-      mqTwoColDesktop.addEventListener('change', scheduleInfoCardHeightSync);
+      mqTwoColDesktop.addEventListener('change', scheduleSafariInfoFrameWidthSync);
     } catch(_) {
       // Safari < 14 fallback
-      try { mqTwoColDesktop.addListener(scheduleInfoCardHeightSync); } catch(_) {}
+      try { mqTwoColDesktop.addListener(scheduleSafariInfoFrameWidthSync); } catch(_) {}
     }
     scheduleSafariInfoFrameWidthSync();
   }
+
 
   function applyDisconnectedDefaults(){
     // User-requested defaults when NOT connected (including first load):
@@ -874,7 +775,6 @@
       }
     }
   
-    try { scheduleInfoCardHeightSync(); } catch(_) {}
   }
 
   function bindStatusUI(){
@@ -1068,11 +968,7 @@
       } catch(_) {}
     } catch(_) {}
 
-    // Height sync init
-    try {
-      initInfoCardHeightSync();
-      scheduleInfoCardHeightSync();
-    } catch(_) {}
+    try { initSafariInfoFrameWidthSync(); } catch(_) {}
 
     window.webble.on('connected', () => {
       connEpoch++;

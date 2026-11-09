@@ -97,7 +97,7 @@
           </div>
         </div>
 
-        <!-- INFO CARD (left column, fills available height) -->
+        <!-- INFO CARD (left column, fixed height) -->
         <div class="card info-card" aria-label="Control image">
           <div class="info-frame" aria-hidden="true">
             <button id="infoVariantBtn" class="info-variant-btn" type="button" aria-label="Change Respooler variant">
@@ -171,45 +171,53 @@
       <div class="card-stack">
 
         <!-- SETTINGS CARD (Block B) -->
-        <div class="card">
-          <section id="lts-settings" class="section-base pos-rel">
+        <!-- Rows are grouped; groups are separated by dividers. Unsupported groups and rows get the hidden attribute. -->
+        <div class="card settings-card">
+          <section id="lts-settings" class="section-base">
 
-            <div class="form-grid">
-              <label for="led" class="form-label">LED Brightness:</label>
-              <input id="led" class="form-control" type="range" min="0" max="100" step="10" value="50" style="width:min(160px, 100%); margin-top:2px;">
+            <div class="settings-group">
+              <div class="form-grid">
+                <label for="wgt" class="form-label">Transfer Amount:</label>
+                <select id="wgt" class="form-control">
+                  <option value="0">Entire Spool</option>
+                  <option value="1">1.0 kg</option>
+                  <option value="2">0.5 kg</option>
+                  <option value="3">0.25 kg</option>
+                </select>
+              </div>
+              <div class="form-grid">
+                <label for="jin" class="form-label">Completion Sound:</label>
+                <select id="jin" class="form-control">
+                  <option value="0">Off</option>
+                  <option value="1">Simple</option>
+                  <option value="2">Glissando</option>
+                  <option value="3">Star Wars</option>
+                </select>
+              </div>
+              <div class="form-grid">
+                <label for="led" class="form-label">LED Brightness:</label>
+                <input id="led" class="form-control" type="range" min="0" max="100" step="10" value="50">
+              </div>
+              <div class="form-grid">
+                <div></div>
+                <label class="form-control"><input id="useFil" type="checkbox" checked> Use Filament Sensor</label>
+              </div>
+              <!-- Firmware 1.3.3+ -->
+              <div id="filTRow" class="form-grid" hidden>
+                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="With a lower sensitivity, the Respooler only reacts to longer interruptions at the filament sensor."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label for="filT">Filament Sensor Sensitivity:</label></div>
+                <select id="filT" class="form-control">
+                  <option value="400">Low</option>
+                  <option value="200">Medium</option>
+                  <option value="100">High</option>
+                </select>
+              </div>
             </div>
 
-            <div class="form-grid" style="margin-top:8px;">
-              <label for="wgt" class="form-label">Transfer Amount:</label>
-              <select id="wgt" class="form-control" style="width:min(135px, 100%); border:1px solid #d1d5db; color:#000;">
-                <option value="0">Entire Spool</option>
-                <option value="1">1.0 kg</option>
-                <option value="2">0.5 kg</option>
-                <option value="3">0.25 kg</option>
-              </select>
-            </div>
+            <hr class="section-divider">
 
-            <div class="form-grid" style="margin-top:5px;">
-              <div></div>
-              <label class="form-control"><input id="useFil" type="checkbox" checked> Use Filament Sensor</label>
-            </div>
-
-            <div class="form-grid" style="margin-top:8px;">
-              <label for="jin" class="form-label">Completion Sound:</label>
-              <select id="jin" class="form-control" style="width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
-                <option value="0">Off</option>
-                <option value="1">Simple</option>
-                <option value="2">Glissando</option>
-                <option value="3">Star Wars</option>
-              </select>
-            </div>
-
-            <hr class="section-divider" style="margin:12px 0;">
-
-            <!-- Servo (PRO boards) -->
-            <div id="servoSettingsGroup" class="servo-settings-group" aria-disabled="true">
-              <div class="servo-settings-overlay" aria-hidden="true"></div>
-              <div class="form-grid" style="margin-top:8px;">
+            <!-- Respooler Pro only -->
+            <div id="servoSettingsGroup" class="settings-group" hidden>
+              <div class="form-grid">
                 <label class="form-label">Servo Calibration:</label>
                 <button id="servoCalBtn" class="mini-btn compact form-control">
                   Calibrate
@@ -220,8 +228,7 @@
                   </span>
                 </button>
               </div>
-
-              <div class="form-grid" style="margin-top:8px;">
+              <div class="form-grid">
                 <label class="form-label">Step Distance:</label>
                 <div class="stepper form-control">
                   <div class="stepper-seg" role="group" aria-label="Step distance controls">
@@ -232,71 +239,77 @@
                   <span id="servoStepVal" class="stepper-value">1.75 mm</span>
                 </div>
               </div>
-
-              <div class="form-grid" style="margin-top:8px;">
+              <div class="form-grid">
                 <label for="servoHomeSetting" class="form-label">Home Position:</label>
-                <select id="servoHomeSetting" class="form-control" style="width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
+                <select id="servoHomeSetting" class="form-control">
                   <option value="R">Right</option>
                   <option value="L">Left</option>
                 </select>
               </div>
             </div>
 
-            <hr class="section-divider" style="margin:12px 0;">
+            <hr class="section-divider">
 
-            <div class="form-grid" style="margin-top:8px;">
-              <label for="motor" class="form-label">Motor Strength:</label>
-              <div class="stepper form-control">
-                <div class="stepper-seg" role="group" aria-label="Motor strength controls">
-                  <button id="motorMinus" class="stepper-seg-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
-                  <div class="stepper-seg-divider" aria-hidden="true"></div>
-                  <button id="motorPlus" class="stepper-seg-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+            <div class="settings-group">
+              <div class="form-grid">
+                <label class="form-label">Motor Strength:</label>
+                <div class="stepper form-control">
+                  <div class="stepper-seg" role="group" aria-label="Motor strength controls">
+                    <button id="motorMinus" class="stepper-seg-btn" type="button" aria-label="Decrease motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+                    <div class="stepper-seg-divider" aria-hidden="true"></div>
+                    <button id="motorPlus" class="stepper-seg-btn" type="button" aria-label="Increase motor strength"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+                  </div>
+                  <span id="motorVal" class="stepper-value">100 %</span>
                 </div>
-                <span id="motorVal" class="stepper-value">100 %</span>
+              </div>
+              <div class="form-grid">
+                <div></div>
+                <label class="form-control"><input id="dir" type="checkbox"> Change Direction</label>
+              </div>
+              <div class="form-grid">
+                <div></div>
+                <div class="form-control"><label><input id="hs" type="checkbox"> High-Speed</label><span class="info-tip" tabindex="0" role="img" aria-label="The High-Speed mode increases the speed of the motor. Auto-Stop is not available when active."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span></div>
+              </div>
+              <div class="form-grid">
+                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="Auto-Stop will stop the motor on high resistance."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label for="autoStop">Auto-Stop Sensitivity:</label></div>
+                <select id="autoStop" class="form-control">
+                  <option value="0">Off</option>
+                  <option value="1">Low</option>
+                  <option value="2">Medium</option>
+                  <option value="3">High</option>
+                </select>
               </div>
             </div>
-            <div class="form-grid" style="margin-top:0px;">
-              <div></div>
-              <label class="form-control"><input id="dir" type="checkbox"> Change Direction</label>
-            </div>
-            <div class="form-grid" style="margin-top:2px;">
-              <div></div>
-              <label class="form-control"><input id="hs" type="checkbox"> High-Speed</label>
-            </div>
-            <div class="form-grid" style="margin-top:8px;">
-              <label for="autoStop" class="form-label">Auto-Stop Sensitivity:</label>
-              <select id="autoStop" class="form-control" style="width:min(110px, 100%); border:1px solid #d1d5db; color:#000;">
-                <option value="0">Off</option>
-                <option value="1">Low</option>
-                <option value="2">Medium</option>
-                <option value="3">High</option>
-              </select>
-            </div>
 
-            <hr class="section-divider" style="margin:12px 0;">
+            <hr class="section-divider">
 
-            <div class="form-grid" style="margin-top:8px;">
-              <label for="fan" class="form-label">Fan Speed:</label>
-              <input id="fan" class="form-control" type="range" min="10" max="100" step="10" value="60" style="width:min(160px, 100%); margin-top:2px;">
-            </div>
-            <div class="form-grid" style="margin-top:0px;">
-              <div></div>
-              <label class="form-control"><input id="fanAlways" type="checkbox"> Fan Always On</label>
-            </div>
-
-            <hr class="section-divider" style="margin:12px 0;">
-
-            <div class="form-grid" style="margin-top:8px;">
-              <label class="form-label">Reference Time:</label>
-              <div class="stepper form-control">
-                <div class="stepper-seg" role="group" aria-label="Reference time controls">
-                  <button id="durMinus" class="stepper-seg-btn" type="button" aria-label="Decrease reference time"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
-                  <div class="stepper-seg-divider" aria-hidden="true"></div>
-                  <button id="durPlus" class="stepper-seg-btn" type="button" aria-label="Increase reference time"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
-                </div>
-                <span id="durVal" class="stepper-value">00m 00s</span>
+            <div class="settings-group">
+              <div class="form-grid">
+                <label for="fan" class="form-label">Fan Speed:</label>
+                <input id="fan" class="form-control" type="range" min="10" max="100" step="10" value="60">
+              </div>
+              <div class="form-grid">
+                <div></div>
+                <label class="form-control"><input id="fanAlways" type="checkbox"> Fan Always On</label>
               </div>
             </div>
+
+            <hr class="section-divider">
+
+            <div class="settings-group">
+              <div class="form-grid">
+                <div class="form-label"><span class="info-tip" tabindex="0" role="img" aria-label="For more accurate times and amounts, measure the duration of a 1 kg spool at 85 % speed without High-Speed mode and adjust it here."><picture><source srcset="info-circle-dark.png" media="(prefers-color-scheme: dark)" /><img src="info-circle.png" alt="" width="16" height="16" /></picture></span><label>Reference Time:</label></div>
+                <div class="stepper form-control">
+                  <div class="stepper-seg" role="group" aria-label="Reference time controls">
+                    <button id="durMinus" class="stepper-seg-btn" type="button" aria-label="Decrease reference time"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+                    <div class="stepper-seg-divider" aria-hidden="true"></div>
+                    <button id="durPlus" class="stepper-seg-btn" type="button" aria-label="Increase reference time"><span class="stepper-glyph" style="display:flex;align-items:center;justify-content:center;height:100%;"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" style="width:14px;height:14px;display:block;"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span></button>
+                  </div>
+                  <span id="durVal" class="stepper-value">00m 00s</span>
+                </div>
+              </div>
+            </div>
+
           </section>
         </div>
 
